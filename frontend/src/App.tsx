@@ -15,9 +15,7 @@ import { SignerInvite } from './pages/signature/SignerInvite'
 import { ProofReport } from './pages/signature/ProofReport'
 
 import { PublicVerification } from './pages/verification/PublicVerification'
-import { UnknownCode } from './pages/verification/UnknownCode'
-import { ResultValid } from './pages/verification/ResultValid'
-import { ResultRevoked } from './pages/verification/ResultRevoked'
+import { VerificationResult } from './pages/verification/VerificationResult'
 import { FileComparison } from './pages/verification/FileComparison'
 
 import { TraceabilityList } from './pages/traceability/TraceabilityList'
@@ -48,9 +46,7 @@ function App() {
       <Route path={ROUTES.accountActivation} element={<AccountActivation />} />
       <Route path={ROUTES.signerInvite} element={<SignerInvite />} />
       <Route path={ROUTES.verifyPublic} element={<PublicVerification />} />
-      <Route path={ROUTES.verifyUnknown} element={<UnknownCode />} />
-      <Route path={ROUTES.verifyValid} element={<ResultValid />} />
-      <Route path={ROUTES.verifyRevoked} element={<ResultRevoked />} />
+      <Route path={ROUTES.verifyResult} element={<VerificationResult />} />
       <Route path={ROUTES.compareFiles} element={<FileComparison />} />
 
       {/* Protégé — nécessite une session active (voir auth/ProtectedRoute) */}

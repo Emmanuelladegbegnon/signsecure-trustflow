@@ -1,24 +1,23 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from '../../components/ui/Icon'
-import { ROUTES } from '../../routes'
+import { verifyResultUrl } from '../../routes'
 
 export function PublicVerification() {
   const navigate = useNavigate()
   const [code, setCode] = useState('')
+  const [touched, setTouched] = useState(false)
+
+  const trimmed = code.trim()
+  const invalid = touched && !trimmed
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    const trimmed = code.trim()
-    if (!trimmed) {
-      navigate(ROUTES.verifyUnknown)
-      return
-    }
-    // Démo uniquement : un vrai back décidera le mode de comparaison à partir
-    // de l'origine réelle du document (Sign = hash exact, Trace = score OCR),
-    // jamais le préfixe du code saisi par l'utilisateur.
-    const isTraceCode = trimmed.toUpperCase().startsWith('TRC')
-    navigate(isTraceCode ? `${ROUTES.verifyValid}?origin=trace` : ROUTES.verifyValid)
+    setTouched(true)
+    if (!trimmed) return
+    // Le vrai verdict (code inconnu, valide, révoqué, hash exact vs score OCR)
+    // vient entièrement de GET /api/verify/:code, appelé par la page de résultat.
+    navigate(verifyResultUrl(trimmed))
   }
 
   return (
@@ -34,14 +33,16 @@ export function PublicVerification() {
 
         <div className="bg-surface-container-lowest w-full rounded-2xl shadow-[0px_10px_15px_-3px_rgba(15,23,42,0.1)] border border-outline-variant/30 p-8 flex flex-col gap-6 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-primary-fixed-dim" />
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
             <label className="font-label-md text-label-md text-on-surface" htmlFor="tracking-code">
               Code de suivi du document
             </label>
             <div className="relative">
               <input
                 autoComplete="off"
-                className="w-full h-14 pl-4 pr-12 rounded-xl border border-outline-variant bg-surface-bright focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-body-md text-body-md text-on-surface placeholder:text-outline outline-none"
+                className={`w-full h-14 pl-4 pr-12 rounded-xl border bg-surface-bright focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-body-md text-body-md text-on-surface placeholder:text-outline outline-none ${
+                  invalid ? 'border-error' : 'border-outline-variant'
+                }`}
                 id="tracking-code"
                 placeholder="Ex: SSTF-8492-XXXX"
                 type="text"
@@ -50,6 +51,12 @@ export function PublicVerification() {
               />
               <Icon name="search" className="absolute right-4 top-1/2 -translate-y-1/2 text-outline" />
             </div>
+            {invalid && (
+              <p className="font-label-sm text-label-sm text-error flex items-center gap-1">
+                <Icon name="error" size={14} />
+                Saisissez un code de suivi.
+              </p>
+            )}
             <button
               className="w-full h-14 bg-primary hover:bg-on-primary-fixed-variant text-on-primary rounded-xl font-label-md text-label-md flex items-center justify-center gap-2 transition-colors shadow-sm mt-2"
               type="submit"
@@ -64,19 +71,15 @@ export function PublicVerification() {
             <span className="font-label-sm text-label-sm text-outline uppercase tracking-wider">ou utiliser</span>
             <div className="h-px bg-outline-variant flex-1" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <button className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-outline-variant bg-surface hover:bg-surface-container-high transition-colors text-secondary hover:text-on-surface">
-              <Icon name="qr_code_scanner" size={24} />
-              <span className="font-label-sm text-label-sm">Scanner QR</span>
-            </button>
-            <button
-              className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-outline-variant bg-surface hover:bg-surface-container-high transition-colors text-secondary hover:text-on-surface"
-              onClick={() => navigate(ROUTES.compareFiles)}
-            >
-              <Icon name="upload_file" size={24} />
-              <span className="font-label-sm text-label-sm">Téléverser</span>
-            </button>
-          </div>
+          <button
+            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-outline-variant bg-surface text-secondary/60 cursor-not-allowed"
+            type="button"
+            disabled
+            title="Scan QR bientôt disponible"
+          >
+            <Icon name="qr_code_scanner" size={24} />
+            <span className="font-label-sm text-label-sm">Scanner QR (bientôt disponible)</span>
+          </button>
         </div>
 
         <p className="font-body-sm text-body-sm text-on-surface-variant mt-8 text-center flex items-center justify-center gap-2">

@@ -22,10 +22,9 @@ export const ROUTES = {
   proofReport: '/documents/:id/rapport-de-preuve',
 
   verifyPublic: '/verifier',
-  verifyUnknown: '/verifier/inconnu',
-  verifyValid: '/verifier/valide',
-  verifyRevoked: '/verifier/revoque',
-  compareFiles: '/verifier/comparaison',
+  /** Résultat de GET /api/verify/:code — une seule page, qui branche son rendu sur `statut`/`origine` (code inconnu, valide, révoqué, hash exact vs score OCR). */
+  verifyResult: '/verifier/resultat/:code',
+  compareFiles: '/verifier/:code/comparaison',
 
   /** List of documents/assets currently being tracked. */
   traceabilityList: '/tracabilite',
@@ -55,3 +54,9 @@ export const assignSignersUrl = (dossierId: string) => `/documents/${dossierId}/
 
 /** Rapport de preuve d'un dossier donné. */
 export const proofReportUrl = (dossierId: string) => `/documents/${dossierId}/rapport-de-preuve`
+
+/** Résultat de vérification pour un code de suivi donné. */
+export const verifyResultUrl = (code: string) => `/verifier/resultat/${encodeURIComponent(code)}`
+
+/** Comparaison de fichier pour un code de suivi donné. */
+export const compareFilesUrl = (code: string) => `/verifier/${encodeURIComponent(code)}/comparaison`
