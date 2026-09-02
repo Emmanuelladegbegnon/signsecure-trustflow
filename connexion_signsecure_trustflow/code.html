@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignSecure TrustFlow - Connexion</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error": "#ba1a1a",
+                      "on-primary-container": "#a3faef",
+                      "surface-container": "#eceef0",
+                      "primary-fixed-dim": "#80d5cb",
+                      "outline": "#6e7977",
+                      "primary-fixed": "#9cf2e8",
+                      "surface-dim": "#d8dadc",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-fixed": "#0b1c30",
+                      "secondary": "#565e74",
+                      "on-secondary-container": "#5c647a",
+                      "secondary-fixed": "#dae2fd",
+                      "inverse-surface": "#2d3133",
+                      "inverse-on-surface": "#eff1f3",
+                      "on-surface": "#191c1e",
+                      "surface": "#f7f9fb",
+                      "surface-container-low": "#f2f4f6",
+                      "on-secondary-fixed": "#131b2e",
+                      "on-tertiary": "#ffffff",
+                      "surface-tint": "#006a63",
+                      "tertiary-fixed": "#d3e4fe",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#38485d",
+                      "primary-container": "#0f766e",
+                      "surface-container-high": "#e6e8ea",
+                      "on-background": "#191c1e",
+                      "surface-variant": "#e0e3e5",
+                      "inverse-primary": "#80d5cb",
+                      "on-secondary-fixed-variant": "#3f465c",
+                      "primary": "#005c55",
+                      "on-error": "#ffffff",
+                      "tertiary-container": "#5a6a81",
+                      "outline-variant": "#bdc9c6",
+                      "on-primary-fixed": "#00201d",
+                      "surface-bright": "#f7f9fb",
+                      "on-primary": "#ffffff",
+                      "secondary-fixed-dim": "#bec6e0",
+                      "tertiary-fixed-dim": "#b7c8e1",
+                      "on-primary-fixed-variant": "#00504a",
+                      "background": "#f7f9fb",
+                      "error-container": "#ffdad6",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-container": "#deeaff",
+                      "surface-container-highest": "#e0e3e5",
+                      "secondary-container": "#dae2fd",
+                      "tertiary": "#425268",
+                      "on-surface-variant": "#3e4947"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "gutter": "24px",
+                      "margin-mobile": "16px",
+                      "container-max": "1280px",
+                      "margin-desktop": "32px"
+              },
+              "fontFamily": {
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "display": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-sm": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "30px",
+                              {
+                                      "lineHeight": "38px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display": [
+                              "36px",
+                              {
+                                      "lineHeight": "44px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .pattern-bg {
+            background-color: #0f766e;
+            background-image: radial-gradient(circle at 100% 150%, #005c55 24%, white 24%, white 28%, #005c55 28%, #005c55 36%, white 36%, white 40%, transparent 40%, transparent), radial-gradient(circle at 0 150%, #005c55 24%, white 24%, white 28%, #005c55 28%, #005c55 36%, white 36%, white 40%, transparent 40%, transparent), radial-gradient(circle at 50% 100%, white 10%, #005c55 10%, #005c55 23%, white 23%, white 30%, #005c55 30%, #005c55 43%, white 43%, white 50%, #005c55 50%, #005c55 63%, white 63%, white 71%, transparent 71%, transparent), radial-gradient(circle at 100% 50%, white 5%, #005c55 5%, #005c55 15%, white 15%, white 20%, #005c55 20%, #005c55 29%, white 29%, white 34%, #005c55 34%, #005c55 44%, white 44%, white 49%, transparent 49%, transparent), radial-gradient(circle at 0 50%, white 5%, #005c55 5%, #005c55 15%, white 15%, white 20%, #005c55 20%, #005c55 29%, white 29%, white 34%, #005c55 34%, #005c55 44%, white 44%, white 49%, transparent 49%, transparent);
+            background-size: 100px 50px;
+            opacity: 0.8;
+            mix-blend-mode: overlay;
+        }
+      </style>
+</head>
+<body class="bg-background text-on-background antialiased h-screen w-screen overflow-hidden flex">
+<div class="w-full lg:w-1/2 bg-surface-container-lowest h-full flex flex-col justify-center px-margin-mobile sm:px-12 lg:px-24">
+<div class="max-w-md w-full mx-auto">
+<div class="flex items-center gap-2 mb-12">
+<span class="material-symbols-outlined text-primary-container text-4xl" style="font-variation-settings: 'FILL' 1;">security</span>
+<span class="font-display text-display text-primary-container">SignSecure</span>
+</div>
+<div class="mb-8">
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-2">Se connecter</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Accédez à votre espace sécurisé TrustFlow.</p>
+</div>
+<form class="space-y-6">
+<div class="space-y-2">
+<label class="font-label-md text-label-md text-on-surface" for="email">Adresse e-mail</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">mail</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 border border-outline-variant rounded-lg bg-surface-bright text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all" id="email" name="email" placeholder="nom@entreprise.com" required="" type="email"/>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md text-on-surface" for="password">Mot de passe</label>
+<a class="font-label-sm text-label-sm text-primary-container hover:text-primary transition-colors" href="#">Mot de passe oublié ?</a>
+</div>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">lock</span>
+</div>
+<input class="block w-full pl-10 pr-10 py-3 border border-outline-variant rounded-lg bg-surface-bright text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-all" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+<div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-outline hover:text-on-surface transition-colors" id="togglePassword">
+<span class="material-symbols-outlined" id="eyeIcon">visibility_off</span>
+</div>
+</div>
+</div>
+<button class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm font-label-md text-label-md text-on-primary bg-primary-container hover:bg-primary transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-container" onclick="event.preventDefault(); location.href='../tableau_de_bord_signsecure_trustflow/code.html';" type="submit">
+                    Se connecter
+                </button>
+</form>
+<div class="mt-8 pt-6 border-t border-surface-variant flex justify-center items-center text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] mr-1">verified_user</span>
+                Connexion chiffrée de bout en bout
+            </div>
+</div>
+</div>
+<div class="hidden lg:flex w-1/2 h-full bg-primary-container relative overflow-hidden flex-col items-center justify-center">
+<div class="absolute inset-0 pattern-bg"></div>
+<div class="absolute inset-0 bg-gradient-to-br from-primary-container/80 to-primary/95"></div>
+<div class="relative z-10 p-16 max-w-lg text-center text-on-primary">
+<span class="material-symbols-outlined text-6xl mb-6 text-primary-fixed" style="font-variation-settings: 'FILL' 1;">assured_workload</span>
+<h2 class="font-display text-display mb-4">Confiance institutionnelle</h2>
+<p class="font-body-lg text-body-lg text-primary-fixed-dim">La plateforme de référence pour la gestion et la signature de documents juridiques sensibles. Sécurisé. Conforme. Traçable.</p>
+</div>
+</div>
+<script>
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            eyeIcon.textContent = type === 'password' ? 'visibility_off' : 'visibility';
+        });
+    </script>
+<a href="../index.html" style="position:fixed;bottom:84px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:6px;background:#191c1e;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.25);text-decoration:none;opacity:.85;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85" title="Retour au prototype SignSecure TrustFlow">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+Prototype
+</a>
+</body></html>

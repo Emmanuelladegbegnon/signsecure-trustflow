@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignSecure TrustFlow — Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --primary:#005c55; --primary-container:#0f766e; --on-primary:#ffffff;
+    --bg:#f7f9fb; --surface:#ffffff; --surface-low:#f2f4f6;
+    --on-surface:#191c1e; --on-surface-variant:#3e4947; --outline-variant:#e0e3e5;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--on-surface);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  header.hero{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-container) 100%);color:#fff;padding:48px 32px 40px;}
+  .hero-inner{max-width:1280px;margin:0 auto;}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);padding:6px 14px;border-radius:9999px;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:16px;}
+  h1{font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-0.02em;margin:0 0 12px;}
+  .hero p{font-size:16px;max-width:640px;line-height:1.6;opacity:.92;margin:0;}
+  main{max-width:1280px;margin:0 auto;padding:40px 32px 80px;}
+  .toc{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:48px;}
+  .toc a{font-size:13px;font-weight:600;color:var(--primary);background:var(--surface-low);border:1px solid var(--outline-variant);padding:8px 14px;border-radius:9999px;text-decoration:none;}
+  .toc a:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+  section.group{margin-bottom:56px;}
+  .group-head{display:flex;align-items:baseline;gap:12px;margin-bottom:20px;border-bottom:1px solid var(--outline-variant);padding-bottom:12px;}
+  .group-head h2{font-size:22px;font-weight:600;margin:0;letter-spacing:-0.01em;}
+  .group-head span{font-size:13px;color:var(--on-surface-variant);}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;}
+  .card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--outline-variant);border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 1px 3px rgba(15,23,42,.08);transition:transform .15s ease,box-shadow .15s ease;}
+  .card:hover{transform:translateY(-3px);box-shadow:0 10px 20px rgba(15,23,42,.12);}
+  .thumb{aspect-ratio:4/3;background:var(--surface-low);overflow:hidden;position:relative;}
+  .thumb img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;}
+  .badge{position:absolute;top:8px;left:8px;background:rgba(25,28,30,.75);color:#fff;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:9999px;}
+  .card-body{padding:14px 16px 16px;flex:1;display:flex;flex-direction:column;gap:4px;}
+  .card-body h3{font-size:14px;font-weight:600;margin:0;line-height:1.35;}
+  .card-body p{font-size:12px;color:var(--on-surface-variant);margin:0;line-height:1.4;}
+  footer{max-width:1280px;margin:0 auto;padding:0 32px 60px;color:var(--on-surface-variant);font-size:13px;}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow">🛡️ Prototype cliquable · 28 écrans</span>
+    <h1>SignSecure TrustFlow</h1>
+    <p>Plateforme de signature électronique, vérification et traçabilité de documents pour le B2B ouest-africain. Cette page relie tous les écrans du design pour valider les parcours avant le développement du back-end. Chaque écran garde aussi un bouton flottant « Prototype » en bas à droite pour revenir ici.</p>
+  </div>
+</header>
+<main>
+  <nav class="toc">
+    <a href="#auth">Authentification</a>
+    <a href="#espace">Espace utilisateur</a>
+    <a href="#signature">Flux de signature</a>
+    <a href="#verification">Vérification publique</a>
+    <a href="#tracabilite">Traçabilité</a>
+    <a href="#mobile-enreg">Mobile — Enregistrement physique</a>
+    <a href="#mobile-transfert">Mobile — Transfert de garde</a>
+    <a href="#admin">Administration</a>
+  </nav>
+
+  <section class="group" id="auth">
+    <div class="group-head"><h2>Authentification</h2><span>2 écrans</span></div>
+    <div class="grid">
+      <a class="card" href="connexion_signsecure_trustflow/code.html">
+        <div class="thumb"><span class="badge">Desktop</span><img loading="lazy" src="connexion_signsecure_trustflow/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Connexion</h3><p>Écran de login (email / mot de passe).</p></div>
+      </a>
+      <a class="card" href="verification_otp_signsecure_trustflow/code.html">
+        <div class="thumb"><span class="badge">Desktop</span><img loading="lazy" src="verification_otp_signsecure_trustflow/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Vérification OTP</h3><p>Double authentification après la connexion.</p></div>
+      </a>
+    </div>
+  </section>
+
+  <section class="group" id="espace">
+    <div class="group-head"><h2>Espace utilisateur</h2><span>2 écrans</span></div>
+    <div class="grid">
+      <a class="card" href="tableau_de_bord_signsecure_trustflow/code.html">
+        <div class="thumb"><span class="badge">Desktop</span><img loading="lazy" src="tableau_de_bord_signsecure_trustflow/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Tableau de bord</h3><p>Vue d'ensemble, activité récente, accès rapides.</p></div>
+      </a>
+      <a class="card" href="mes_dossiers_signsecure_trustflow/code.html">
+        <div class="thumb"><span class="badge">Desktop</span><img loading="lazy" src="mes_dossiers_signsecure_trustflow/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Mes dossiers</h3><p>Liste des documents de l'utilisateur.</p></div>
+      </a>
+    </div>
+  </section>
+
+  <section class="group" id="signature">
+    <div class="group-head"><h2>Flux de signature</h2><span>6 écrans</span></div>
+    <div class="grid">
+      <a class="card" href="nouveau_dossier_upload/code.html">
+        <div class="thumb"><span class="badge">Desktop</span><img loading="lazy" src="nouveau_dossier_upload/screen.png" alt=""/></div>
+        <div class="card-body"><h3>1. Nouveau dossier</h3><p>Upload du document à signer.</p></div>
+      </a>
+      <a class="card" href="configuration_des_signataires/code.html">
+        <div class="thumb"><span class="badge">Desktop</span><img loading="lazy" src="configuration_des_signataires/screen.png" alt=""/></div>
+        <div class="card-body"><h3>2. Signataires</h3><p>Assignation des signataires et de l'ordre de signature.</p></div>
+      </a>
+      <a class="card" href="apposer_ma_signature/code.html">
+        <div class="thumb"><span class="badge">Desktop</span><img loading="lazy" src="apposer_ma_signature/screen.png" alt=""/></div>
+        <div class="card-body"><h3>3. Apposer ma signature</h3><p>Capture de la signature (dessin / import).</p></div>
+      </a>
+      <a class="card" href="confirmation_de_signature/code.html">
+        <div class="thumb"><span class="badge">Desktop</span><img loading="lazy" src="confirmation_de_signature/screen.png" alt=""/></div>
+        <div class="card-body"><h3>4. Code de sécurité</h3><p>Confirmation OTP de la signature.</p></div>
+      </a>
+      <a class="card" href="signature_reussie/code.html">
+        <div class="thumb"><span class="badge">Desktop</span><img loading="lazy" src="signature_reussie/screen.png" alt=""/></div>
+        <div class="card-body"><h3>5. Signature réussie</h3><p>Écran de succès transactionnel.</p></div>
+      </a>
+      <a class="card" href="rapport_de_preuve/code.html">
+        <div class="thumb"><span class="badge">Desktop</span><img loading="lazy" src="rapport_de_preuve/screen.png" alt=""/></div>
+        <div class="card-body"><h3>6. Rapport de preuve</h3><p>Certificat légal imprimable / PDF.</p></div>
+      </a>
+    </div>
+  </section>
+
+  <section class="group" id="verification">
+    <div class="group-head"><h2>Vérification publique</h2><span>5 écrans</span></div>
+    <div class="grid">
+      <a class="card" href="verification_publique/code.html">
+        <div class="thumb"><span class="badge">Public</span><img loading="lazy" src="verification_publique/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Vérification (accueil)</h3><p>Saisie du code de suivi, sans compte requis.</p></div>
+      </a>
+      <a class="card" href="resultat_de_verification_valide/code.html">
+        <div class="thumb"><span class="badge">Desktop</span><img loading="lazy" src="resultat_de_verification_valide/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Résultat — Validé</h3><p>Rapport d'analyse pour un document valide.</p></div>
+      </a>
+      <a class="card" href="resultat_de_verification_revoque/code.html">
+        <div class="thumb"><span class="badge">Desktop</span><img loading="lazy" src="resultat_de_verification_revoque/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Résultat — Révoqué</h3><p>Rapport d'analyse pour un document révoqué.</p></div>
+      </a>
+      <a class="card" href="code_inconnu/code.html">
+        <div class="thumb"><span class="badge">Desktop</span><img loading="lazy" src="code_inconnu/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Code inconnu</h3><p>État d'erreur — code introuvable.</p></div>
+      </a>
+      <a class="card" href="comparaison_de_fichiers/code.html">
+        <div class="thumb"><span class="badge">Desktop</span><img loading="lazy" src="comparaison_de_fichiers/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Comparaison de fichiers</h3><p>Vérification par comparaison de deux fichiers.</p></div>
+      </a>
+    </div>
+  </section>
+
+  <section class="group" id="tracabilite">
+    <div class="group-head"><h2>Traçabilité</h2><span>2 écrans</span></div>
+    <div class="grid">
+      <a class="card" href="historique_de_tracabilite_desktop/code.html">
+        <div class="thumb"><span class="badge">Desktop</span><img loading="lazy" src="historique_de_tracabilite_desktop/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Historique de traçabilité</h3><p>Timeline de garde d'un actif physique.</p></div>
+      </a>
+      <a class="card" href="tracabilite_mobile/code.html">
+        <div class="thumb"><span class="badge">Mobile</span><img loading="lazy" src="tracabilite_mobile/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Traçabilité mobile</h3><p>Suivi de la chaîne de garde sur mobile.</p></div>
+      </a>
+    </div>
+  </section>
+
+  <section class="group" id="mobile-enreg">
+    <div class="group-head"><h2>Mobile — Enregistrement physique</h2><span>6 écrans</span></div>
+    <div class="grid">
+      <a class="card" href="enregistrement_physique_etape_1/code.html">
+        <div class="thumb"><span class="badge">Mobile</span><img loading="lazy" src="enregistrement_physique_etape_1/screen.png" alt=""/></div>
+        <div class="card-body"><h3>1. Étape 1</h3><p>Démarrage de l'enregistrement physique.</p></div>
+      </a>
+      <a class="card" href="capture_document_mobile/code.html">
+        <div class="thumb"><span class="badge">Mobile</span><img loading="lazy" src="capture_document_mobile/screen.png" alt=""/></div>
+        <div class="card-body"><h3>2. Capture caméra</h3><p>Scan du document en mode sécurisé.</p></div>
+      </a>
+      <a class="card" href="code_et_etiquette_mobile/code.html">
+        <div class="thumb"><span class="badge">Mobile</span><img loading="lazy" src="code_et_etiquette_mobile/screen.png" alt=""/></div>
+        <div class="card-body"><h3>3. Code &amp; étiquette</h3><p>Association d'un code de suivi physique.</p></div>
+      </a>
+      <a class="card" href="observations_etape_2/code.html">
+        <div class="thumb"><span class="badge">Mobile</span><img loading="lazy" src="observations_etape_2/screen.png" alt=""/></div>
+        <div class="card-body"><h3>4. Observations</h3><p>Points de contrôle du document.</p></div>
+      </a>
+      <a class="card" href="confirmation_d_enregistrement_mobile/code.html">
+        <div class="thumb"><span class="badge">Mobile</span><img loading="lazy" src="confirmation_d_enregistrement_mobile/screen.png" alt=""/></div>
+        <div class="card-body"><h3>5. Confirmation</h3><p>Écran de succès de l'enregistrement.</p></div>
+      </a>
+      <a class="card" href="declarer_un_incident_mobile/code.html">
+        <div class="thumb"><span class="badge">Mobile</span><img loading="lazy" src="declarer_un_incident_mobile/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Déclarer un incident</h3><p>Branche alternative en cas d'anomalie.</p></div>
+      </a>
+    </div>
+  </section>
+
+  <section class="group" id="mobile-transfert">
+    <div class="group-head"><h2>Mobile — Transfert de garde</h2><span>2 écrans</span></div>
+    <div class="grid">
+      <a class="card" href="demande_de_transfert_mobile/code.html">
+        <div class="thumb"><span class="badge">Mobile</span><img loading="lazy" src="demande_de_transfert_mobile/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Demande de transfert</h3><p>Initier un transfert de garde vers un tiers.</p></div>
+      </a>
+      <a class="card" href="reception_de_transfert_mobile/code.html">
+        <div class="thumb"><span class="badge">Mobile</span><img loading="lazy" src="reception_de_transfert_mobile/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Réception de transfert</h3><p>Confirmation de réception côté destinataire.</p></div>
+      </a>
+    </div>
+  </section>
+
+  <section class="group" id="admin">
+    <div class="group-head"><h2>Administration</h2><span>3 écrans</span></div>
+    <div class="grid">
+      <a class="card" href="gestion_des_utilisateurs_admin/code.html">
+        <div class="thumb"><span class="badge">Admin</span><img loading="lazy" src="gestion_des_utilisateurs_admin/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Gestion des utilisateurs</h3><p>Rôles, statuts, invitations.</p></div>
+      </a>
+      <a class="card" href="journal_d_audit_admin/code.html">
+        <div class="thumb"><span class="badge">Admin</span><img loading="lazy" src="journal_d_audit_admin/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Journal d'audit</h3><p>Historique des actions sur la plateforme.</p></div>
+      </a>
+      <a class="card" href="matrice_des_permissions_admin/code.html">
+        <div class="thumb"><span class="badge">Admin</span><img loading="lazy" src="matrice_des_permissions_admin/screen.png" alt=""/></div>
+        <div class="card-body"><h3>Matrice des permissions</h3><p>Droits d'accès par rôle.</p></div>
+      </a>
+    </div>
+  </section>
+</main>
+<footer>SignSecure TrustFlow — prototype front-end statique (Stitch → HTML/Tailwind). 28 écrans, aucune donnée réelle.</footer>
+</body>
+</html>

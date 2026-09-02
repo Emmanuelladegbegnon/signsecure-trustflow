@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignSecure TrustFlow - Comparaison de Fichier</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#a3faef",
+                        "surface-container": "#eceef0",
+                        "primary-fixed-dim": "#80d5cb",
+                        "outline": "#6e7977",
+                        "primary-fixed": "#9cf2e8",
+                        "surface-dim": "#d8dadc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "secondary": "#565e74",
+                        "on-secondary-container": "#5c647a",
+                        "secondary-fixed": "#dae2fd",
+                        "inverse-surface": "#2d3133",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-surface": "#191c1e",
+                        "surface": "#f7f9fb",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary-fixed": "#131b2e",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#006a63",
+                        "tertiary-fixed": "#d3e4fe",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "primary-container": "#0f766e",
+                        "surface-container-high": "#e6e8ea",
+                        "on-background": "#191c1e",
+                        "surface-variant": "#e0e3e5",
+                        "inverse-primary": "#80d5cb",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "primary": "#005c55",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#5a6a81",
+                        "outline-variant": "#bdc9c6",
+                        "on-primary-fixed": "#00201d",
+                        "surface-bright": "#f7f9fb",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-primary-fixed-variant": "#00504a",
+                        "background": "#f7f9fb",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#deeaff",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-container": "#dae2fd",
+                        "tertiary": "#425268",
+                        "on-surface-variant": "#3e4947"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "container-max": "1280px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .dropzone-active {
+            border-color: #005c55 !important;
+            background-color: #0f766e10 !important;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="docked full-width top-0 bg-white shadow-sm flex justify-between items-center w-full h-16 px-gutter ml-[280px] z-40 lg:flex hidden">
+<div class="font-headline-sm text-headline-sm font-black text-primary">SignSecure TrustFlow</div>
+<div class="flex items-center gap-4">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Démonstration</span>
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center font-label-md text-on-surface-variant">
+                AK
+            </div>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="hidden lg:flex flex-col h-screen p-unit overflow-y-auto fixed left-0 top-0 w-[280px] border-r border-outline-variant bg-surface shadow-sm z-50">
+<div class="p-4 mb-4">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-headline-md mb-2">AK</div>
+<div class="font-headline-sm text-headline-sm text-primary">Awa KONE</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">Superviseur</div>
+</div>
+<button class="bg-primary text-on-primary rounded-lg py-2 px-4 mb-6 font-label-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+            Nouveau Document
+        </button>
+<div class="flex-grow flex flex-col gap-2">
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Tableau de bord</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">edit_document</span>
+<span class="font-label-md text-label-md">Signer</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-primary font-bold border-r-4 border-primary bg-primary-container/10 opacity-90 transition-opacity duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="font-label-md text-label-md">Vérifier</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Tracer</span>
+</a>
+</div>
+<div class="mt-auto border-t border-outline-variant pt-4 flex flex-col gap-2">
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Paramètres</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-error hover:bg-error-container transition-colors" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Déconnexion</span>
+</a>
+</div>
+</nav>
+<!-- BottomNavBar (Mobile) -->
+<nav class="lg:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-surface border-t border-outline-variant shadow-lg rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined mb-1">dashboard</span>
+<span class="font-label-sm text-label-sm">Tableau</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined mb-1">history_edu</span>
+<span class="font-label-sm text-label-sm">Signer</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">qr_code_scanner</span>
+<span class="font-label-sm text-label-sm">Vérifier</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined mb-1">track_changes</span>
+<span class="font-label-sm text-label-sm">Tracer</span>
+</a>
+</nav>
+<!-- Main Content Canvas -->
+<main class="lg:ml-[280px] lg:mt-16 p-margin-mobile lg:p-margin-desktop min-h-screen pb-24 lg:pb-margin-desktop flex flex-col gap-8 max-w-container-max mx-auto">
+<!-- Header Section -->
+<div>
+<div class="flex items-center gap-2 mb-2">
+<button class="p-2 rounded-full hover:bg-surface-variant transition-colors text-on-surface-variant lg:hidden">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Vérification par fichier</h1>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">
+                Comparez le document soumis avec la référence originale enregistrée dans la blockchain. Téléversez le fichier suspecté pour lancer l'analyse structurelle et cryptographique.
+            </p>
+</div>
+<!-- Layout Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+<!-- Left: Reference Document Details Card -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0px_1px_3px_rgba(15,23,42,0.1)] border border-outline-variant/30 flex flex-col gap-6">
+<div class="flex items-center gap-4 pb-4 border-b border-outline-variant/30">
+<div class="w-12 h-12 rounded-lg bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed">
+<span class="material-symbols-outlined text-2xl">description</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Document de Référence</h2>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#e6f4ea] text-[#1e8e3e]">
+<span class="material-symbols-outlined text-[14px] mr-1">check_circle</span>
+                                Validé
+                            </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">ID: 8F4A-99B2</span>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant">Nom du fichier</span>
+<span class="font-body-md text-body-md font-medium text-on-surface truncate max-w-[200px]">Contrat_Partenariat_Final.pdf</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant">Signataire</span>
+<span class="font-body-md text-body-md font-medium text-on-surface">Jean Dupont (Directeur)</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant">Date d'enregistrement</span>
+<span class="font-body-md text-body-md font-medium text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+                            12 Oct 2023, 14:30
+                        </span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant">Empreinte (SHA-256)</span>
+<span class="font-body-sm text-body-sm font-mono text-secondary truncate max-w-[150px] bg-surface-variant px-2 py-1 rounded">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</span>
+</div>
+</div>
+</div>
+<!-- Right: Drag and Drop Zone -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0px_1px_3px_rgba(15,23,42,0.1)] border border-outline-variant/30 flex flex-col h-full">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-4">Fichier à comparer</h2>
+<div class="flex-grow flex flex-col items-center justify-center border-2 border-dashed border-outline-variant rounded-xl bg-surface p-8 text-center transition-colors hover:bg-surface-container-high cursor-pointer relative group min-h-[250px]" id="dropzone">
+<input accept=".pdf" aria-label="Téléverser un fichier PDF pour comparaison" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" type="file"/>
+<div class="w-16 h-16 rounded-full bg-primary-container/20 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl">upload_file</span>
+</div>
+<p class="font-headline-sm text-headline-sm text-on-surface mb-2">Glissez-déposez le PDF ici</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4">ou cliquez pour parcourir</p>
+<button class="bg-surface-container-lowest border border-outline text-on-surface font-label-md py-2 px-4 rounded-lg shadow-sm" type="button">
+                        Sélectionner un fichier
+                    </button>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-4 opacity-70">Format supporté: PDF. Taille max: 10 Mo.</p>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple script to handle drag and drop visual state
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = dropzone.querySelector('input[type="file"]');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropzone.classList.add('dropzone-active');
+        }
+
+        function unhighlight(e) {
+            dropzone.classList.remove('dropzone-active');
+        }
+
+        dropzone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            let dt = e.dataTransfer;
+            let files = dt.files;
+            
+            if(files.length) {
+                fileInput.files = files;
+                // In a real app, this would trigger the comparison process
+                console.log("File dropped:", files[0].name);
+            }
+        }
+    </script>
+<a href="../index.html" style="position:fixed;bottom:84px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:6px;background:#191c1e;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.25);text-decoration:none;opacity:.85;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85" title="Retour au prototype SignSecure TrustFlow">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+Prototype
+</a>
+</body></html>

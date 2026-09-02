@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignSecure TrustFlow - Capture de Document</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#a3faef",
+                        "surface-container": "#eceef0",
+                        "primary-fixed-dim": "#80d5cb",
+                        "outline": "#6e7977",
+                        "primary-fixed": "#9cf2e8",
+                        "surface-dim": "#d8dadc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "secondary": "#565e74",
+                        "on-secondary-container": "#5c647a",
+                        "secondary-fixed": "#dae2fd",
+                        "inverse-surface": "#2d3133",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-surface": "#191c1e",
+                        "surface": "#f7f9fb",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary-fixed": "#131b2e",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#006a63",
+                        "tertiary-fixed": "#d3e4fe",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "primary-container": "#0f766e",
+                        "surface-container-high": "#e6e8ea",
+                        "on-background": "#191c1e",
+                        "surface-variant": "#e0e3e5",
+                        "inverse-primary": "#80d5cb",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "primary": "#005c55",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#5a6a81",
+                        "outline-variant": "#bdc9c6",
+                        "on-primary-fixed": "#00201d",
+                        "surface-bright": "#f7f9fb",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-primary-fixed-variant": "#00504a",
+                        "background": "#f7f9fb",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#deeaff",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-container": "#dae2fd",
+                        "tertiary": "#425268",
+                        "on-surface-variant": "#3e4947"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "container-max": "1280px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                },
+            }
+        }
+    </script>
+<style>
+        /* Essential utility for material icons */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Camera UI specific styles */
+        .camera-overlay {
+            background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.6) 100%);
+        }
+        
+        .viewfinder-corner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #80d5cb; /* primary-fixed-dim */
+            position: absolute;
+        }
+        
+        .corner-tl { top: 0; left: 0; border-right: none; border-bottom: none; border-top-left-radius: 12px; }
+        .corner-tr { top: 0; right: 0; border-left: none; border-bottom: none; border-top-right-radius: 12px; }
+        .corner-bl { bottom: 0; left: 0; border-right: none; border-top: none; border-bottom-left-radius: 12px; }
+        .corner-br { bottom: 0; right: 0; border-left: none; border-top: none; border-bottom-right-radius: 12px; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-black text-white h-screen overflow-hidden font-body-sm selection:bg-primary-container selection:text-on-primary-container relative">
+<!-- Top App Bar (Custom for Camera) -->
+<header class="absolute top-0 w-full z-40 flex justify-between items-center px-4 py-4 bg-gradient-to-b from-black/80 to-transparent">
+<button class="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm text-white hover:bg-black/60 transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
+<span class="material-symbols-outlined text-[16px] text-primary-fixed-dim fill">shield</span>
+<span class="font-label-sm text-label-sm text-white uppercase tracking-wider">Mode Sécurisé</span>
+</div>
+<button class="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm text-white hover:bg-black/60 transition-colors">
+<span class="material-symbols-outlined">flash_auto</span>
+</button>
+</header>
+<!-- Camera Feed Background (Simulated) -->
+<div class="absolute inset-0 z-0 bg-zinc-900">
+<!-- Using a placeholder image to simulate camera feed of a document on a desk -->
+<div class="w-full h-full bg-cover bg-center opacity-70" data-alt="A top-down view of a formal legal document lying flat on a dark wooden desk, simulated as a camera feed. The document is white with dense black text and official stamps. The lighting is slightly uneven, mimicking an office environment. The mood is serious and professional, fitting a bank-grade document scanning context. High contrast, realistic textures." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBXQzikcVJDnqTn44ZhNb_GsU-pmElc8DVfR3q2Kj8j7_VVtuflRMla9_w523GwYwycZyfhMx2FRpHPMFYh87pia6SaCsY4hcg-aFV5eHRuUZYbUNO7JOfL6-Jay1cn4AmnDYGNe7VsfHlHcOESIpW3fJt8d87nAC5_GMnpxPe-cOpr1LYDzQrfA01zHXbxW4ziJ5pFJ65G-_tmm2EvO5aJ2ubb-qSSdsRtdGrX1UZNOuFlLvVderdz')">
+</div>
+<div class="absolute inset-0 camera-overlay"></div>
+</div>
+<!-- Viewfinder Area -->
+<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[85%] h-[60%] max-w-md max-h-[800px] z-10 flex flex-col justify-center items-center">
+<!-- Reticle corners -->
+<div class="relative w-full h-full border border-white/20 rounded-xl overflow-hidden shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
+<div class="viewfinder-corner corner-tl"></div>
+<div class="viewfinder-corner corner-tr"></div>
+<div class="viewfinder-corner corner-bl"></div>
+<div class="viewfinder-corner corner-br"></div>
+<!-- Scanning Animation Line -->
+<div class="absolute w-full h-0.5 bg-primary-fixed-dim/80 shadow-[0_0_8px_2px_rgba(128,213,203,0.5)] top-1/2 left-0 animate-[scan_2s_ease-in-out_infinite]"></div>
+</div>
+<div class="mt-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary-fixed-dim animate-pulse">document_scanner</span>
+<span class="font-label-md text-label-md text-white">Maintenez le document stable</span>
+</div>
+</div>
+<!-- Bottom Controls Area -->
+<div class="absolute bottom-0 w-full z-30 bg-gradient-to-t from-black via-black/90 to-transparent pb-8 pt-12 px-4 flex flex-col gap-6">
+<!-- Thumbnail Strip -->
+<div class="w-full overflow-x-auto flex gap-3 px-2 pb-2 snap-x hide-scrollbar">
+<!-- Scanned Page 1 -->
+<div class="relative w-16 h-20 bg-white rounded-md shrink-0 snap-center border-2 border-primary-fixed-dim overflow-hidden shadow-lg">
+<div class="w-full h-full bg-cover bg-center" data-alt="A small, blurry thumbnail of a scanned white document with text, representing a successfully captured page in a digital scanning application. Clean, professional look." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuArmd7NrGKIrpyNSEgagKJb2IQMLoiZDyIG76SpARXVugQUa-KlICHOPFBX3N-AQ_u0XTdwz0yt5UrhF4uueaMTif-B2c3OdyxZDmuPq8KEYPe3thp_MReSncfVsfx6XD1cRh3aLqWA-EHIzuLT4R_w_p57C6vrSaccE_3tbjU9wIjj9vFo28HtJW2mqpKeohULdJ3rMz97DNcBeWxXWTdmA3E_PkZ9wLsVY7s9C7c_fz9NYUWI8LK1')"></div>
+<div class="absolute bottom-0 right-0 bg-primary-fixed-dim text-on-primary-fixed w-5 h-5 flex items-center justify-center rounded-tl-md font-label-sm text-[10px]">1</div>
+</div>
+<!-- Scanned Page 2 -->
+<div class="relative w-16 h-20 bg-white rounded-md shrink-0 snap-center border border-white/30 overflow-hidden opacity-80">
+<div class="w-full h-full bg-cover bg-center" data-alt="A small, blurry thumbnail of a second scanned white document, representing another successfully captured page. Clean, professional look." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA9qwtoHnh9Tb1ZolcPzFg-36NmfivY-Su-ryWkYIDPAc41fxNp3XIKCG2rKmpA_vLS2Ce1wfm_jicOQxo5mk3Fpw3rhLI5awFfUNpmhmFOpX34Wa_QE6brYS82WGrLbyXedytTDu3uK4duw4dyBssRFXkz5qyN5VFPfe3L4Vlncv69MC2oK1_fXcbG2iDACkp-VWQkYJV1RdNUEGt2DTgGJfzalZQG9NkVMTQeucQspxXTvJOluoS2')"></div>
+<div class="absolute bottom-0 right-0 bg-black/60 text-white w-5 h-5 flex items-center justify-center rounded-tl-md font-label-sm text-[10px]">2</div>
+</div>
+</div>
+<!-- Action Buttons & Capture -->
+<div class="flex justify-between items-center w-full max-w-sm mx-auto">
+<button class="flex flex-col items-center gap-1 opacity-80 hover:opacity-100 transition-opacity p-2">
+<span class="material-symbols-outlined text-white">note_add</span>
+<span class="font-label-sm text-[10px] text-white">Ajouter</span>
+</button>
+<!-- Large Capture Button -->
+<button class="relative w-20 h-20 rounded-full border-4 border-white flex items-center justify-center group active:scale-95 transition-transform duration-150">
+<div class="w-16 h-16 bg-white rounded-full flex items-center justify-center group-hover:bg-primary-fixed-dim transition-colors duration-300">
+<div class="w-14 h-14 rounded-full border-2 border-black/10"></div>
+</div>
+</button>
+<button class="flex flex-col items-center gap-1 p-2 bg-primary-container text-on-primary-container rounded-lg px-4 py-2 font-label-md text-label-md" onclick="location.href='../code_et_etiquette_mobile/code.html';">
+                Terminer
+                <span class="font-label-sm text-[10px] opacity-80">(2 pages)</span>
+</button>
+</div>
+</div>
+<style>
+        @keyframes scan {
+            0% { top: 5%; }
+            50% { top: 95%; }
+            100% { top: 5%; }
+        }
+        
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<a href="../index.html" style="position:fixed;bottom:84px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:6px;background:#191c1e;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.25);text-decoration:none;opacity:.85;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85" title="Retour au prototype SignSecure TrustFlow">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+Prototype
+</a>
+</body></html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignSecure TrustFlow - Confirmation d'Enregistrement</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error": "#ba1a1a",
+                      "on-primary-container": "#a3faef",
+                      "surface-container": "#eceef0",
+                      "primary-fixed-dim": "#80d5cb",
+                      "outline": "#6e7977",
+                      "primary-fixed": "#9cf2e8",
+                      "surface-dim": "#d8dadc",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-fixed": "#0b1c30",
+                      "secondary": "#565e74",
+                      "on-secondary-container": "#5c647a",
+                      "secondary-fixed": "#dae2fd",
+                      "inverse-surface": "#2d3133",
+                      "inverse-on-surface": "#eff1f3",
+                      "on-surface": "#191c1e",
+                      "surface": "#f7f9fb",
+                      "surface-container-low": "#f2f4f6",
+                      "on-secondary-fixed": "#131b2e",
+                      "on-tertiary": "#ffffff",
+                      "surface-tint": "#006a63",
+                      "tertiary-fixed": "#d3e4fe",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#38485d",
+                      "primary-container": "#0f766e",
+                      "surface-container-high": "#e6e8ea",
+                      "on-background": "#191c1e",
+                      "surface-variant": "#e0e3e5",
+                      "inverse-primary": "#80d5cb",
+                      "on-secondary-fixed-variant": "#3f465c",
+                      "primary": "#005c55",
+                      "on-error": "#ffffff",
+                      "tertiary-container": "#5a6a81",
+                      "outline-variant": "#bdc9c6",
+                      "on-primary-fixed": "#00201d",
+                      "surface-bright": "#f7f9fb",
+                      "on-primary": "#ffffff",
+                      "secondary-fixed-dim": "#bec6e0",
+                      "tertiary-fixed-dim": "#b7c8e1",
+                      "on-primary-fixed-variant": "#00504a",
+                      "background": "#f7f9fb",
+                      "error-container": "#ffdad6",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-container": "#deeaff",
+                      "surface-container-highest": "#e0e3e5",
+                      "secondary-container": "#dae2fd",
+                      "tertiary": "#425268",
+                      "on-surface-variant": "#3e4947"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "gutter": "24px",
+                      "margin-mobile": "16px",
+                      "container-max": "1280px",
+                      "margin-desktop": "32px"
+              },
+              "fontFamily": {
+                      "body-sm": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "body-md": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "display": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-sm": ["Inter"]
+              },
+              "fontSize": {
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "display": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                      "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[style*="FILL' 1"] {
+          font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Subtle entrance animation for the confirmation card */
+        @keyframes slideUpFade {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-entrance {
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        
+        /* Confetti or success burst effect (CSS only version) */
+        @keyframes pulseSuccess {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 92, 85, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(0, 92, 85, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 92, 85, 0); }
+        }
+        .success-icon-pulse {
+            animation: pulseSuccess 2s infinite;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background h-screen flex flex-col font-body-md overflow-x-hidden">
+<!-- Top Navigation (Suppressed per instructions for Transactional/Success screens, but adding a simplified header for context as it's a mobile screen without nav) -->
+<header class="w-full h-16 flex items-center px-margin-mobile bg-white shadow-sm z-40 relative">
+<h1 class="font-headline-sm text-headline-sm font-black text-primary">SignSecure TrustFlow</h1>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto px-margin-mobile py-8 pb-32 flex flex-col items-center justify-start">
+<!-- Success Indicator -->
+<div class="mb-8 flex flex-col items-center animate-entrance" style="animation-delay: 0.1s;">
+<div class="w-20 h-20 bg-primary-container rounded-full flex items-center justify-center mb-4 success-icon-pulse">
+<span class="material-symbols-outlined text-4xl text-on-primary-container" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-center text-on-surface mb-2">Enregistrement Confirmé</h2>
+<p class="font-body-md text-body-md text-on-surface-variant text-center max-w-[280px]">
+                Votre document a été sécurisé et enregistré avec succès dans le registre immuable.
+            </p>
+</div>
+<!-- Summary Card (Bento-style layout) -->
+<div class="w-full max-w-[400px] bg-white rounded-xl shadow-sm border border-outline-variant p-5 mb-8 animate-entrance" style="animation-delay: 0.2s;">
+<div class="flex items-start justify-between border-b border-outline-variant pb-4 mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-surface-container-high rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="description">description</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Contrat_Prestation_v2.pdf</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">2.4 MB • PDF</p>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<!-- Metadata Item -->
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Identifiant Unique (Hash)</span>
+<div class="flex items-center justify-between bg-surface-container-lowest border border-outline-variant rounded p-2">
+<span class="font-body-sm text-body-sm text-on-surface truncate font-mono">8f4e9b2c1a...3d7e5f6g8h</span>
+<button aria-label="Copy Hash" class="text-primary hover:bg-surface-container p-1 rounded transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="content_copy">content_copy</span>
+</button>
+</div>
+</div>
+<!-- Grid for smaller metadata -->
+<div class="grid grid-cols-2 gap-4">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1">Date d'Enregistrement</span>
+<span class="font-body-md text-body-md text-on-surface">24 Oct 2023</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1">Heure (UTC)</span>
+<span class="font-body-md text-body-md text-on-surface">14:32:45</span>
+</div>
+</div>
+<!-- Status Chip -->
+<div class="mt-4 flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Statut:</span>
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-primary-container text-on-primary-container font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px] mr-1" data-icon="verified">verified</span>
+                        Scellé &amp; Valide
+                    </span>
+</div>
+</div>
+<!-- Document Thumbnail (Abstract representation) -->
+<div class="mt-5 w-full h-32 rounded-lg overflow-hidden border border-outline-variant relative bg-surface-container-low group cursor-pointer">
+<img class="w-full h-full object-cover opacity-80 mix-blend-multiply" data-alt="A macro shot of a crisp, white legal document with subtle, abstract geometric patterns representing digital encryption overlays. The lighting is bright and clean, emphasizing a modern corporate aesthetic with deep teal accents on the document's edge. The focus is sharp on a stylized signature area, conveying trust and legal authority." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCh2d7I1BvzdrlqAxKaWEqYCvOsC8Ey7m7SJJ7wYx_Abk2CLqxm93ABVyam5Nyr9dFu-s7mnMM7HBfXtEBd4vw9vl7B_7J9HWTY_Y68Lgu_3Z6hvKlmnoZy61ioYFWIbVBXCYmdQ_GYKvwzDEDuFjuMIbNGwXE0u-FLiESekPOn9tmkC1uX1SlyQ9C_EoMmT1IGJiWEW_0a-H8RAj-wMTMo928IGFmjODlXpozSpuEC-aXLKYhqxY13"/>
+<div class="absolute inset-0 flex items-center justify-center bg-inverse-surface/40 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white text-3xl" data-icon="visibility">visibility</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Sticky Bottom Action -->
+<div class="fixed bottom-0 left-0 w-full p-margin-mobile bg-surface/90 backdrop-blur-md border-t border-outline-variant shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50">
+<button class="w-full h-12 bg-primary text-on-primary font-label-md text-label-md rounded-lg flex items-center justify-center gap-2 hover:bg-on-primary-fixed-variant transition-colors shadow-sm animate-entrance" style="animation-delay: 0.4s;">
+<span class="material-symbols-outlined" data-icon="qr_code">qr_code</span>
+            Générer le code de suivi
+        </button>
+<button class="w-full mt-3 h-10 text-primary font-label-md text-label-md rounded flex items-center justify-center hover:bg-surface-container-high transition-colors animate-entrance" style="animation-delay: 0.5s;">
+            Retour à l'accueil
+        </button>
+</div>
+<script>
+        // Simple script to handle copy action simulation
+        document.querySelectorAll('button[aria-label="Copy Hash"]').forEach(button => {
+            button.addEventListener('click', function() {
+                const icon = this.querySelector('.material-symbols-outlined');
+                const originalIcon = icon.getAttribute('data-icon');
+                
+                // Change to checkmark temporarily
+                icon.setAttribute('data-icon', 'check');
+                icon.textContent = 'check';
+                icon.classList.add('text-primary');
+                
+                setTimeout(() => {
+                    icon.setAttribute('data-icon', originalIcon);
+                    icon.textContent = originalIcon;
+                }, 2000);
+            });
+        });
+    </script>
+<a href="../index.html" style="position:fixed;bottom:84px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:6px;background:#191c1e;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.25);text-decoration:none;opacity:.85;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85" title="Retour au prototype SignSecure TrustFlow">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+Prototype
+</a>
+</body></html>

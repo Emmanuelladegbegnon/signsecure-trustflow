@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignSecure TrustFlow - Tableau de bord</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config injected from Style Guidance -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error": "#ba1a1a",
+                      "on-primary-container": "#a3faef",
+                      "surface-container": "#eceef0",
+                      "primary-fixed-dim": "#80d5cb",
+                      "outline": "#6e7977",
+                      "primary-fixed": "#9cf2e8",
+                      "surface-dim": "#d8dadc",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-fixed": "#0b1c30",
+                      "secondary": "#565e74",
+                      "on-secondary-container": "#5c647a",
+                      "secondary-fixed": "#dae2fd",
+                      "inverse-surface": "#2d3133",
+                      "inverse-on-surface": "#eff1f3",
+                      "on-surface": "#191c1e",
+                      "surface": "#f7f9fb",
+                      "surface-container-low": "#f2f4f6",
+                      "on-secondary-fixed": "#131b2e",
+                      "on-tertiary": "#ffffff",
+                      "surface-tint": "#006a63",
+                      "tertiary-fixed": "#d3e4fe",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#38485d",
+                      "primary-container": "#0f766e",
+                      "surface-container-high": "#e6e8ea",
+                      "on-background": "#191c1e",
+                      "surface-variant": "#e0e3e5",
+                      "inverse-primary": "#80d5cb",
+                      "on-secondary-fixed-variant": "#3f465c",
+                      "primary": "#005c55",
+                      "on-error": "#ffffff",
+                      "tertiary-container": "#5a6a81",
+                      "outline-variant": "#bdc9c6",
+                      "on-primary-fixed": "#00201d",
+                      "surface-bright": "#f7f9fb",
+                      "on-primary": "#ffffff",
+                      "secondary-fixed-dim": "#bec6e0",
+                      "tertiary-fixed-dim": "#b7c8e1",
+                      "on-primary-fixed-variant": "#00504a",
+                      "background": "#f7f9fb",
+                      "error-container": "#ffdad6",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-container": "#deeaff",
+                      "surface-container-highest": "#e0e3e5",
+                      "secondary-container": "#dae2fd",
+                      "tertiary": "#425268",
+                      "on-surface-variant": "#3e4947"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "gutter": "24px",
+                      "margin-mobile": "16px",
+                      "container-max": "1280px",
+                      "margin-desktop": "32px"
+              },
+              "fontFamily": {
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "display": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-sm": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "30px",
+                              {
+                                      "lineHeight": "38px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display": [
+                              "36px",
+                              {
+                                      "lineHeight": "44px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-family: 'Material Symbols Outlined';
+          font-weight: normal;
+          font-style: normal;
+          font-size: 24px;
+          line-height: 1;
+          letter-spacing: normal;
+          text-transform: none;
+          display: inline-block;
+          white-space: nowrap;
+          word-wrap: normal;
+          direction: ltr;
+          -webkit-font-feature-settings: 'liga';
+          -webkit-font-smoothing: antialiased;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen">
+<!-- SideNavBar -->
+<aside class="hidden md:flex fixed left-0 top-0 h-full w-[280px] bg-surface border-r border-outline-variant shadow-sm flex-col p-unit overflow-y-auto z-50">
+<!-- Brand -->
+<div class="px-4 py-6 mb-4">
+<span class="font-headline-md text-headline-md font-bold text-primary">SignSecure TrustFlow</span>
+</div>
+<!-- User Profile Area -->
+<div class="px-4 mb-8 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+                AK
+            </div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-bold">Awa KONE</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Superviseur</p>
+</div>
+</div>
+<!-- CTA -->
+<div class="px-4 mb-6">
+<button class="w-full bg-primary text-on-primary py-3 px-4 rounded-lg font-label-md text-label-md font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors" onclick="location.href='../nouveau_dossier_upload/code.html';">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+                Nouveau Document
+            </button>
+</div>
+<!-- Navigation Tabs -->
+<nav class="flex-1 space-y-2 px-2">
+<!-- Active Tab: Tableau de bord -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-bold border-r-4 border-primary bg-primary-container/10 opacity-90 transition-opacity duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-md text-label-md">Tableau de bord</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">edit_document</span>
+<span class="font-label-md text-label-md">Signer</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">verified_user</span>
+<span class="font-label-md text-label-md">Vérifier</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Tracer</span>
+</a>
+</nav>
+<!-- Footer Tabs -->
+<div class="mt-auto space-y-2 px-2 pb-4 pt-6 border-t border-outline-variant">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Paramètres</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Déconnexion</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="hidden md:flex justify-between items-center w-full h-16 px-gutter ml-[280px] z-40 bg-white shadow-sm fixed top-0 right-0 left-0" style="width: calc(100% - 280px);">
+<!-- Empty left side on desktop as brand is in side nav, could hold breadcrumbs or page title -->
+<div class="flex items-center">
+<h1 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Tableau de bord</h1>
+</div>
+<div class="flex items-center gap-4">
+<!-- Search Icon (Placeholder for on_right logic) -->
+<button class="p-2 text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="text-primary font-label-sm text-label-sm font-bold border border-outline-variant rounded px-4 py-2 hover:bg-surface-container-low transition-colors">
+                Démonstration
+            </button>
+<!-- User Avatar -->
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface font-label-sm text-label-sm ml-2">
+                AK
+            </div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="pt-[80px] pb-24 md:pb-8 px-margin-mobile md:px-margin-desktop md:ml-[280px] max-w-container-max mx-auto">
+<!-- Greeting -->
+<div class="mb-8">
+<h2 class="font-display text-display text-on-surface mb-2">Bonjour, Awa</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Voici un aperçu de vos activités de confiance aujourd'hui.</p>
+</div>
+<!-- Primary Action Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+<!-- Action 1: Signer -->
+<button class="bg-primary text-on-primary p-6 rounded-xl shadow-[0px_1px_3px_rgba(15,23,42,0.1)] flex flex-col items-start gap-4 hover:bg-primary/90 transition-colors text-left group" onclick="location.href='../nouveau_dossier_upload/code.html';">
+<div class="p-3 bg-white/20 rounded-lg group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">edit_document</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm font-bold mb-1">Signer un document</h3>
+<p class="font-body-sm text-body-sm text-on-primary/80">Initier un nouveau flux de signature sécurisé.</p>
+</div>
+</button>
+<!-- Action 2: Vérifier -->
+<button class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl shadow-[0px_1px_3px_rgba(15,23,42,0.1)] flex flex-col items-start gap-4 hover:border-primary hover:shadow-md transition-all text-left group" onclick="location.href='../verification_publique/code.html';">
+<div class="p-3 bg-surface-container rounded-lg group-hover:bg-primary/10 transition-colors text-primary">
+<span class="material-symbols-outlined text-3xl">verified_user</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mb-1">Vérifier un code</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Scanner un QR code pour authentifier.</p>
+</div>
+</button>
+<!-- Action 3: Tracer -->
+<button class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl shadow-[0px_1px_3px_rgba(15,23,42,0.1)] flex flex-col items-start gap-4 hover:border-primary hover:shadow-md transition-all text-left group" onclick="location.href='../historique_de_tracabilite_desktop/code.html';">
+<div class="p-3 bg-surface-container rounded-lg group-hover:bg-primary/10 transition-colors text-primary">
+<span class="material-symbols-outlined text-3xl">inventory_2</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mb-1">Tracer un document</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Suivre le cycle de vie d'un actif physique.</p>
+</div>
+</button>
+</div>
+<!-- Stat Cards Grid -->
+<h3 class="font-headline-md text-headline-md text-on-surface mb-6">Vue d'ensemble</h3>
+<div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
+<!-- Stat 1 -->
+<div class="bg-surface-container-lowest p-5 rounded-lg border border-outline-variant shadow-sm flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2">Documents Signés</span>
+<div class="flex items-end justify-between">
+<span class="font-headline-lg text-headline-lg text-on-surface">1,284</span>
+<span class="flex items-center text-primary font-label-sm text-label-sm bg-primary/10 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-[16px] mr-1">trending_up</span>+12%
+                    </span>
+</div>
+</div>
+<!-- Stat 2 -->
+<div class="bg-surface-container-lowest p-5 rounded-lg border border-outline-variant shadow-sm flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2">En Attente</span>
+<div class="flex items-end justify-between">
+<span class="font-headline-lg text-headline-lg text-on-surface">42</span>
+<span class="flex items-center text-secondary font-label-sm text-label-sm bg-surface-container px-2 py-1 rounded">
+<span class="material-symbols-outlined text-[16px] mr-1">trending_flat</span>0%
+                    </span>
+</div>
+</div>
+<!-- Stat 3 -->
+<div class="bg-surface-container-lowest p-5 rounded-lg border border-outline-variant shadow-sm flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2">Vérifications (Mois)</span>
+<div class="flex items-end justify-between">
+<span class="font-headline-lg text-headline-lg text-on-surface">8,930</span>
+<span class="flex items-center text-primary font-label-sm text-label-sm bg-primary/10 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-[16px] mr-1">trending_up</span>+5.4%
+                    </span>
+</div>
+</div>
+<!-- Stat 4 -->
+<div class="bg-surface-container-lowest p-5 rounded-lg border border-outline-variant shadow-sm flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2">Anomalies Détectées</span>
+<div class="flex items-end justify-between">
+<span class="font-headline-lg text-headline-lg text-on-surface">3</span>
+<span class="flex items-center text-error font-label-sm text-label-sm bg-error-container text-on-error-container px-2 py-1 rounded">
+<span class="material-symbols-outlined text-[16px] mr-1">trending_down</span>-2
+                    </span>
+</div>
+</div>
+<!-- Stat 5 -->
+<div class="bg-surface-container-lowest p-5 rounded-lg border border-outline-variant shadow-sm flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2">Actifs Tracés</span>
+<div class="flex items-end justify-between">
+<span class="font-headline-lg text-headline-lg text-on-surface">450</span>
+<span class="flex items-center text-primary font-label-sm text-label-sm bg-primary/10 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-[16px] mr-1">trending_up</span>+18%
+                    </span>
+</div>
+</div>
+<!-- Stat 6 -->
+<div class="bg-surface-container-lowest p-5 rounded-lg border border-outline-variant shadow-sm flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2">Taux de Conformité</span>
+<div class="flex items-end justify-between">
+<span class="font-headline-lg text-headline-lg text-on-surface">99.8%</span>
+<span class="flex items-center text-primary font-label-sm text-label-sm bg-primary/10 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-[16px] mr-1">trending_up</span>+0.1%
+                    </span>
+</div>
+</div>
+</div>
+<!-- Recent Activity Table -->
+<h3 class="font-headline-md text-headline-md text-on-surface mb-6">Activité Récente</h3>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface border-b border-outline-variant">
+<th class="p-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Nom du document</th>
+<th class="p-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Type</th>
+<th class="p-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Statut</th>
+<th class="p-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Date</th>
+<th class="p-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Acteur</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<tr class="border-b border-outline-variant hover:bg-surface transition-colors cursor-pointer group">
+<td class="p-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-outline group-hover:text-primary">description</span>
+<span class="font-medium">Contrat_Fournisseur_Tech_2023.pdf</span>
+</td>
+<td class="p-4 text-on-surface-variant">Signature B2B</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#dcfce7] text-[#166534]">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                    Validé
+                                </span>
+</td>
+<td class="p-4 text-on-surface-variant">12 Oct 2023, 14:30</td>
+<td class="p-4">Awa KONE</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface transition-colors cursor-pointer group">
+<td class="p-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-outline group-hover:text-primary">qr_code</span>
+<span class="font-medium">Certificat_Origine_Cacao_Lot89.xml</span>
+</td>
+<td class="p-4 text-on-surface-variant">Vérification QR</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#fef08a] text-[#854d0e]">
+<span class="material-symbols-outlined text-[14px]">pending</span>
+                                    En attente
+                                </span>
+</td>
+<td class="p-4 text-on-surface-variant">12 Oct 2023, 11:15</td>
+<td class="p-4">Moussa DIALLO</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface transition-colors cursor-pointer group">
+<td class="p-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-outline group-hover:text-primary">inventory_2</span>
+<span class="font-medium">Titre_Foncier_Parcelle_A12.pdf</span>
+</td>
+<td class="p-4 text-on-surface-variant">Traçabilité</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#dcfce7] text-[#166534]">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+                                    Authentifié
+                                </span>
+</td>
+<td class="p-4 text-on-surface-variant">11 Oct 2023, 09:45</td>
+<td class="p-4">Système Auto</td>
+</tr>
+<tr class="hover:bg-surface transition-colors cursor-pointer group">
+<td class="p-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-outline group-hover:text-primary">description</span>
+<span class="font-medium">Accord_Confidentialité_ProjetX.docx</span>
+</td>
+<td class="p-4 text-on-surface-variant">Signature Interne</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#fee2e2] text-[#991b1b]">
+<span class="material-symbols-outlined text-[14px]">error</span>
+                                    Rejeté
+                                </span>
+</td>
+<td class="p-4 text-on-surface-variant">10 Oct 2023, 16:20</td>
+<td class="p-4">Awa KONE</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 border-t border-outline-variant bg-surface flex justify-center">
+<button class="text-primary font-label-md text-label-md font-semibold hover:underline">Voir tout l'historique</button>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-surface border-t border-outline-variant shadow-lg rounded-t-xl">
+<!-- Active Item -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-sm text-label-sm mt-1">Tableau</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high rounded-full px-4 py-1 transition-colors" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+<span class="font-label-sm text-label-sm mt-1">Signer</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high rounded-full px-4 py-1 transition-colors" href="#">
+<span class="material-symbols-outlined">qr_code_scanner</span>
+<span class="font-label-sm text-label-sm mt-1">Vérifier</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high rounded-full px-4 py-1 transition-colors" href="#">
+<span class="material-symbols-outlined">track_changes</span>
+<span class="font-label-sm text-label-sm mt-1">Tracer</span>
+</a>
+</nav>
+<a href="../index.html" style="position:fixed;bottom:84px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:6px;background:#191c1e;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.25);text-decoration:none;opacity:.85;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85" title="Retour au prototype SignSecure TrustFlow">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+Prototype
+</a>
+</body></html>

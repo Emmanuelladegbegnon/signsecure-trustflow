@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignSecure TrustFlow - Historique de Traçabilité</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#a3faef",
+                        "surface-container": "#eceef0",
+                        "primary-fixed-dim": "#80d5cb",
+                        "outline": "#6e7977",
+                        "primary-fixed": "#9cf2e8",
+                        "surface-dim": "#d8dadc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "secondary": "#565e74",
+                        "on-secondary-container": "#5c647a",
+                        "secondary-fixed": "#dae2fd",
+                        "inverse-surface": "#2d3133",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-surface": "#191c1e",
+                        "surface": "#f7f9fb",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary-fixed": "#131b2e",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#006a63",
+                        "tertiary-fixed": "#d3e4fe",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "primary-container": "#0f766e",
+                        "surface-container-high": "#e6e8ea",
+                        "on-background": "#191c1e",
+                        "surface-variant": "#e0e3e5",
+                        "inverse-primary": "#80d5cb",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "primary": "#005c55",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#5a6a81",
+                        "outline-variant": "#bdc9c6",
+                        "on-primary-fixed": "#00201d",
+                        "surface-bright": "#f7f9fb",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-primary-fixed-variant": "#00504a",
+                        "background": "#f7f9fb",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#deeaff",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-container": "#dae2fd",
+                        "tertiary": "#425268",
+                        "on-surface-variant": "#3e4947"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "container-max": "1280px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col md:flex-row">
+<!-- SideNavBar (Desktop Only) -->
+<nav class="hidden md:flex flex-col h-screen p-unit overflow-y-auto bg-surface border-r border-outline-variant shadow-sm fixed left-0 top-0 w-[280px] z-50">
+<div class="mb-8 px-4 pt-4">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">SignSecure TrustFlow</h1>
+</div>
+<div class="flex flex-col gap-2 flex-grow">
+<!-- Active: Tracer -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Tableau de bord</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="edit_document">edit_document</span>
+<span class="font-label-md text-label-md">Signer</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+<span class="font-label-md text-label-md">Vérifier</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-bold border-r-4 border-primary bg-primary-container/10 transition-colors opacity-90 transition-opacity duration-150" href="#">
+<span class="material-symbols-outlined icon-fill" data-icon="analytics">analytics</span>
+<span class="font-label-md text-label-md">Tracer</span>
+</a>
+</div>
+<div class="mt-auto pt-6 border-t border-outline-variant">
+<button class="w-full mb-6 bg-primary text-on-primary py-2 px-4 rounded-full font-label-md text-label-md hover:bg-primary-fixed-variant transition-colors shadow-sm">
+                Nouveau Document
+            </button>
+<div class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Paramètres</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-error hover:bg-error-container rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-md text-label-md">Déconnexion</span>
+</a>
+</div>
+<div class="mt-6 flex items-center gap-3 px-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden border border-outline-variant">
+<img alt="Awa KONE" class="w-full h-full object-cover" data-alt="A professional headshot of an African businesswoman with a neat hairstyle, wearing a modern dark corporate blazer over a light shirt. The background is a slightly blurred, bright, modern office space with soft lighting. Professional and trustworthy mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAoctFjXgst8QxnQnkM-lDDuZE0jCbOjqnMZFvWffwZq0-vECEkAC1wNYGTVbN3E-adXO4OGIvaSDuJM_P-vBljLlmJaUAx4Zp2ZtuoiaYxEvh5AjrxloisKhXDxKLsz6mI1keh_IHrDOFGzAb8dSwh4nHOXlFDA_6L7AkB_dT9I5HGRzBabqcJXiNg8bKou-ZVLuQcniKK4M9aCo5zvE5nwNKEPN_bRgD-yspbF6Lkovvq4rMfWLM5"/>
+</div>
+<div>
+<p class="font-label-md text-label-md font-semibold text-on-surface">Awa KONE</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Superviseur</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col md:ml-[280px]">
+<!-- TopNavBar (Desktop Only) -->
+<header class="hidden md:flex justify-between items-center w-full h-16 px-gutter bg-surface-container-lowest shadow-sm z-40 sticky top-0">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-sm text-headline-sm font-semibold text-on-surface">Détails de Traçabilité</h2>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<button class="font-label-md text-label-md text-primary hover:text-primary-fixed-variant transition-colors">
+                    Démonstration
+                </button>
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-sm text-label-sm font-bold">
+                    AK
+                </div>
+</div>
+</header>
+<!-- Main Workspace -->
+<main class="flex-1 p-gutter bg-surface overflow-y-auto">
+<div class="max-w-5xl mx-auto flex flex-col lg:flex-row gap-8">
+<!-- Left Column: Document Summary -->
+<div class="lg:w-1/3 flex flex-col gap-6">
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant flex flex-col gap-4">
+<div class="flex items-center gap-3 mb-2">
+<div class="p-3 bg-secondary-container text-on-secondary-container rounded-lg">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Contrat Partenariat B2B</h3>
+<span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-surface-container text-on-surface-variant mt-1">
+                                    DOC-2023-8942
+                                </span>
+</div>
+</div>
+<div class="flex flex-col gap-3 py-4 border-y border-outline-variant">
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Statut actuel</span>
+<span class="inline-flex items-center px-2.5 py-1 rounded-full font-label-sm text-label-sm bg-[#e8f5e9] text-[#1b5e20]">
+                                    Réception confirmée
+                                </span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Créé le</span>
+<span class="font-label-md text-label-md text-on-surface">12 Oct 2023</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Niveau de sécurité</span>
+<span class="flex items-center gap-1 font-label-md text-label-md text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="shield_lock">shield_lock</span>
+                                    Élevé
+                                </span>
+</div>
+</div>
+<button class="w-full py-2 border border-outline text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors mt-2 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+                            Télécharger l'Audit
+                        </button>
+</div>
+</div>
+<!-- Right Column: Custody Timeline -->
+<div class="lg:w-2/3">
+<div class="bg-surface-container-lowest rounded-xl p-8 shadow-sm border border-outline-variant relative">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-8 border-b border-outline-variant pb-4">Chaîne de Garde (Custody Timeline)</h3>
+<!-- Timeline Container -->
+<div class="relative pl-6 space-y-10 before:absolute before:inset-0 before:ml-[35px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-outline-variant">
+<!-- Step 4: Réception confirmée (Latest) -->
+<div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+<!-- Icon -->
+<div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-surface-container-lowest bg-primary text-on-primary shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm relative z-10">
+<span class="material-symbols-outlined text-[20px]" data-icon="check_circle">check_circle</span>
+</div>
+<!-- Content Card -->
+<div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-surface rounded-xl p-5 border border-primary/30 shadow-sm relative before:absolute before:top-5 before:w-3 before:h-3 before:bg-surface before:border-t before:border-l before:border-primary/30 before:rotate-45 md:group-odd:before:-right-1.5 md:group-even:before:-left-1.5 md:group-odd:text-right">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2 mb-1 md:group-odd:justify-end">
+<span class="font-label-md text-label-md font-bold text-primary">Réception confirmée</span>
+<span class="inline-flex px-1.5 py-0.5 bg-primary-container text-on-primary-container text-[10px] rounded font-bold">ACTUEL</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1 md:group-odd:justify-end">
+<span class="material-symbols-outlined text-[14px]" data-icon="person">person</span>
+                                            Kouamé Diallo (Directeur Général)
+                                        </p>
+<p class="font-label-sm text-label-sm text-on-surface-variant/70 mt-2 flex items-center gap-1 md:group-odd:justify-end">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+                                            15 Oct 2023, 14:30 GMT
+                                        </p>
+</div>
+</div>
+</div>
+<!-- Step 3: Transfert demandé -->
+<div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+<div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-surface-container-lowest bg-surface-container-highest text-on-surface-variant shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm relative z-10">
+<span class="material-symbols-outlined text-[20px]" data-icon="swap_horiz">swap_horiz</span>
+</div>
+<div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-surface-container-lowest rounded-xl p-5 border border-outline-variant shadow-sm relative before:absolute before:top-5 before:w-3 before:h-3 before:bg-surface-container-lowest before:border-t before:border-l before:border-outline-variant before:rotate-45 md:group-odd:before:-right-1.5 md:group-even:before:-left-1.5 md:group-odd:text-right opacity-80 hover:opacity-100 transition-opacity">
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md font-bold text-on-surface">Transfert demandé</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1 md:group-odd:justify-end">
+<span class="material-symbols-outlined text-[14px]" data-icon="person">person</span>
+                                            Awa KONE (Superviseur)
+                                        </p>
+<p class="font-label-sm text-label-sm text-on-surface-variant/70 mt-2 flex items-center gap-1 md:group-odd:justify-end">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+                                            14 Oct 2023, 09:15 GMT
+                                        </p>
+</div>
+</div>
+</div>
+<!-- Step 2: Archivé -->
+<div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+<div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-surface-container-lowest bg-surface-container-highest text-on-surface-variant shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm relative z-10">
+<span class="material-symbols-outlined text-[20px]" data-icon="inventory_2">inventory_2</span>
+</div>
+<div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-surface-container-lowest rounded-xl p-5 border border-outline-variant shadow-sm relative before:absolute before:top-5 before:w-3 before:h-3 before:bg-surface-container-lowest before:border-t before:border-l before:border-outline-variant before:rotate-45 md:group-odd:before:-right-1.5 md:group-even:before:-left-1.5 md:group-odd:text-right opacity-80 hover:opacity-100 transition-opacity">
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md font-bold text-on-surface">Archivé</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1 md:group-odd:justify-end">
+<span class="material-symbols-outlined text-[14px]" data-icon="dns">dns</span>
+                                            Système SignSecure (Auto)
+                                        </p>
+<p class="font-label-sm text-label-sm text-on-surface-variant/70 mt-2 flex items-center gap-1 md:group-odd:justify-end">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+                                            12 Oct 2023, 11:45 GMT
+                                        </p>
+</div>
+</div>
+</div>
+<!-- Step 1: Reçu -->
+<div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+<div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-surface-container-lowest bg-surface-container-highest text-on-surface-variant shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm relative z-10">
+<span class="material-symbols-outlined text-[20px]" data-icon="inbox">inbox</span>
+</div>
+<div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-surface-container-lowest rounded-xl p-5 border border-outline-variant shadow-sm relative before:absolute before:top-5 before:w-3 before:h-3 before:bg-surface-container-lowest before:border-t before:border-l before:border-outline-variant before:rotate-45 md:group-odd:before:-right-1.5 md:group-even:before:-left-1.5 md:group-odd:text-right opacity-80 hover:opacity-100 transition-opacity">
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md font-bold text-on-surface">Reçu</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1 md:group-odd:justify-end">
+<span class="material-symbols-outlined text-[14px]" data-icon="api">api</span>
+                                            API Partenaire (Banque Atlantique)
+                                        </p>
+<p class="font-label-sm text-label-sm text-on-surface-variant/70 mt-2 flex items-center gap-1 md:group-odd:justify-end">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+                                            12 Oct 2023, 11:42 GMT
+                                        </p>
+</div>
+</div>
+</div>
+<!-- Overriding the vertical line color to teal (primary) for completed steps -->
+<div class="absolute inset-0 left-[35px] md:left-1/2 md:-translate-x-1/2 w-0.5 bg-primary h-[calc(100%-4rem)] z-0 hidden md:block"></div>
+<div class="absolute inset-0 ml-[35px] -translate-x-px w-0.5 bg-primary h-[calc(100%-4rem)] z-0 md:hidden"></div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<a href="../index.html" style="position:fixed;bottom:84px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:6px;background:#191c1e;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.25);text-decoration:none;opacity:.85;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85" title="Retour au prototype SignSecure TrustFlow">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+Prototype
+</a>
+</body></html>

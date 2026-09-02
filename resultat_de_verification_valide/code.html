@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignSecure TrustFlow - Résultat de Vérification (Validé)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error": "#ba1a1a",
+                      "on-primary-container": "#a3faef",
+                      "surface-container": "#eceef0",
+                      "primary-fixed-dim": "#80d5cb",
+                      "outline": "#6e7977",
+                      "primary-fixed": "#9cf2e8",
+                      "surface-dim": "#d8dadc",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-fixed": "#0b1c30",
+                      "secondary": "#565e74",
+                      "on-secondary-container": "#5c647a",
+                      "secondary-fixed": "#dae2fd",
+                      "inverse-surface": "#2d3133",
+                      "inverse-on-surface": "#eff1f3",
+                      "on-surface": "#191c1e",
+                      "surface": "#f7f9fb",
+                      "surface-container-low": "#f2f4f6",
+                      "on-secondary-fixed": "#131b2e",
+                      "on-tertiary": "#ffffff",
+                      "surface-tint": "#006a63",
+                      "tertiary-fixed": "#d3e4fe",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#38485d",
+                      "primary-container": "#0f766e",
+                      "surface-container-high": "#e6e8ea",
+                      "on-background": "#191c1e",
+                      "surface-variant": "#e0e3e5",
+                      "inverse-primary": "#80d5cb",
+                      "on-secondary-fixed-variant": "#3f465c",
+                      "primary": "#005c55",
+                      "on-error": "#ffffff",
+                      "tertiary-container": "#5a6a81",
+                      "outline-variant": "#bdc9c6",
+                      "on-primary-fixed": "#00201d",
+                      "surface-bright": "#f7f9fb",
+                      "on-primary": "#ffffff",
+                      "secondary-fixed-dim": "#bec6e0",
+                      "tertiary-fixed-dim": "#b7c8e1",
+                      "on-primary-fixed-variant": "#00504a",
+                      "background": "#f7f9fb",
+                      "error-container": "#ffdad6",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-container": "#deeaff",
+                      "surface-container-highest": "#e0e3e5",
+                      "secondary-container": "#dae2fd",
+                      "tertiary": "#425268",
+                      "on-surface-variant": "#3e4947"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "gutter": "24px",
+                      "margin-mobile": "16px",
+                      "container-max": "1280px",
+                      "margin-desktop": "32px"
+              },
+              "fontFamily": {
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "display": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-sm": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "30px",
+                              {
+                                      "lineHeight": "38px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display": [
+                              "36px",
+                              {
+                                      "lineHeight": "44px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-background antialiased min-h-screen flex">
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex flex-col h-screen p-unit overflow-y-auto bg-surface fixed left-0 top-0 h-full w-[280px] border-r border-outline-variant shadow-sm z-50">
+<div class="mb-8 p-4">
+<span class="font-headline-md text-headline-md font-bold text-primary">SignSecure TrustFlow</span>
+</div>
+<div class="flex items-center gap-4 p-4 mb-6">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">AK</div>
+<div>
+<div class="font-label-md text-label-md font-semibold">Awa KONE</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">Superviseur</div>
+</div>
+</div>
+<button class="mb-6 mx-4 py-3 px-4 bg-primary text-on-primary rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px]">add</span>
+            Nouveau Document
+        </button>
+<ul class="flex-1 space-y-2">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                    Tableau de bord
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">edit_document</span>
+                    Signer
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-bold border-r-4 border-primary bg-primary-container/10 font-label-md text-label-md opacity-90 transition-opacity duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+                    Vérifier
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">analytics</span>
+                    Tracer
+                </a>
+</li>
+</ul>
+<div class="mt-auto border-t border-outline-variant pt-4">
+<ul class="space-y-2">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+                        Paramètres
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">logout</span>
+                        Déconnexion
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-[280px] flex flex-col min-h-screen mb-20 md:mb-0">
+<!-- TopNavBar (Mobile & Desktop) -->
+<header class="flex justify-between items-center w-full h-16 px-gutter z-40 bg-white shadow-sm sticky top-0">
+<div class="md:hidden">
+<span class="font-headline-sm text-headline-sm font-black text-primary">SignSecure TrustFlow</span>
+</div>
+<div class="hidden md:flex flex-1"></div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="pl-10 pr-4 py-2 border border-outline-variant rounded-full text-body-sm bg-surface-container-low focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary w-64 transition-all" placeholder="Rechercher..." type="text"/>
+</div>
+<button class="hidden md:flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-lg text-primary font-label-sm text-label-sm hover:bg-surface-container-low transition-colors">
+                Démonstration
+            </button>
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs md:hidden">AK</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-margin-mobile md:p-margin-desktop max-w-container-max mx-auto w-full flex-1">
+<!-- Success Banner -->
+<div class="bg-[#e8f5e9] border border-[#a5d6a7] rounded-xl p-4 flex items-center gap-4 mb-8 shadow-sm">
+<div class="w-10 h-10 rounded-full bg-[#4caf50] text-white flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">check</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-[#2e7d32]">Document enregistré - statut valide</h2>
+<p class="font-body-sm text-body-sm text-[#1b5e20] opacity-80">La vérification cryptographique a été effectuée avec succès le 24 Oct 2023 à 14:32:01 UTC.</p>
+</div>
+</div>
+<div class="mb-8">
+<h1 class="font-headline-lg text-headline-lg text-on-background mb-2">Résultats d'Analyse</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Détails de la validation du document de transaction financière.</p>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+<!-- Identité du dossier -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0px_1px_3px_rgba(15,23,42,0.1)] border border-outline-variant/30 flex flex-col lg:col-span-2">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary">folder_open</span>
+<h3 class="font-headline-sm text-headline-sm">Identité du dossier</h3>
+</div>
+<div class="grid grid-cols-2 gap-4 flex-1">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-1">RÉFÉRENCE</span>
+<span class="font-body-md text-body-md font-medium">TRX-2023-8902A</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-1">TYPE DE DOCUMENT</span>
+<span class="font-body-md text-body-md font-medium">Contrat B2B Standard</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-1">PROPRIÉTAIRE</span>
+<span class="font-body-md text-body-md font-medium">Awa KONE</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-1">TAILLE</span>
+<span class="font-body-md text-body-md font-medium">2.4 MB (PDF)</span>
+</div>
+</div>
+</div>
+<!-- Origine -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0px_1px_3px_rgba(15,23,42,0.1)] border border-outline-variant/30 flex flex-col">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary">trip_origin</span>
+<h3 class="font-headline-sm text-headline-sm">Origine</h3>
+</div>
+<div class="flex-1 flex flex-col justify-center items-center text-center p-4">
+<div class="w-16 h-16 bg-primary-container/10 rounded-full flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-[32px] text-primary">security</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-primary mb-2">Signé dans SignSecure</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">L'origine du document est certifiée par notre infrastructure sécurisée.</p>
+</div>
+</div>
+<!-- Intégrité -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0px_1px_3px_rgba(15,23,42,0.1)] border border-outline-variant/30 flex flex-col">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary">data_check</span>
+<h3 class="font-headline-sm text-headline-sm">Intégrité</h3>
+</div>
+<div class="flex-1 flex flex-col">
+<div class="flex items-center justify-between mb-4">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Hash Correspondant</span>
+<span class="px-2 py-1 bg-[#e8f5e9] text-[#2e7d32] rounded-md font-label-sm text-label-sm">100% Match</span>
+</div>
+<div class="bg-surface p-3 rounded-lg border border-outline-variant/50 break-all font-mono text-[11px] text-on-surface-variant">
+                        e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+                    </div>
+</div>
+</div>
+<!-- Signature -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0px_1px_3px_rgba(15,23,42,0.1)] border border-outline-variant/30 flex flex-col">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary">draw</span>
+<h3 class="font-headline-sm text-headline-sm">Signature</h3>
+</div>
+<div class="flex-1">
+<div class="flex items-start gap-3 mb-4">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs shrink-0">JD</div>
+<div>
+<span class="font-label-md text-label-md font-semibold block">Jean Dupont</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant block">Directeur Financier</span>
+<span class="font-label-sm text-label-sm text-primary mt-1 block">Certificat X.509 Valide</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Traçabilité -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0px_1px_3px_rgba(15,23,42,0.1)] border border-outline-variant/30 flex flex-col">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary">history</span>
+<h3 class="font-headline-sm text-headline-sm">Traçabilité</h3>
+</div>
+<div class="flex-1 relative pl-4 border-l-2 border-outline-variant/30 space-y-4">
+<div class="relative">
+<div class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-primary ring-4 ring-white"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Aujourd'hui, 14:32</span>
+<span class="font-body-sm text-body-sm font-medium">Vérification complétée</span>
+</div>
+<div class="relative">
+<div class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-outline-variant ring-4 ring-white"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block">23 Oct 2023, 09:15</span>
+<span class="font-body-sm text-body-sm font-medium">Document signé</span>
+</div>
+</div>
+</div>
+</div>
+<div class="border-t border-outline-variant pt-6 text-center">
+<p class="font-body-sm text-body-sm text-on-surface-variant/70 max-w-2xl mx-auto">
+                Ce rapport de vérification est généré automatiquement par SignSecure TrustFlow. Il atteste de l'intégrité cryptographique du document au moment de l'analyse. Ce document ne constitue pas un avis juridique indépendant.
+            </p>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="lg:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-surface border-t border-outline-variant shadow-lg rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high p-2 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-sm text-label-sm mt-1">Tableau</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high p-2 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+<span class="font-label-sm text-label-sm mt-1">Signer</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">qr_code_scanner</span>
+<span class="font-label-sm text-label-sm mt-1">Vérifier</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high p-2 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">track_changes</span>
+<span class="font-label-sm text-label-sm mt-1">Tracer</span>
+</a>
+</nav>
+<a href="../index.html" style="position:fixed;bottom:84px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:6px;background:#191c1e;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.25);text-decoration:none;opacity:.85;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85" title="Retour au prototype SignSecure TrustFlow">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+Prototype
+</a>
+</body></html>

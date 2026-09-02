@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignSecure TrustFlow - Code &amp; Étiquette</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#a3faef",
+                        "surface-container": "#eceef0",
+                        "primary-fixed-dim": "#80d5cb",
+                        "outline": "#6e7977",
+                        "primary-fixed": "#9cf2e8",
+                        "surface-dim": "#d8dadc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "secondary": "#565e74",
+                        "on-secondary-container": "#5c647a",
+                        "secondary-fixed": "#dae2fd",
+                        "inverse-surface": "#2d3133",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-surface": "#191c1e",
+                        "surface": "#f7f9fb",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary-fixed": "#131b2e",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#006a63",
+                        "tertiary-fixed": "#d3e4fe",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "primary-container": "#0f766e",
+                        "surface-container-high": "#e6e8ea",
+                        "on-background": "#191c1e",
+                        "surface-variant": "#e0e3e5",
+                        "inverse-primary": "#80d5cb",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "primary": "#005c55",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#5a6a81",
+                        "outline-variant": "#bdc9c6",
+                        "on-primary-fixed": "#00201d",
+                        "surface-bright": "#f7f9fb",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-primary-fixed-variant": "#00504a",
+                        "background": "#f7f9fb",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#deeaff",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-container": "#dae2fd",
+                        "tertiary": "#425268",
+                        "on-surface-variant": "#3e4947"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "container-max": "1280px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col items-center pt-8 pb-32 px-margin-mobile">
+<!-- Intent: Transactional/Process completion screen - Nav shell is suppressed intentionally -->
+<!-- Header / Branding -->
+<header class="w-full max-w-[400px] mb-8 text-center flex flex-col items-center">
+<div class="h-16 w-16 bg-primary-container text-on-primary-container rounded-full flex items-center justify-center mb-4 shadow-sm">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<h1 class="font-headline-md text-headline-md text-primary">Document Sécurisé</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2 text-center">
+            Générez et apposez l'étiquette de sécurité sur le document physique.
+        </p>
+</header>
+<!-- Main Content Canvas -->
+<main class="w-full max-w-[400px] flex flex-col gap-6">
+<!-- Sticker Mockup Preview -->
+<section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant flex flex-col items-center relative overflow-hidden">
+<!-- Subtle background pattern for realism -->
+<div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(var(--tw-colors-outline) 1px, transparent 1px); background-size: 10px 10px;"></div>
+<h2 class="font-label-md text-label-md text-on-surface-variant w-full text-left mb-4 uppercase">Aperçu de l'étiquette</h2>
+<div class="bg-surface-bright border-2 border-dashed border-outline-variant rounded-lg p-6 w-full flex flex-col items-center gap-4 relative z-10 shadow-sm">
+<!-- QR Code Representation -->
+<div class="bg-white p-3 rounded shadow-sm border border-surface-variant">
+<img alt="QR Code" class="w-32 h-32 object-contain" data-alt="A clean, high-contrast, black and white square QR code centered on a crisp white background, representing digital verification. Professional lighting, minimal shadows, corporate modern aesthetic, essential for legal document tracking." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKsMp3DPGs1DJaQC65Em3chczziEfz0QpNloE_3m10IqHxJ_0gkLIBh0Uxxrp_h6eAUyg2gYdufUwY7Ch1CBniXnRt2l-E3yk8Mrj6zd_Z6_ETVmxzdxNxSwNZr6hI326Nj3g7jlQbk3tqltjICeinG_-eMZrm_AFM7Jbhd_nSOkimLEHNX-igkFl4SKjLWznipY26Ev1VxfQvF1voFpwCWj4MUP1LiUUT9AxIxnwvjDxxmOkzDgNB"/>
+</div>
+<!-- Tracking Code -->
+<div class="text-center w-full">
+<div class="font-label-sm text-label-sm text-on-surface-variant uppercase mb-1">Code de suivi</div>
+<div class="font-headline-sm text-headline-sm tracking-[0.2em] font-bold text-on-surface bg-surface-container py-2 px-4 rounded">
+                        STF-982-4A
+                    </div>
+</div>
+<!-- Warning Label -->
+<div class="mt-2 flex items-center gap-2 bg-error-container text-on-error-container px-3 py-1.5 rounded-full w-full justify-center">
+<span class="material-symbols-outlined text-sm">warning</span>
+<span class="font-label-sm text-label-sm">SignSecure — Ne pas coller sur la signature</span>
+</div>
+</div>
+</section>
+<!-- Information Card -->
+<section class="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-outline-variant flex items-start gap-4">
+<span class="material-symbols-outlined text-primary mt-1">info</span>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface">Instructions d'impression</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                    Assurez-vous que votre imprimante d'étiquettes thermique est connectée. Format recommandé : 50x30mm.
+                </p>
+</div>
+</section>
+</main>
+<!-- Fixed Bottom Actions -->
+<footer class="fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant p-4 flex flex-col gap-3 shadow-lg z-50">
+<button class="w-full bg-primary hover:bg-primary/90 text-on-primary font-label-md text-label-md h-12 rounded-lg flex items-center justify-center gap-2 transition-colors active:scale-[0.98]">
+<span class="material-symbols-outlined text-xl">print</span>
+            Imprimer la fiche
+        </button>
+<button class="w-full border border-outline hover:bg-surface-container text-on-surface font-label-md text-label-md h-12 rounded-lg flex items-center justify-center transition-colors active:scale-[0.98]" onclick="location.href='../observations_etape_2/code.html';">
+            Terminer
+        </button>
+</footer>
+<a href="../index.html" style="position:fixed;bottom:84px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:6px;background:#191c1e;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.25);text-decoration:none;opacity:.85;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85" title="Retour au prototype SignSecure TrustFlow">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+Prototype
+</a>
+</body></html>

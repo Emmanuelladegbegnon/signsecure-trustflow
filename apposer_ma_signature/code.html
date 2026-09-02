@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignSecure TrustFlow - Apposer ma Signature</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#a3faef",
+                        "surface-container": "#eceef0",
+                        "primary-fixed-dim": "#80d5cb",
+                        "outline": "#6e7977",
+                        "primary-fixed": "#9cf2e8",
+                        "surface-dim": "#d8dadc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "secondary": "#565e74",
+                        "on-secondary-container": "#5c647a",
+                        "secondary-fixed": "#dae2fd",
+                        "inverse-surface": "#2d3133",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-surface": "#191c1e",
+                        "surface": "#f7f9fb",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary-fixed": "#131b2e",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#006a63",
+                        "tertiary-fixed": "#d3e4fe",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "primary-container": "#0f766e",
+                        "surface-container-high": "#e6e8ea",
+                        "on-background": "#191c1e",
+                        "surface-variant": "#e0e3e5",
+                        "inverse-primary": "#80d5cb",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "primary": "#005c55",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#5a6a81",
+                        "outline-variant": "#bdc9c6",
+                        "on-primary-fixed": "#00201d",
+                        "surface-bright": "#f7f9fb",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-primary-fixed-variant": "#00504a",
+                        "background": "#f7f9fb",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#deeaff",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-container": "#dae2fd",
+                        "tertiary": "#425268",
+                        "on-surface-variant": "#3e4947"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "container-max": "1280px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom scrollbar for PDF area to look professional */
+        .pdf-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .pdf-scroll::-webkit-scrollbar-track {
+            background: theme('colors.surface');
+        }
+        .pdf-scroll::-webkit-scrollbar-thumb {
+            background: theme('colors.outline-variant');
+            border-radius: 4px;
+        }
+        .pdf-scroll::-webkit-scrollbar-thumb:hover {
+            background: theme('colors.outline');
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md h-screen flex flex-col overflow-hidden">
+<!-- Top Navigation (Simplified for focus, no side nav) -->
+<header class="bg-surface-container-lowest shadow-sm w-full h-16 px-gutter flex justify-between items-center z-40 shrink-0">
+<div class="flex items-center gap-4">
+<button aria-label="Retour" class="text-on-surface-variant hover:text-primary transition-all p-2 rounded-full hover:bg-surface-container-high">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="shield">shield</span>
+<span class="font-headline-sm text-headline-sm font-black text-primary">SignSecure TrustFlow</span>
+</div>
+<div class="h-6 w-px bg-outline-variant mx-2 hidden sm:block"></div>
+<span class="font-label-md text-label-md text-on-surface-variant hidden sm:block">Contrat de Prestation - Ref: CT-2023-089</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-primary font-label-md text-label-md hover:bg-surface-container-high px-4 py-2 rounded transition-colors hidden sm:block">Démonstration</button>
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-label-md text-label-md font-bold overflow-hidden">
+<img alt="AK" class="w-full h-full object-cover" data-alt="A small circular avatar showing a professional looking person in a business setting, highly realistic, bright corporate lighting, focusing on trust and reliability in a financial context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfKStXZHjE8e0stCoEMC8ek0IALkE9SnY7QS5CxD2AhMeNoj6J3zFGZRXA_9B-5bcFLISIYra2Cy4e73XkJ1BqntHXAOqg1njR0SYEm5tjSlVgob14TETGhf3Afop3wrjyGOEoVIQ98yMTrOL_1xteAxZ0GX7LTl--5wRq5VtadaV9buSS_6cAVKCG_iIQNtN0TlouPEhHBddDLVvYDh8bxUl-YipG7mq6aDLIZxfR8kQ0KDPFgOwo"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+<!-- Document Preview Area (Left/Top) -->
+<div class="flex-1 bg-surface-container-low p-4 md:p-8 flex justify-center overflow-hidden">
+<div class="w-full max-w-4xl h-full bg-white shadow-[0_4px_20px_-4px_rgba(15,23,42,0.1)] rounded-lg flex flex-col relative overflow-hidden">
+<!-- PDF Header Mock -->
+<div class="h-12 border-b border-outline-variant flex items-center px-6 justify-between bg-surface-container-lowest shrink-0">
+<span class="font-label-md text-label-md text-on-surface">Page 5 sur 5</span>
+<div class="flex gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px] cursor-pointer hover:text-primary" data-icon="zoom_out">zoom_out</span>
+<span class="font-label-md text-label-md w-12 text-center">100%</span>
+<span class="material-symbols-outlined text-[20px] cursor-pointer hover:text-primary" data-icon="zoom_in">zoom_in</span>
+</div>
+</div>
+<!-- PDF Content Area -->
+<div class="flex-1 overflow-y-auto pdf-scroll p-8 relative">
+<!-- Faux Text Content to simulate document -->
+<div class="space-y-6 text-on-surface-variant font-body-sm mb-12 opacity-70">
+<div class="h-4 bg-surface-container-high rounded w-3/4"></div>
+<div class="h-4 bg-surface-container-high rounded w-full"></div>
+<div class="h-4 bg-surface-container-high rounded w-5/6"></div>
+<div class="h-4 bg-surface-container-high rounded w-full"></div>
+<br/>
+<div class="h-4 bg-surface-container-high rounded w-2/3"></div>
+<div class="h-4 bg-surface-container-high rounded w-full"></div>
+<div class="h-4 bg-surface-container-high rounded w-4/5"></div>
+</div>
+<p class="font-body-md text-body-md text-on-surface mb-8">Fait à Dakar, le 24 Octobre 2023.</p>
+<div class="flex justify-between mt-12">
+<div class="w-1/2">
+<p class="font-label-md text-label-md text-on-surface mb-2">Le Prestataire</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Jean Dupont</p>
+</div>
+<div class="w-1/2">
+<p class="font-label-md text-label-md text-on-surface mb-2">Le Client</p>
+<!-- Highlighted Signature Zone -->
+<div class="relative w-full max-w-[280px] h-[120px] bg-yellow-50 border-2 border-dashed border-yellow-400 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-yellow-100 transition-colors group">
+<div class="absolute -top-3 -right-3 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-yellow-900" data-icon="edit">edit</span>
+</div>
+<span class="material-symbols-outlined text-yellow-600 mb-2 opacity-50 group-hover:opacity-100 transition-opacity" data-icon="draw">draw</span>
+<span class="font-label-md text-label-md text-yellow-800 text-center px-4">Cliquez pour apposer votre signature ici</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Side / Bottom Sticky Panel for Signature Action -->
+<div class="w-full lg:w-[420px] bg-surface-container-lowest border-t lg:border-t-0 lg:border-l border-outline-variant flex flex-col shadow-[0_-4px_15px_-3px_rgba(15,23,42,0.1)] lg:shadow-[-4px_0_15px_-3px_rgba(15,23,42,0.1)] z-10 shrink-0 h-[512px] lg:h-auto">
+<div class="p-6 border-b border-outline-variant bg-surface-bright">
+<h2 class="font-headline-sm text-headline-sm font-semibold text-on-surface">Signature requise</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Veuillez fournir votre signature pour valider le document.</p>
+</div>
+<!-- Signature Pad Area -->
+<div class="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+<!-- Tabs -->
+<div class="flex border-b border-outline-variant">
+<button class="flex-1 pb-3 text-center border-b-2 border-primary text-primary font-label-md text-label-md">Dessiner</button>
+<button class="flex-1 pb-3 text-center text-on-surface-variant hover:text-on-surface font-label-md text-label-md">Importer</button>
+<button class="flex-1 pb-3 text-center text-on-surface-variant hover:text-on-surface font-label-md text-label-md">Enregistrée</button>
+</div>
+<!-- Canvas Area -->
+<div class="relative w-full h-[200px] bg-surface rounded border border-outline-variant flex items-center justify-center cursor-crosshair">
+<span class="absolute text-surface-variant font-display text-display opacity-30 select-none">Signez ici</span>
+<!-- Invisible canvas for actual drawing logic -->
+<canvas class="absolute inset-0 w-full h-full"></canvas>
+<button class="absolute top-2 right-2 text-on-surface-variant hover:text-error text-sm flex items-center gap-1 bg-white/80 px-2 py-1 rounded shadow-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="delete">delete</span>
+</button>
+</div>
+<!-- Legal Confirmation Checkbox -->
+<div class="flex items-start gap-3 mt-auto pt-4">
+<div class="flex items-center h-5">
+<input class="w-5 h-5 text-primary border-outline rounded focus:ring-primary focus:ring-2 cursor-pointer bg-surface-container-lowest" id="legal-check" type="checkbox"/>
+</div>
+<label class="font-body-sm text-body-sm text-on-surface cursor-pointer select-none" for="legal-check">
+                        Je confirme apposer ma signature électronique sur ce document, reconnaissant sa pleine valeur légale et mon engagement contractuel envers les termes qui y sont stipulés.
+                    </label>
+</div>
+</div>
+<!-- Action Area -->
+<div class="p-6 bg-surface-bright border-t border-outline-variant">
+<button class="w-full bg-surface-variant text-on-surface-variant font-label-md text-label-md py-3 px-4 rounded flex items-center justify-center gap-2 transition-colors cursor-not-allowed" disabled="" id="confirm-btn">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+                    Confirmer la signature
+                </button>
+</div>
+</div>
+</main>
+<script>
+        // Simple micro-interaction for the checkbox to enable the button
+        document.addEventListener('DOMContentLoaded', () => {
+            const checkbox = document.getElementById('legal-check');
+            const btn = document.getElementById('confirm-btn');
+
+            checkbox.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    btn.disabled = false;
+                    btn.classList.remove('bg-surface-variant', 'text-on-surface-variant', 'cursor-not-allowed');
+                    btn.classList.add('bg-primary', 'text-on-primary', 'hover:bg-primary-fixed-dim', 'cursor-pointer');
+                } else {
+                    btn.disabled = true;
+                    btn.classList.add('bg-surface-variant', 'text-on-surface-variant', 'cursor-not-allowed');
+                    btn.classList.remove('bg-primary', 'text-on-primary', 'hover:bg-primary-fixed-dim', 'cursor-pointer');
+                }
+            });
+
+            btn.addEventListener('click', () => {
+                if (!btn.disabled) {
+                    location.href = '../confirmation_de_signature/code.html';
+                }
+            });
+        });
+    </script>
+<a href="../index.html" style="position:fixed;bottom:84px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:6px;background:#191c1e;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.25);text-decoration:none;opacity:.85;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85" title="Retour au prototype SignSecure TrustFlow">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+Prototype
+</a>
+</body></html>

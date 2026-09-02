@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Demande de transfert - SignSecure TrustFlow</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#a3faef",
+                        "surface-container": "#eceef0",
+                        "primary-fixed-dim": "#80d5cb",
+                        "outline": "#6e7977",
+                        "primary-fixed": "#9cf2e8",
+                        "surface-dim": "#d8dadc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "secondary": "#565e74",
+                        "on-secondary-container": "#5c647a",
+                        "secondary-fixed": "#dae2fd",
+                        "inverse-surface": "#2d3133",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-surface": "#191c1e",
+                        "surface": "#f7f9fb",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary-fixed": "#131b2e",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#006a63",
+                        "tertiary-fixed": "#d3e4fe",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "primary-container": "#0f766e",
+                        "surface-container-high": "#e6e8ea",
+                        "on-background": "#191c1e",
+                        "surface-variant": "#e0e3e5",
+                        "inverse-primary": "#80d5cb",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "primary": "#005c55",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#5a6a81",
+                        "outline-variant": "#bdc9c6",
+                        "on-primary-fixed": "#00201d",
+                        "surface-bright": "#f7f9fb",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-primary-fixed-variant": "#00504a",
+                        "background": "#f7f9fb",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#deeaff",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-container": "#dae2fd",
+                        "tertiary": "#425268",
+                        "on-surface-variant": "#3e4947"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "container-max": "1280px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- Intent: Transactional/Task-Focused. Navbars suppressed. -->
+<!-- Top App Bar (Task Context) -->
+<header class="bg-surface-container-lowest shadow-[0px_1px_3px_rgba(15,23,42,0.1)] flex items-center h-16 px-margin-mobile sticky top-0 z-40">
+<button aria-label="Retour" class="p-2 -ml-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="ml-2 font-headline-sm text-headline-sm text-on-surface">Demande de transfert</h1>
+</header>
+<main class="flex-1 flex flex-col px-margin-mobile py-gutter w-full max-w-[600px] mx-auto gap-[36px]">
+<!-- Document Summary Card -->
+<section aria-labelledby="doc-summary-title">
+<h2 class="sr-only" id="doc-summary-title">Résumé du document</h2>
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-[0px_1px_3px_rgba(15,23,42,0.1)] border border-outline-variant/30 flex items-start gap-4">
+<div class="bg-surface-container-high p-3 rounded-lg text-primary flex-shrink-0">
+<span class="material-symbols-outlined text-[32px]" data-icon="folder" style="font-variation-settings: 'FILL' 1;">folder</span>
+</div>
+<div class="flex-1 min-w-0">
+<h3 class="font-label-md text-label-md text-on-surface truncate mb-1">Contrat_Cadre_Services_Financiers_V2.pdf</h3>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="shield">shield</span>
+<p class="font-body-sm text-body-sm truncate">ID: DOC-2023-8902A</p>
+</div>
+<div class="mt-2 inline-flex items-center gap-1.5 bg-surface-container-high px-2 py-1 rounded-md">
+<span class="material-symbols-outlined text-[14px] text-primary" data-icon="history">history</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Modifié le 12 Oct 2023</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Transfer Form -->
+<section aria-labelledby="form-title" class="flex-1 flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-6" id="form-title">Détails du transfert</h2>
+<form class="flex flex-col gap-6 flex-1">
+<!-- Destination Select -->
+<div class="relative">
+<label class="block font-label-md text-label-md text-on-surface mb-2" for="destination">Destination (Agence ou Service)</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="domain">domain</span>
+</div>
+<select class="block w-full pl-10 pr-10 py-3 text-body-md font-body-md text-on-surface bg-surface-container-lowest border border-outline-variant rounded-lg appearance-none focus:ring-1 focus:ring-primary focus:border-primary focus:shadow-[0_0_0_4px_rgba(0,92,85,0.1)] transition-shadow" id="destination" name="destination">
+<option disabled="" selected="" value="">Sélectionner une destination</option>
+<option value="dakar-hq">Siège - Dakar Plateau</option>
+<option value="abidjan-branch">Succursale - Abidjan Cocody</option>
+<option value="legal-dept">Département Juridique Central</option>
+<option value="compliance-dept">Service Conformité et Audit</option>
+</select>
+<div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Lieu Input -->
+<div class="relative">
+<label class="block font-label-md text-label-md text-on-surface mb-2" for="lieu">Lieu physique cible</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="location_on">location_on</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 text-body-md font-body-md text-on-surface bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-1 focus:ring-primary focus:border-primary focus:shadow-[0_0_0_4px_rgba(0,92,85,0.1)] transition-shadow placeholder:text-on-surface-variant/60" id="lieu" name="lieu" placeholder="Ex: Bureau 402, Bâtiment A" type="text"/>
+</div>
+</div>
+<!-- Motif Input -->
+<div class="relative">
+<label class="block font-label-md text-label-md text-on-surface mb-2" for="motif">Motif du transfert</label>
+<textarea class="block w-full p-3 text-body-md font-body-md text-on-surface bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-1 focus:ring-primary focus:border-primary focus:shadow-[0_0_0_4px_rgba(0,92,85,0.1)] transition-shadow resize-none placeholder:text-on-surface-variant/60" id="motif" name="motif" placeholder="Veuillez préciser la raison légale ou opérationnelle de ce transfert..." rows="4"></textarea>
+</div>
+<!-- Action Area (Pinned to bottom on mobile if needed, but flowing naturally here) -->
+<div class="mt-auto pt-8 pb-4">
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-4 rounded-full flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.98] transition-all shadow-md" type="submit">
+<span class="material-symbols-outlined text-[20px]" data-icon="send">send</span>
+                        Envoyer la demande
+                    </button>
+<button class="w-full mt-4 text-primary font-label-md text-label-md py-3 rounded-full hover:bg-surface-container-high transition-colors" type="button">
+                        Annuler
+                    </button>
+</div>
+</form>
+</section>
+</main>
+<script>
+        // Simple form interaction visual feedback
+        const inputs = document.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.classList.add('opacity-100');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.classList.remove('opacity-100');
+            });
+        });
+    </script>
+<a href="../index.html" style="position:fixed;bottom:84px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:6px;background:#191c1e;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.25);text-decoration:none;opacity:.85;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85" title="Retour au prototype SignSecure TrustFlow">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+Prototype
+</a>
+</body></html>

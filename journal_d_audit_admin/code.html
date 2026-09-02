@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Audit Log - SignSecure TrustFlow</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error": "#ba1a1a",
+                      "on-primary-container": "#a3faef",
+                      "surface-container": "#eceef0",
+                      "primary-fixed-dim": "#80d5cb",
+                      "outline": "#6e7977",
+                      "primary-fixed": "#9cf2e8",
+                      "surface-dim": "#d8dadc",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-fixed": "#0b1c30",
+                      "secondary": "#565e74",
+                      "on-secondary-container": "#5c647a",
+                      "secondary-fixed": "#dae2fd",
+                      "inverse-surface": "#2d3133",
+                      "inverse-on-surface": "#eff1f3",
+                      "on-surface": "#191c1e",
+                      "surface": "#f7f9fb",
+                      "surface-container-low": "#f2f4f6",
+                      "on-secondary-fixed": "#131b2e",
+                      "on-tertiary": "#ffffff",
+                      "surface-tint": "#006a63",
+                      "tertiary-fixed": "#d3e4fe",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#38485d",
+                      "primary-container": "#0f766e",
+                      "surface-container-high": "#e6e8ea",
+                      "on-background": "#191c1e",
+                      "surface-variant": "#e0e3e5",
+                      "inverse-primary": "#80d5cb",
+                      "on-secondary-fixed-variant": "#3f465c",
+                      "primary": "#005c55",
+                      "on-error": "#ffffff",
+                      "tertiary-container": "#5a6a81",
+                      "outline-variant": "#bdc9c6",
+                      "on-primary-fixed": "#00201d",
+                      "surface-bright": "#f7f9fb",
+                      "on-primary": "#ffffff",
+                      "secondary-fixed-dim": "#bec6e0",
+                      "tertiary-fixed-dim": "#b7c8e1",
+                      "on-primary-fixed-variant": "#00504a",
+                      "background": "#f7f9fb",
+                      "error-container": "#ffdad6",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-container": "#deeaff",
+                      "surface-container-highest": "#e0e3e5",
+                      "secondary-container": "#dae2fd",
+                      "tertiary": "#425268",
+                      "on-surface-variant": "#3e4947"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "gutter": "24px",
+                      "margin-mobile": "16px",
+                      "container-max": "1280px",
+                      "margin-desktop": "32px"
+              },
+              "fontFamily": {
+                      "body-sm": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "body-md": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "display": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-sm": ["Inter"],
+                      "mono": ["Fira Code", "monospace"]
+              },
+              "fontSize": {
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "display": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                      "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased flex">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-screen p-unit overflow-y-auto bg-surface dark:bg-inverse-surface fixed left-0 top-0 w-[280px] border-r border-outline-variant shadow-sm z-50">
+<!-- Header -->
+<div class="flex items-center gap-4 p-4 mb-6">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-lg">
+                AK
+            </div>
+<div>
+<div class="font-headline-sm text-headline-sm text-on-surface">Awa KONE</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Superviseur</div>
+</div>
+</div>
+<!-- CTA -->
+<div class="px-4 mb-6">
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-3 rounded-lg hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="add" style="font-variation-settings: 'FILL' 1;">add</span>
+                Nouveau Document
+            </button>
+</div>
+<!-- Navigation Tabs -->
+<div class="flex flex-col gap-1 flex-1 px-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Tableau de bord
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="edit_document">edit_document</span>
+                Signer
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+                Vérifier
+            </a>
+<!-- Active Tab -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-bold border-r-4 border-primary bg-primary-container/10 font-label-md text-label-md opacity-90 transition-opacity duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="analytics" style="font-variation-settings: 'FILL' 1;">analytics</span>
+                Tracer
+            </a>
+</div>
+<!-- Footer Tabs -->
+<div class="flex flex-col gap-1 mt-auto px-2 pb-4">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Paramètres
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Déconnexion
+            </a>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col md:ml-[280px] min-h-screen">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full h-16 px-gutter bg-white shadow-sm z-40 sticky top-0">
+<div class="font-headline-sm text-headline-sm font-black text-primary">
+                SignSecure TrustFlow
+            </div>
+<div class="flex items-center gap-6">
+<!-- Search (on_right) -->
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="pl-10 pr-4 py-2 border border-outline-variant rounded-full text-body-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface-container-lowest w-64 transition-all" placeholder="Rechercher..." type="text"/>
+</div>
+<!-- Trailing Secondary Action -->
+<button class="hidden md:flex items-center gap-2 text-primary font-label-sm text-label-sm border border-primary px-4 py-2 rounded-full hover:bg-primary-container/10 transition-colors">
+                    Démonstration
+                </button>
+<!-- Notifications -->
+<button class="relative text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<!-- Mobile Menu Toggle (only visible on mobile) -->
+<button class="md:hidden text-on-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 p-margin-mobile md:p-gutter max-w-container-max mx-auto w-full flex flex-col gap-8">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-outline-variant pb-6">
+<div>
+<h1 class="font-display text-display text-on-surface">Journal d'Audit</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">Traçabilité complète des actions système et utilisateurs.</p>
+</div>
+<div class="flex gap-3 w-full md:w-auto">
+<button class="flex-1 md:flex-none flex items-center justify-center gap-2 border border-outline-variant px-4 py-2 rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface transition-colors bg-white shadow-sm">
+<span class="material-symbols-outlined">download</span>
+                        Exporter (CSV)
+                    </button>
+<button class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-primary/90 transition-colors shadow-sm">
+<span class="material-symbols-outlined">filter_list</span>
+                        Filtres Avancés
+                    </button>
+</div>
+</div>
+<!-- Content Canvas -->
+<div class="bg-white rounded-xl shadow-sm border border-outline-variant overflow-hidden flex flex-col">
+<!-- Filters Bar -->
+<div class="p-4 border-b border-outline-variant bg-surface-container-lowest flex flex-col sm:flex-row gap-4 items-center justify-between">
+<div class="flex flex-wrap gap-4 w-full sm:w-auto">
+<!-- Date Filter -->
+<div class="flex items-center gap-2 bg-surface px-3 py-1.5 rounded-lg border border-outline-variant w-full sm:w-auto">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-size: 18px;">calendar_today</span>
+<select class="bg-transparent border-none text-body-sm text-on-surface focus:ring-0 p-0 pr-6 w-full cursor-pointer">
+<option>Aujourd'hui</option>
+<option>7 derniers jours</option>
+<option>30 derniers jours</option>
+<option>Période personnalisée...</option>
+</select>
+</div>
+<!-- Actor Filter -->
+<div class="flex items-center gap-2 bg-surface px-3 py-1.5 rounded-lg border border-outline-variant w-full sm:w-auto">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-size: 18px;">person</span>
+<select class="bg-transparent border-none text-body-sm text-on-surface focus:ring-0 p-0 pr-6 w-full cursor-pointer">
+<option>Tous les acteurs</option>
+<option>Awa KONE</option>
+<option>Système</option>
+<option>API Externe</option>
+</select>
+</div>
+</div>
+<div class="text-body-sm text-on-surface-variant whitespace-nowrap">
+                        Affichage de 1-10 sur 2,451 entrées
+                    </div>
+</div>
+<!-- Data Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse min-w-[800px]">
+<thead>
+<tr class="border-b border-outline-variant bg-surface">
+<th class="py-4 px-6 font-label-md text-label-md text-on-surface-variant font-semibold">Horodatage</th>
+<th class="py-4 px-6 font-label-md text-label-md text-on-surface-variant font-semibold">Acteur</th>
+<th class="py-4 px-6 font-label-md text-label-md text-on-surface-variant font-semibold">Action</th>
+<th class="py-4 px-6 font-label-md text-label-md text-on-surface-variant font-semibold">Objet</th>
+<th class="py-4 px-6 font-label-md text-label-md text-on-surface-variant font-semibold">Statut</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant bg-white">
+<!-- Row 1 -->
+<tr class="hover:bg-surface transition-colors">
+<td class="py-4 px-6">
+<div class="font-mono text-body-sm text-on-surface">2023-10-24 14:32:01</div>
+<div class="font-body-sm text-xs text-on-surface-variant mt-1">GMT+0</div>
+</td>
+<td class="py-4 px-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs">AK</div>
+<div>
+<div class="font-body-sm text-on-surface font-medium">Awa KONE</div>
+<div class="font-mono text-xs text-on-surface-variant">ID: usr_8f92a1</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-secondary-fixed text-on-secondary-fixed text-xs font-semibold">
+<span class="material-symbols-outlined" style="font-size: 14px;">edit_document</span>
+                                        SIGNATURE_APPOSÉE
+                                    </span>
+</td>
+<td class="py-4 px-6">
+<div class="font-body-sm text-on-surface">Contrat_Partenariat_Q3.pdf</div>
+<div class="font-mono text-xs text-on-surface-variant mt-1 truncate max-w-[150px]" title="Hash: 0x9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08">0x9f86...0a08</div>
+</td>
+<td class="py-4 px-6">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-surface-tint"></div>
+<span class="font-body-sm text-on-surface">Succès</span>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface transition-colors">
+<td class="py-4 px-6">
+<div class="font-mono text-body-sm text-on-surface">2023-10-24 14:30:15</div>
+<div class="font-body-sm text-xs text-on-surface-variant mt-1">GMT+0</div>
+</td>
+<td class="py-4 px-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center font-bold text-xs">
+<span class="material-symbols-outlined" style="font-size: 16px;">dns</span>
+</div>
+<div>
+<div class="font-body-sm text-on-surface font-medium">Système</div>
+<div class="font-mono text-xs text-on-surface-variant">Automatisé</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-variant text-on-surface text-xs font-semibold">
+<span class="material-symbols-outlined" style="font-size: 14px;">verified</span>
+                                        VÉRIFICATION_HASH
+                                    </span>
+</td>
+<td class="py-4 px-6">
+<div class="font-body-sm text-on-surface">Doc_Preuve_ID_742.png</div>
+<div class="font-mono text-xs text-on-surface-variant mt-1 truncate max-w-[150px]" title="Hash: 0x5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8">0x5e88...42d8</div>
+</td>
+<td class="py-4 px-6">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-surface-tint"></div>
+<span class="font-body-sm text-on-surface">Valide</span>
+</div>
+</td>
+</tr>
+<!-- Row 3 (Error State) -->
+<tr class="hover:bg-surface transition-colors bg-error-container/10">
+<td class="py-4 px-6">
+<div class="font-mono text-body-sm text-on-surface">2023-10-24 11:15:42</div>
+<div class="font-body-sm text-xs text-on-surface-variant mt-1">GMT+0</div>
+</td>
+<td class="py-4 px-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-bold text-xs">API</div>
+<div>
+<div class="font-body-sm text-on-surface font-medium">API Externe</div>
+<div class="font-mono text-xs text-on-surface-variant">IP: 192.168.1.45</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-error-container text-on-error-container text-xs font-semibold">
+<span class="material-symbols-outlined" style="font-size: 14px;">lock_open_right</span>
+                                        TENTATIVE_ACCÈS
+                                    </span>
+</td>
+<td class="py-4 px-6">
+<div class="font-body-sm text-on-surface">Dossier_Confidentiel_RH</div>
+<div class="font-mono text-xs text-on-surface-variant mt-1 truncate max-w-[150px]">Ref: DIR_8829</div>
+</td>
+<td class="py-4 px-6">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+<span class="font-body-sm text-error font-medium">Échec (403)</span>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="p-4 border-t border-outline-variant flex items-center justify-between bg-surface-container-lowest">
+<button class="flex items-center gap-1 text-on-surface-variant hover:text-primary disabled:opacity-50 font-label-md text-label-md transition-colors" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+                        Précédent
+                    </button>
+<div class="flex gap-1">
+<button class="w-8 h-8 rounded flex items-center justify-center bg-primary text-on-primary font-label-md text-label-md">1</button>
+<button class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md">2</button>
+<button class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md">3</button>
+<span class="w-8 h-8 flex items-center justify-center text-on-surface-variant">...</span>
+<button class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md">245</button>
+</div>
+<button class="flex items-center gap-1 text-on-surface-variant hover:text-primary font-label-md text-label-md transition-colors">
+                        Suivant
+                        <span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-surface dark:bg-inverse-surface border-t border-outline-variant shadow-lg rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high p-2 rounded-lg transition-colors w-16" href="#">
+<span class="material-symbols-outlined mb-1">dashboard</span>
+<span class="font-label-sm text-label-sm">Tableau</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high p-2 rounded-lg transition-colors w-16" href="#">
+<span class="material-symbols-outlined mb-1">history_edu</span>
+<span class="font-label-sm text-label-sm">Signer</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high p-2 rounded-lg transition-colors w-16" href="#">
+<span class="material-symbols-outlined mb-1">qr_code_scanner</span>
+<span class="font-label-sm text-label-sm">Vérifier</span>
+</a>
+<!-- Active Mobile Tab -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 scale-90 duration-200 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">track_changes</span>
+<span class="font-label-sm text-label-sm">Tracer</span>
+</a>
+</nav>
+<a href="../index.html" style="position:fixed;bottom:84px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:6px;background:#191c1e;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.25);text-decoration:none;opacity:.85;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85" title="Retour au prototype SignSecure TrustFlow">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+Prototype
+</a>
+</body></html>

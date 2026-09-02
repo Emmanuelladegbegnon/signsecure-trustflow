@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignSecure TrustFlow - Résultat de Vérification (Révoqué)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#a3faef",
+                        "surface-container": "#eceef0",
+                        "primary-fixed-dim": "#80d5cb",
+                        "outline": "#6e7977",
+                        "primary-fixed": "#9cf2e8",
+                        "surface-dim": "#d8dadc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "secondary": "#565e74",
+                        "on-secondary-container": "#5c647a",
+                        "secondary-fixed": "#dae2fd",
+                        "inverse-surface": "#2d3133",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-surface": "#191c1e",
+                        "surface": "#f7f9fb",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary-fixed": "#131b2e",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#006a63",
+                        "tertiary-fixed": "#d3e4fe",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "primary-container": "#0f766e",
+                        "surface-container-high": "#e6e8ea",
+                        "on-background": "#191c1e",
+                        "surface-variant": "#e0e3e5",
+                        "inverse-primary": "#80d5cb",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "primary": "#005c55",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#5a6a81",
+                        "outline-variant": "#bdc9c6",
+                        "on-primary-fixed": "#00201d",
+                        "surface-bright": "#f7f9fb",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-primary-fixed-variant": "#00504a",
+                        "background": "#f7f9fb",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#deeaff",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-container": "#dae2fd",
+                        "tertiary": "#425268",
+                        "on-surface-variant": "#3e4947"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "container-max": "1280px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col md:flex-row">
+<!-- TopNavBar (Mobile Only) -->
+<header class="md:hidden flex justify-between items-center w-full h-16 px-gutter bg-white dark:bg-surface-dim shadow-sm z-40 fixed top-0 left-0">
+<div class="font-headline-sm text-headline-sm font-black text-primary dark:text-primary-fixed-dim">
+            SignSecure TrustFlow
+        </div>
+<div class="flex items-center gap-4">
+<button class="text-primary dark:text-primary-fixed-dim font-label-sm text-label-sm hover:text-primary dark:hover:text-primary-fixed-dim transition-all active:scale-95 duration-100">Démonstration</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-label-sm text-label-sm font-bold text-on-surface">AK</div>
+</div>
+</header>
+<!-- SideNavBar (Desktop Only) -->
+<nav class="hidden md:flex flex-col h-screen p-unit overflow-y-auto bg-surface dark:bg-inverse-surface fixed left-0 top-0 w-[280px] border-r border-outline-variant dark:border-outline shadow-sm dark:shadow-none z-50">
+<div class="p-4 mb-6">
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">
+                SignSecure TrustFlow
+            </div>
+</div>
+<div class="px-4 mb-8 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-headline-sm text-headline-sm font-bold">
+                 AK
+             </div>
+<div>
+<div class="font-label-md text-label-md font-semibold text-on-surface">Awa KONE</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Superviseur</div>
+</div>
+</div>
+<button class="mx-4 mb-6 py-2.5 px-4 bg-primary text-on-primary rounded-lg font-label-md text-label-md font-medium hover:bg-on-primary-fixed-variant transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined filled" data-icon="add">add</span>
+            Nouveau Document
+        </button>
+<ul class="flex flex-col gap-1 flex-1">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                    Tableau de bord
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="edit_document">edit_document</span>
+                    Signer
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary dark:text-primary-fixed-dim font-bold border-r-4 border-primary dark:border-primary-fixed-dim bg-primary-container/10 hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors font-label-md text-label-md active:opacity-90 active:transition-opacity active:duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+                    Vérifier
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+                    Tracer
+                </a>
+</li>
+</ul>
+<div class="mt-auto border-t border-outline-variant pt-4">
+<ul class="flex flex-col gap-1">
+<li>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                         Paramètres
+                     </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-error hover:bg-error-container hover:text-on-error-container transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                         Déconnexion
+                     </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 md:ml-[280px] pt-16 md:pt-0 pb-20 lg:pb-8 px-margin-mobile md:px-margin-desktop w-full max-w-container-max mx-auto flex flex-col gap-8">
+<!-- Header Section -->
+<div class="pt-8 flex flex-col gap-2">
+<button class="flex items-center gap-2 text-primary font-label-md text-label-md w-fit hover:underline">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+                Retour au scan
+            </button>
+<h1 class="font-display text-display text-on-background">Résultat d'Analyse</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Rapport de vérification cryptographique du document soumis.</p>
+</div>
+<!-- Warning Banner (Revoked Status) -->
+<div class="bg-error-container rounded-xl p-6 border-l-4 border-error shadow-sm flex items-start gap-4">
+<span class="material-symbols-outlined filled text-error text-3xl" data-icon="warning">warning</span>
+<div class="flex-1">
+<h2 class="font-headline-md text-headline-md text-on-error-container mb-2">Document Révoqué</h2>
+<p class="font-body-md text-body-md text-on-error-container/80 mb-4">
+                    La signature cryptographique de ce document a été explicitement révoquée par l'autorité émettrice. Ce document ne doit plus être considéré comme valide ou authentique pour toute transaction légale ou financière.
+                </p>
+<div class="bg-surface-container-lowest/50 rounded-lg p-4 font-body-sm text-body-sm text-on-error-container flex flex-col gap-1">
+<div class="flex justify-between border-b border-error/20 pb-2">
+<span class="font-semibold">Motif de révocation:</span>
+<span>Compromission présumée de la clé privée</span>
+</div>
+<div class="flex justify-between pt-2">
+<span class="font-semibold">Date de révocation:</span>
+<span>14 Nov 2023, 09:42 UTC</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Details Bento Grid (Grayed out/Invalidated style) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-60 grayscale-[50%]">
+<!-- Document Info Card -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant flex flex-col gap-4">
+<div class="flex items-center gap-3 text-secondary">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<h3 class="font-headline-sm text-headline-sm">Informations Document</h3>
+</div>
+<div class="flex-1 flex flex-col gap-3">
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Nom du fichier</div>
+<div class="font-body-md text-body-md text-on-surface font-medium break-all">Contrat_Partenariat_Final_v2.pdf</div>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Empreinte SHA-256</div>
+<div class="font-body-sm text-body-sm text-on-surface font-mono bg-surface p-2 rounded break-all border border-outline-variant/50">
+                            e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+                        </div>
+</div>
+</div>
+</div>
+<!-- Identity Card -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant flex flex-col gap-4 relative overflow-hidden">
+<div class="absolute top-4 right-4 bg-error-container text-on-error-container px-3 py-1 rounded-full font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="cancel">cancel</span> Invalide
+                </div>
+<div class="flex items-center gap-3 text-secondary">
+<span class="material-symbols-outlined" data-icon="person_cancel">person_cancel</span>
+<h3 class="font-headline-sm text-headline-sm">Identité Signataire</h3>
+</div>
+<div class="flex-1 flex flex-col gap-3 mt-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="domain">domain</span>
+</div>
+<div>
+<div class="font-body-md text-body-md font-semibold text-on-surface">Ministère des Finances</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">ID: GOUV-CI-00129</div>
+</div>
+</div>
+<div class="mt-2 border-t border-outline-variant pt-3">
+<div class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Certificat (Révoqué)</div>
+<div class="font-body-sm text-body-sm text-on-surface text-error">N° 8839-4421-BBAA (Expiré/Révoqué)</div>
+</div>
+</div>
+</div>
+<!-- Integrity Card -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant flex flex-col gap-4 lg:col-span-1 md:col-span-2">
+<div class="absolute top-4 right-4 bg-error-container text-on-error-container px-3 py-1 rounded-full font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="gpp_bad">gpp_bad</span> Compromis
+                </div>
+<div class="flex items-center gap-3 text-secondary">
+<span class="material-symbols-outlined" data-icon="security_update_warning">security_update_warning</span>
+<h3 class="font-headline-sm text-headline-sm">Intégrité &amp; Timestamp</h3>
+</div>
+<div class="flex-1 flex flex-col gap-4 mt-4">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary mt-0.5" data-icon="history">history</span>
+<div>
+<div class="font-label-md text-label-md font-semibold text-on-surface">Horodatage Initial</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">12 Oct 2023, 14:30 UTC</div>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-error mt-0.5" data-icon="block">block</span>
+<div>
+<div class="font-label-md text-label-md font-semibold text-error">Statut de la Chaîne</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Rupture de confiance détectée au niveau du nœud d'autorité.</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="lg:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-surface dark:bg-inverse-surface border-t border-outline-variant dark:border-outline shadow-lg rounded-t-xl pb-safe">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high px-2 py-1 rounded-lg min-w-[64px]" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard">dashboard</span>
+<span class="font-label-sm text-[10px] leading-tight">Tableau</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high px-2 py-1 rounded-lg min-w-[64px]" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="history_edu">history_edu</span>
+<span class="font-label-sm text-[10px] leading-tight">Signer</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary-container text-on-primary-container dark:text-on-primary-container rounded-full px-4 py-1 min-w-[64px] active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined mb-1 filled" data-icon="qr_code_scanner">qr_code_scanner</span>
+<span class="font-label-sm text-[10px] leading-tight font-bold">Vérifier</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high px-2 py-1 rounded-lg min-w-[64px]" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="track_changes">track_changes</span>
+<span class="font-label-sm text-[10px] leading-tight">Tracer</span>
+</a>
+</nav>
+<style>
+        /* iOS Safe Area padding for Bottom Nav */
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 16px);
+        }
+    </style>
+<a href="../index.html" style="position:fixed;bottom:84px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:6px;background:#191c1e;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.25);text-decoration:none;opacity:.85;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85" title="Retour au prototype SignSecure TrustFlow">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+Prototype
+</a>
+</body></html>

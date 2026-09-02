@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignSecure TrustFlow - Assigner Signataires</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#a3faef",
+                        "surface-container": "#eceef0",
+                        "primary-fixed-dim": "#80d5cb",
+                        "outline": "#6e7977",
+                        "primary-fixed": "#9cf2e8",
+                        "surface-dim": "#d8dadc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "secondary": "#565e74",
+                        "on-secondary-container": "#5c647a",
+                        "secondary-fixed": "#dae2fd",
+                        "inverse-surface": "#2d3133",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-surface": "#191c1e",
+                        "surface": "#f7f9fb",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary-fixed": "#131b2e",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#006a63",
+                        "tertiary-fixed": "#d3e4fe",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "primary-container": "#0f766e",
+                        "surface-container-high": "#e6e8ea",
+                        "on-background": "#191c1e",
+                        "surface-variant": "#e0e3e5",
+                        "inverse-primary": "#80d5cb",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "primary": "#005c55",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#5a6a81",
+                        "outline-variant": "#bdc9c6",
+                        "on-primary-fixed": "#00201d",
+                        "surface-bright": "#f7f9fb",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-primary-fixed-variant": "#00504a",
+                        "background": "#f7f9fb",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#deeaff",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-container": "#dae2fd",
+                        "tertiary": "#425268",
+                        "on-surface-variant": "#3e4947"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "container-max": "1280px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased h-screen overflow-hidden flex">
+<!-- SideNavBar (Desktop) -->
+<aside class="hidden md:flex flex-col h-screen p-unit overflow-y-auto bg-surface fixed left-0 top-0 w-[280px] border-r border-outline-variant shadow-sm z-30">
+<!-- Brand -->
+<div class="px-4 py-6 mb-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-3xl icon-filled" data-icon="shield_locked">shield_locked</span>
+<div class="font-headline-md text-headline-md font-bold text-primary">SignSecure TrustFlow</div>
+</div>
+<!-- CTA -->
+<div class="px-2 mb-6">
+<button class="w-full bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container transition-colors rounded-xl py-3 px-4 flex items-center justify-center gap-2 font-label-md text-label-md shadow-sm">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                Nouveau Document
+            </button>
+</div>
+<!-- Navigation Tabs -->
+<nav class="flex-1 px-2 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-colors opacity-90" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Tableau de bord</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-primary font-bold border-r-4 border-primary bg-primary-container/10 transition-colors opacity-90" href="#">
+<span class="material-symbols-outlined icon-filled" data-icon="edit_document">edit_document</span>
+<span class="font-label-md text-label-md">Signer</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-colors opacity-90" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+<span class="font-label-md text-label-md">Vérifier</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-colors opacity-90" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-md text-label-md">Tracer</span>
+</a>
+</nav>
+<!-- Footer / Profile -->
+<div class="mt-auto px-2 pt-4 border-t border-outline-variant">
+<div class="flex items-center gap-3 px-4 py-3 mb-2">
+<img alt="Awa KONE" class="w-10 h-10 rounded-full object-cover border border-outline-variant" data-alt="A professional corporate headshot of a West African businesswoman, smiling slightly, wearing a tailored navy blazer. Soft, high-key studio lighting with a neutral light grey background to convey institutional trust and reliability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCI7iXSzzTgxe4QhpVgAJJZPXbKpSnEKtMZt0IYcwcF3h-PI09aCd_sjPFixe7Jvo_pNmctzkx3dArkRE_iUfSsH4a9IONMtGxD7iupg6pAfQvos--EPu3X6SWm2YdAGLL7l6FDkVF9DvRbkFsFR0KEAqQZoeVvUqvWjUbQvNdjcTzSBMZ7od04S8sIFWgMJuAYmqCsoFnTcNlFY0PQmHPf8z94X_OqjoaZGVLWZ2IFs4rzeEeCnPWn"/>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Awa KONE</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Superviseur</p>
+</div>
+</div>
+<a class="flex items-center gap-3 px-4 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Paramètres</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-xl text-error hover:bg-error-container transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-md text-label-md">Déconnexion</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col md:ml-[280px] h-screen relative">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full h-16 px-gutter bg-surface-container-lowest shadow-sm z-20">
+<div class="flex items-center gap-4">
+<!-- Mobile Menu Button -->
+<button class="md:hidden p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-sm text-headline-sm font-black text-primary">Préparation du Document</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-all p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<button class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border border-outline text-secondary hover:bg-surface-container transition-colors font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="play_circle">play_circle</span>
+                    Démonstration
+                </button>
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-md text-label-md font-bold md:hidden">
+                    AK
+                </div>
+</div>
+</header>
+<!-- Split Workspace -->
+<div class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-surface-container-lowest">
+<!-- PDF Viewer (Left) -->
+<section class="flex-[2] bg-surface-container-low flex flex-col border-r border-outline-variant relative overflow-hidden">
+<!-- Viewer Toolbar -->
+<div class="h-12 border-b border-outline-variant bg-surface flex items-center justify-between px-4">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Contrat_Pret_Bancaire_v2.pdf</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded transition-colors" title="Zoom Arrière">
+<span class="material-symbols-outlined text-[20px]" data-icon="zoom_out">zoom_out</span>
+</button>
+<span class="font-body-sm text-body-sm text-on-surface-variant">100%</span>
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded transition-colors" title="Zoom Avant">
+<span class="material-symbols-outlined text-[20px]" data-icon="zoom_in">zoom_in</span>
+</button>
+<div class="w-px h-6 bg-outline-variant mx-1"></div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Page 1 / 12</span>
+</div>
+</div>
+<!-- Document Canvas -->
+<div class="flex-1 overflow-auto p-4 md:p-8 flex justify-center bg-surface-container">
+<!-- PDF Page Mockup -->
+<div class="w-full max-w-[800px] h-fit min-h-[1100px] bg-white shadow-sm border border-outline-variant p-10 md:p-16 relative">
+<!-- Decorative document content -->
+<div class="w-1/3 h-8 bg-surface-container-high mb-8 rounded"></div>
+<div class="w-full h-4 bg-surface-container mb-4 rounded"></div>
+<div class="w-full h-4 bg-surface-container mb-4 rounded"></div>
+<div class="w-5/6 h-4 bg-surface-container mb-12 rounded"></div>
+<div class="w-1/4 h-6 bg-surface-container-high mb-6 rounded"></div>
+<div class="w-full h-4 bg-surface-container mb-4 rounded"></div>
+<div class="w-full h-4 bg-surface-container mb-4 rounded"></div>
+<div class="w-full h-4 bg-surface-container mb-4 rounded"></div>
+<div class="w-4/5 h-4 bg-surface-container mb-12 rounded"></div>
+<!-- Signature Zone Indicator -->
+<div class="absolute bottom-32 left-16 w-64 h-32 border-2 border-dashed border-primary bg-primary-container/5 flex items-center justify-center rounded group hover:bg-primary-container/10 transition-colors cursor-pointer">
+<div class="flex flex-col items-center gap-2 text-primary">
+<span class="material-symbols-outlined" data-icon="signature">signature</span>
+<span class="font-label-sm text-label-sm">Zone de signature : Directeur</span>
+</div>
+</div>
+<!-- Floating Action on PDF -->
+<div class="absolute bottom-8 right-8">
+<button class="bg-surface-container-lowest border border-primary text-primary shadow-lg rounded-full px-4 py-3 flex items-center gap-2 hover:bg-primary hover:text-on-primary transition-all font-label-md text-label-md font-bold">
+<span class="material-symbols-outlined" data-icon="place_item">place_item</span>
+                                Placer la signature
+                            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Panel: Assigner Signataires -->
+<section class="flex-[1] bg-surface-container-lowest flex flex-col min-w-[320px] max-w-md">
+<div class="p-6 border-b border-outline-variant">
+<h2 class="font-headline-sm text-headline-sm font-semibold text-on-surface mb-2">Ajouter des signataires</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Définissez l'ordre et les informations des personnes devant signer ce document.</p>
+</div>
+<div class="flex-1 overflow-y-auto p-6 space-y-6">
+<!-- Added Signatory Card -->
+<div class="bg-surface border border-outline-variant rounded-xl p-4 relative group">
+<div class="absolute -left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-sm text-[10px] font-bold border-2 border-surface-container-lowest shadow-sm">1</div>
+<div class="flex justify-between items-start mb-3 ml-2">
+<div>
+<h3 class="font-label-md text-label-md font-semibold text-on-surface">Jean Dupont</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Directeur Général</p>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1 rounded-full">
+<span class="material-symbols-outlined text-[20px]" data-icon="close">close</span>
+</button>
+</div>
+<div class="ml-2 flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="mail">mail</span>
+                            jean.d@entreprise.com
+                        </div>
+</div>
+<!-- Add New Signatory Form -->
+<div class="bg-surface-container-low border border-outline-variant rounded-xl p-5 relative">
+<div class="absolute -left-2.5 top-5 w-5 h-5 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center font-label-sm text-[10px] font-bold border-2 border-surface-container-lowest">2</div>
+<div class="ml-2 space-y-4">
+<!-- Role Input -->
+<div class="space-y-1">
+<label class="block font-label-sm text-label-sm text-on-surface-variant" for="role">Rôle / Fonction *</label>
+<input class="w-full bg-surface-container-lowest border border-outline rounded-lg px-3 py-2 text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow" id="role" placeholder="Ex: Directeur Financier" type="text"/>
+</div>
+<!-- Name Input -->
+<div class="space-y-1">
+<label class="block font-label-sm text-label-sm text-on-surface-variant" for="nom">Nom complet *</label>
+<input class="w-full bg-surface-container-lowest border border-outline rounded-lg px-3 py-2 text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow" id="nom" placeholder="Saisir le nom" type="text"/>
+</div>
+<!-- Email Input -->
+<div class="space-y-1">
+<label class="block font-label-sm text-label-sm text-on-surface-variant" for="email">Email ou Mobile *</label>
+<input class="w-full bg-surface-container-lowest border border-outline rounded-lg px-3 py-2 text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow" id="email" placeholder="contact@exemple.com" type="text"/>
+</div>
+<!-- Authentication Type -->
+<div class="pt-2">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="w-4 h-4 rounded border-outline text-primary focus:ring-primary bg-surface-container-lowest cursor-pointer" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">Exiger OTP par SMS (Sécurité Renforcée)</span>
+</label>
+</div>
+</div>
+</div>
+<!-- Add Another Button -->
+<button class="w-full border border-dashed border-outline text-secondary hover:text-primary hover:border-primary hover:bg-primary-container/5 transition-all rounded-xl py-3 px-4 flex items-center justify-center gap-2 font-label-md text-label-md">
+<span class="material-symbols-outlined" data-icon="person_add">person_add</span>
+                        Ajouter un autre signataire
+                    </button>
+</div>
+<!-- Bottom Action Panel (Desktop Right Panel Footer) -->
+<div class="p-6 border-t border-outline-variant bg-surface-container-lowest mt-auto hidden lg:block">
+<button class="w-full bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container transition-colors rounded-xl py-3 px-4 flex items-center justify-center gap-2 font-label-md text-label-md font-bold shadow-sm" onclick="location.href='../apposer_ma_signature/code.html';">
+<span class="material-symbols-outlined" data-icon="send">send</span>
+                        Envoyer pour signature
+                    </button>
+</div>
+</section>
+</div>
+<!-- Global Bottom Action Bar (Mobile/Tablet) -->
+<div class="lg:hidden border-t border-outline-variant bg-surface-container-lowest p-4 pb-[88px]"> <!-- Added pb for bottom nav -->
+<button class="w-full bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container transition-colors rounded-xl py-3 px-4 flex items-center justify-center gap-2 font-label-md text-label-md font-bold shadow-sm" onclick="location.href='../apposer_ma_signature/code.html';">
+<span class="material-symbols-outlined" data-icon="send">send</span>
+                Envoyer pour signature
+            </button>
+</div>
+<!-- BottomNavBar (Mobile) -->
+<nav class="lg:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-surface border-t border-outline-variant shadow-lg rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant w-16 h-12" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard">dashboard</span>
+<span class="font-label-sm text-label-sm text-[10px]">Tableau</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 w-20 h-12" href="#">
+<span class="material-symbols-outlined icon-filled mb-1" data-icon="history_edu">history_edu</span>
+<span class="font-label-sm text-label-sm text-[10px]">Signer</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant w-16 h-12" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="qr_code_scanner">qr_code_scanner</span>
+<span class="font-label-sm text-label-sm text-[10px]">Vérifier</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant w-16 h-12" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="track_changes">track_changes</span>
+<span class="font-label-sm text-label-sm text-[10px]">Tracer</span>
+</a>
+</nav>
+</main>
+<a href="../index.html" style="position:fixed;bottom:84px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:6px;background:#191c1e;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.25);text-decoration:none;opacity:.85;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85" title="Retour au prototype SignSecure TrustFlow">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+Prototype
+</a>
+</body></html>

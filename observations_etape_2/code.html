@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SignSecure TrustFlow - Observations</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#a3faef",
+                        "surface-container": "#eceef0",
+                        "primary-fixed-dim": "#80d5cb",
+                        "outline": "#6e7977",
+                        "primary-fixed": "#9cf2e8",
+                        "surface-dim": "#d8dadc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "secondary": "#565e74",
+                        "on-secondary-container": "#5c647a",
+                        "secondary-fixed": "#dae2fd",
+                        "inverse-surface": "#2d3133",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-surface": "#191c1e",
+                        "surface": "#f7f9fb",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary-fixed": "#131b2e",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#006a63",
+                        "tertiary-fixed": "#d3e4fe",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "primary-container": "#0f766e",
+                        "surface-container-high": "#e6e8ea",
+                        "on-background": "#191c1e",
+                        "surface-variant": "#e0e3e5",
+                        "inverse-primary": "#80d5cb",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "primary": "#005c55",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#5a6a81",
+                        "outline-variant": "#bdc9c6",
+                        "on-primary-fixed": "#00201d",
+                        "surface-bright": "#f7f9fb",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-primary-fixed-variant": "#00504a",
+                        "background": "#f7f9fb",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#deeaff",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-container": "#dae2fd",
+                        "tertiary": "#425268",
+                        "on-surface-variant": "#3e4947"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "container-max": "1280px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #F8FAFC;
+        }
+        
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #005c55;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #005c55;
+        }
+        .toggle-checkbox:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 92, 85, 0.2);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background antialiased font-body-md flex flex-col min-h-screen">
+<!-- Top Navigation Area (Mobile Optimized, No Bottom Nav for transactional screen) -->
+<header class="bg-surface-container-lowest shadow-sm w-full h-16 px-gutter flex justify-between items-center z-40 sticky top-0">
+<div class="flex items-center gap-2">
+<button aria-label="Retour" class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary">Observations</h1>
+</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">
+            Étape 3/4
+        </div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow p-margin-mobile flex flex-col gap-6 max-w-lg mx-auto w-full pb-24">
+<!-- Header Section -->
+<div class="mb-2">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-2">Vérification du Document</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Veuillez confirmer les points de contrôle suivants pour le document en cours de traitement.</p>
+</div>
+<!-- Checklist Section -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
+<div class="p-4 border-b border-outline-variant/20 flex justify-between items-center hover:bg-surface-container-highest transition-colors cursor-pointer">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-medium">Signature présente</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Vérifier toutes les pages requises</span>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-outline-variant/50 top-0 bottom-0 m-auto z-10 transition-all duration-200" id="toggle-sig" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer transition-colors duration-200" for="toggle-sig"></label>
+</div>
+</div>
+<div class="p-4 border-b border-outline-variant/20 flex justify-between items-center hover:bg-surface-container-highest transition-colors cursor-pointer">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-medium">Pages complètes</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Aucune page manquante ou altérée</span>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-outline-variant/50 top-0 bottom-0 m-auto z-10 transition-all duration-200" id="toggle-pages" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer transition-colors duration-200" for="toggle-pages"></label>
+</div>
+</div>
+<div class="p-4 border-b border-outline-variant/20 flex justify-between items-center hover:bg-surface-container-highest transition-colors cursor-pointer">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-medium">Cachet visible</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Lisible et officiel</span>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-outline-variant/50 top-0 bottom-0 m-auto z-10 transition-all duration-200" id="toggle-stamp" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer transition-colors duration-200" for="toggle-stamp"></label>
+</div>
+</div>
+<div class="p-4 flex justify-between items-center hover:bg-surface-container-highest transition-colors cursor-pointer">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-medium">Enveloppe intacte</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Scellés originaux non brisés</span>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-outline-variant/50 top-0 bottom-0 m-auto z-10 transition-all duration-200" id="toggle-env" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer transition-colors duration-200" for="toggle-env"></label>
+</div>
+</div>
+</section>
+<!-- Anomalies Section -->
+<section class="mt-2">
+<label class="block font-label-md text-label-md text-on-surface mb-2 font-semibold" for="anomalie">Anomalie constatée</label>
+<textarea class="w-full rounded-lg border border-outline-variant bg-surface-container-lowest p-3 font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none shadow-sm placeholder:text-on-surface-variant/60" id="anomalie" placeholder="Décrivez brièvement toute anomalie observée (facultatif)..." rows="4"></textarea>
+<p class="mt-2 font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="info">info</span>
+                Laissez vide si tout est conforme.
+            </p>
+</section>
+</main>
+<!-- Fixed Bottom Action Bar -->
+<div class="fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant/20 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50">
+<div class="max-w-lg mx-auto flex gap-4">
+<button class="flex-1 py-3 px-4 rounded-lg border border-outline-variant text-on-surface font-label-md text-label-md font-medium hover:bg-surface-container-low transition-colors text-center">
+                Précédent
+            </button>
+<button class="flex-1 py-3 px-4 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-medium hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm text-center flex items-center justify-center gap-2" onclick="location.href='../confirmation_d_enregistrement_mobile/code.html';">
+                Suivant
+                <span class="material-symbols-outlined text-[18px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+<a href="../index.html" style="position:fixed;bottom:84px;right:16px;z-index:2147483647;display:flex;align-items:center;gap:6px;background:#191c1e;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.25);text-decoration:none;opacity:.85;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85" title="Retour au prototype SignSecure TrustFlow">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+Prototype
+</a>
+</body></html>
