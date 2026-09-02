@@ -1,16 +1,30 @@
-import { useRef, useState, type PointerEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useRef, useState, type ChangeEvent, type PointerEvent } from 'react'
+import { FormAlert } from '../../components/ui/FormAlert'
 import { Icon } from '../../components/ui/Icon'
-import { ROUTES } from '../../routes'
 
 type SignatureTab = 'dessiner' | 'importer' | 'enregistree'
 
-export function ApplySignature() {
-  const navigate = useNavigate()
+interface ApplySignatureProps {
+  documentTitle: string
+  /** Envoie consentement + image au serveur — l'appelant ne doit jamais garder cette image en mémoire au-delà de cet appel (CLAUDE.md § Sign). */
+  onSubmit: (consentement: true, signatureImageBase64: string) => Promise<void>
+  submitting: boolean
+  error: string | null
+}
+
+/**
+ * Étape "dessiner ma signature" du parcours signataire. Composant purement
+ * présentationnel : c'est SignerInvite qui pilote l'appel réseau et détruit
+ * l'image immédiatement après envoi — jamais stockée ni mise en cache ici
+ * au-delà du temps de l'appel.
+ */
+export function ApplySignature({ documentTitle, onSubmit, submitting, error }: ApplySignatureProps) {
   const [tab, setTab] = useState<SignatureTab>('dessiner')
   const [legalCheck, setLegalCheck] = useState(false)
   const [hasSignature, setHasSignature] = useState(false)
+  const [importedImage, setImportedImage] = useState<string | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const drawing = useRef(false)
 
   const getContext = () => canvasRef.current?.getContext('2d') ?? null
@@ -46,38 +60,49 @@ export function ApplySignature() {
   const clearCanvas = () => {
     const canvas = canvasRef.current
     const ctx = getContext()
-    if (!canvas || !ctx) return
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    if (canvas && ctx) ctx.clearRect(0, 0, canvas.width, canvas.height)
     setHasSignature(false)
   }
 
-  const canConfirm = legalCheck && (tab !== 'dessiner' || hasSignature)
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setImportedImage(typeof reader.result === 'string' ? reader.result : null)
+    reader.readAsDataURL(file)
+  }
+
+  const hasUsableSignature = (tab === 'dessiner' && hasSignature) || (tab === 'importer' && Boolean(importedImage))
+  const canConfirm = legalCheck && hasUsableSignature && !submitting
+
+  const handleConfirm = async () => {
+    if (!canConfirm) return
+    const image = tab === 'dessiner' ? canvasRef.current?.toDataURL('image/png') : importedImage
+    if (!image) return
+    await onSubmit(true, image)
+    // Sécurité (CLAUDE.md) : rien ne doit rester en mémoire côté client une fois envoyé.
+    clearCanvas()
+    setImportedImage(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   return (
-    <div className="bg-background text-on-background font-body-md h-screen flex flex-col overflow-hidden">
+    <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col">
       <header className="bg-surface-container-lowest shadow-sm w-full h-16 px-gutter flex justify-between items-center z-40 shrink-0">
         <div className="flex items-center gap-4 min-w-0">
-          <button aria-label="Retour" className="text-on-surface-variant hover:text-primary transition-all p-2 rounded-full hover:bg-surface-container-high" onClick={() => navigate(-1)}>
-            <Icon name="close" />
-          </button>
-          <div className="flex items-center gap-2 shrink-0">
-            <Icon name="shield" className="text-primary" />
-            <span className="font-headline-sm text-headline-sm font-black text-primary">SignSecure TrustFlow</span>
-          </div>
+          <Icon name="shield" className="text-primary" />
+          <span className="font-headline-sm text-headline-sm font-black text-primary">SignSecure TrustFlow</span>
           <div className="h-6 w-px bg-outline-variant mx-2 hidden sm:block" />
-          <span className="font-label-md text-label-md text-on-surface-variant hidden sm:block truncate">Contrat de Prestation - Ref: CT-2023-089</span>
+          <span className="font-label-md text-label-md text-on-surface-variant hidden sm:block truncate">{documentTitle}</span>
         </div>
-        <div className="flex items-center gap-4">
-          <button className="text-primary font-label-md text-label-md hover:bg-surface-container-high px-4 py-2 rounded transition-colors hidden sm:block">Démonstration</button>
-          <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-label-md text-label-md font-bold">AK</div>
-        </div>
+        <button className="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-all">Aide</button>
       </header>
 
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         <div className="flex-1 bg-surface-container-low p-4 md:p-8 flex justify-center overflow-hidden">
           <div className="w-full max-w-4xl h-full bg-white shadow-[0_4px_20px_-4px_rgba(15,23,42,0.1)] rounded-lg flex flex-col relative overflow-hidden">
             <div className="h-12 border-b border-outline-variant flex items-center px-6 justify-between bg-surface-container-lowest shrink-0">
-              <span className="font-label-md text-label-md text-on-surface">Page 5 sur 5</span>
+              <span className="font-label-md text-label-md text-on-surface">{documentTitle}</span>
               <div className="flex gap-2 text-on-surface-variant items-center">
                 <Icon name="zoom_out" size={20} className="cursor-pointer hover:text-primary" />
                 <span className="font-label-md text-label-md w-12 text-center">100%</span>
@@ -95,26 +120,25 @@ export function ApplySignature() {
                 <div className="h-4 bg-surface-container-high rounded w-full" />
                 <div className="h-4 bg-surface-container-high rounded w-4/5" />
               </div>
-              <p className="font-body-md text-body-md text-on-surface mb-8">Fait à Dakar, le 24 Octobre 2023.</p>
-              <div className="flex justify-between mt-12">
+              <p className="font-label-sm text-label-sm text-on-surface-variant mb-8 flex items-center gap-1">
+                <Icon name="info" size={14} />
+                Aperçu indicatif — la mise en page définitive du PDF est calculée côté serveur.
+              </p>
+              <div className="flex justify-end mt-12">
                 <div className="w-1/2">
-                  <p className="font-label-md text-label-md text-on-surface mb-2">Le Prestataire</p>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">Jean Dupont</p>
-                </div>
-                <div className="w-1/2">
-                  <p className="font-label-md text-label-md text-on-surface mb-2">Le Client</p>
-                  <div className="relative w-full max-w-[280px] h-[120px] bg-yellow-50 border-2 border-dashed border-yellow-400 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-yellow-100 transition-colors group">
-                    <div className="absolute -top-3 -right-3 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center shadow-sm">
-                      <Icon name="edit" size={16} className="text-yellow-900" />
-                    </div>
-                    {hasSignature ? (
-                      <Icon name="check_circle" filled className="text-yellow-700" />
+                  <p className="font-label-md text-label-md text-on-surface mb-2">Votre signature</p>
+                  <div className="relative w-full max-w-[280px] h-[120px] bg-yellow-50 border-2 border-dashed border-yellow-400 rounded flex flex-col items-center justify-center">
+                    {hasUsableSignature ? (
+                      <>
+                        <Icon name="check_circle" filled className="text-yellow-700" />
+                        <span className="font-label-md text-label-md text-yellow-800 text-center px-4">Signature prête à être envoyée</span>
+                      </>
                     ) : (
-                      <Icon name="draw" className="text-yellow-600 mb-2 opacity-50 group-hover:opacity-100 transition-opacity" />
+                      <>
+                        <Icon name="draw" className="text-yellow-600 mb-2 opacity-60" />
+                        <span className="font-label-md text-label-md text-yellow-800 text-center px-4">Zone de signature</span>
+                      </>
                     )}
-                    <span className="font-label-md text-label-md text-yellow-800 text-center px-4">
-                      {hasSignature ? 'Signature apposée' : 'Cliquez pour apposer votre signature ici'}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -128,6 +152,8 @@ export function ApplySignature() {
             <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">Veuillez fournir votre signature pour valider le document.</p>
           </div>
           <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+            {error && <FormAlert tone="error">{error}</FormAlert>}
+
             <div className="flex border-b border-outline-variant">
               {(
                 [
@@ -142,6 +168,7 @@ export function ApplySignature() {
                   className={`flex-1 pb-3 text-center font-label-md text-label-md ${
                     tab === key ? 'border-b-2 border-primary text-primary' : 'text-on-surface-variant hover:text-on-surface'
                   }`}
+                  type="button"
                 >
                   {label}
                 </button>
@@ -168,9 +195,25 @@ export function ApplySignature() {
               </div>
             )}
             {tab === 'importer' && (
-              <div className="w-full h-[200px] bg-surface rounded border-2 border-dashed border-outline-variant flex flex-col items-center justify-center gap-2 text-on-surface-variant">
-                <Icon name="upload_file" size={28} />
-                <span className="font-body-sm text-body-sm">Importer une image de signature (PNG, JPG)</span>
+              <div className="relative w-full h-[200px] bg-surface rounded border-2 border-dashed border-outline-variant flex flex-col items-center justify-center gap-2 text-on-surface-variant overflow-hidden">
+                {importedImage ? (
+                  <>
+                    <img src={importedImage} alt="Signature importée" className="max-h-full max-w-full object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => setImportedImage(null)}
+                      className="absolute top-2 right-2 text-on-surface-variant hover:text-error text-sm flex items-center gap-1 bg-white/80 px-2 py-1 rounded shadow-sm"
+                    >
+                      <Icon name="delete" size={16} />
+                    </button>
+                  </>
+                ) : (
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center gap-2">
+                    <Icon name="upload_file" size={28} />
+                    <span className="font-body-sm text-body-sm">Importer une image de signature (PNG, JPG)</span>
+                  </button>
+                )}
+                <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleFileChange} />
               </div>
             )}
             {tab === 'enregistree' && (
@@ -201,10 +244,15 @@ export function ApplySignature() {
                 canConfirm ? 'bg-primary text-on-primary hover:bg-primary-fixed-dim cursor-pointer' : 'bg-surface-variant text-on-surface-variant cursor-not-allowed'
               }`}
               disabled={!canConfirm}
-              onClick={() => navigate(ROUTES.signatureOtp)}
+              onClick={handleConfirm}
+              type="button"
             >
-              <Icon name="check_circle" />
-              Confirmer la signature
+              {submitting ? (
+                <span className="w-4 h-4 rounded-full border-2 border-on-surface-variant/40 border-t-on-surface-variant animate-spin" aria-hidden="true" />
+              ) : (
+                <Icon name="check_circle" />
+              )}
+              {submitting ? 'Envoi…' : 'Confirmer la signature'}
             </button>
           </div>
         </div>

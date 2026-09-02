@@ -1,36 +1,79 @@
-import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, type FormEvent, type MouseEvent } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { AppShell } from '../../components/layout/AppShell'
+import { FormAlert } from '../../components/ui/FormAlert'
 import { Icon } from '../../components/ui/Icon'
+import { apiRequest, ApiRequestError } from '../../lib/httpClient'
 import { ROUTES } from '../../routes'
 
-interface Signer {
-  role: string
-  name: string
-  contact: string
-  requireOtp: boolean
+interface SignerZone {
+  page: number
+  x: number
+  y: number
 }
+
+interface Signer {
+  nom: string
+  email: string
+  telephone: string
+  zone: SignerZone
+}
+
+const DEFAULT_ZONE: SignerZone = { page: 1, x: 70, y: 80 }
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function AssignSigners() {
   const navigate = useNavigate()
-  const [signers, setSigners] = useState<Signer[]>([{ role: 'Directeur Général', name: 'Jean Dupont', contact: 'jean.d@entreprise.com', requireOtp: true }])
-  const [role, setRole] = useState('')
-  const [name, setName] = useState('')
-  const [contact, setContact] = useState('')
-  const [requireOtp, setRequireOtp] = useState(false)
+  const { id } = useParams<{ id: string }>()
+
+  const [signers, setSigners] = useState<Signer[]>([])
+  const [nom, setNom] = useState('')
+  const [email, setEmail] = useState('')
+  const [telephone, setTelephone] = useState('')
+  const [pendingZone, setPendingZone] = useState<SignerZone | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
+
+  const [sendError, setSendError] = useState<string | null>(null)
+  const [sending, setSending] = useState(false)
   const [invitesSent, setInvitesSent] = useState(false)
+
+  const placeZone = (e: MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = Math.round(((e.clientX - rect.left) / rect.width) * 100)
+    const y = Math.round(((e.clientY - rect.top) / rect.height) * 100)
+    setPendingZone({ page: 1, x, y })
+  }
 
   const addSigner = (e: FormEvent) => {
     e.preventDefault()
-    if (!role || !name || !contact) return
-    setSigners((prev) => [...prev, { role, name, contact, requireOtp }])
-    setRole('')
-    setName('')
-    setContact('')
-    setRequireOtp(false)
+    setFormError(null)
+    if (!nom.trim()) return setFormError('Le nom complet est requis.')
+    if (!EMAIL_PATTERN.test(email.trim())) return setFormError('Adresse e-mail invalide.')
+    if (!telephone.trim()) return setFormError('Le numéro de téléphone est requis (pour l’OTP de signature).')
+
+    setSigners((prev) => [...prev, { nom: nom.trim(), email: email.trim(), telephone: telephone.trim(), zone: pendingZone ?? DEFAULT_ZONE }])
+    setNom('')
+    setEmail('')
+    setTelephone('')
+    setPendingZone(null)
   }
 
   const removeSigner = (index: number) => setSigners((prev) => prev.filter((_, i) => i !== index))
+
+  const handleSend = async () => {
+    if (!id || signers.length === 0 || sending) return
+    setSendError(null)
+    setSending(true)
+    try {
+      await apiRequest(`/documents/${id}/signataires`, { method: 'POST', body: { signataires: signers } })
+      await apiRequest(`/documents/${id}/envoyer`, { method: 'POST' })
+      setInvitesSent(true)
+    } catch (err) {
+      setSendError(err instanceof ApiRequestError ? err.message : 'Une erreur inattendue est survenue. Réessayez.')
+    } finally {
+      setSending(false)
+    }
+  }
 
   if (invitesSent) {
     return (
@@ -46,9 +89,9 @@ export function AssignSigners() {
           </p>
           <div className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-4 mb-8 text-left flex flex-col gap-2">
             {signers.map((signer, i) => (
-              <div key={`${signer.name}-${i}`} className="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+              <div key={`${signer.email}-${i}`} className="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
                 <Icon name="mail" size={16} />
-                {signer.name} — {signer.contact}
+                {signer.nom} — {signer.email}
               </div>
             ))}
           </div>
@@ -74,21 +117,17 @@ export function AssignSigners() {
         {/* PDF Viewer */}
         <section className="flex-[2] bg-surface-container-low flex flex-col border-r border-outline-variant relative overflow-hidden">
           <div className="h-12 border-b border-outline-variant bg-surface flex items-center justify-between px-4 shrink-0">
-            <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Contrat_Pret_Bancaire_v2.pdf</span>
+            <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Document du dossier</span>
             <div className="flex items-center gap-3">
-              <button className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded transition-colors" title="Zoom Arrière" type="button">
-                <Icon name="zoom_out" size={20} />
-              </button>
               <span className="font-body-sm text-body-sm text-on-surface-variant">100%</span>
-              <button className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded transition-colors" title="Zoom Avant" type="button">
-                <Icon name="zoom_in" size={20} />
-              </button>
-              <div className="w-px h-6 bg-outline-variant mx-1" />
-              <span className="font-body-sm text-body-sm text-on-surface-variant">Page 1 / 12</span>
             </div>
           </div>
           <div className="flex-1 overflow-auto p-4 md:p-8 flex justify-center bg-surface-container">
-            <div className="w-full max-w-[800px] h-fit min-h-[1100px] bg-white shadow-sm border border-outline-variant p-10 md:p-16 relative">
+            <div
+              className="w-full max-w-[800px] h-fit min-h-[1100px] bg-white shadow-sm border border-outline-variant p-10 md:p-16 relative cursor-crosshair"
+              onClick={placeZone}
+              title="Cliquez pour positionner la zone de signature du prochain signataire"
+            >
               <div className="w-1/3 h-8 bg-surface-container-high mb-8 rounded" />
               <div className="w-full h-4 bg-surface-container mb-4 rounded" />
               <div className="w-full h-4 bg-surface-container mb-4 rounded" />
@@ -98,18 +137,24 @@ export function AssignSigners() {
               <div className="w-full h-4 bg-surface-container mb-4 rounded" />
               <div className="w-full h-4 bg-surface-container mb-4 rounded" />
               <div className="w-4/5 h-4 bg-surface-container mb-12 rounded" />
-              <div className="absolute bottom-32 left-16 w-64 h-32 border-2 border-dashed border-primary bg-primary-container/5 flex items-center justify-center rounded group hover:bg-primary-container/10 transition-colors cursor-pointer">
-                <div className="flex flex-col items-center gap-2 text-primary">
-                  <Icon name="signature" />
-                  <span className="font-label-sm text-label-sm">Zone de signature : Directeur</span>
+
+              {pendingZone && (
+                <div
+                  className="absolute w-40 h-16 -translate-x-1/2 -translate-y-1/2 border-2 border-dashed border-primary bg-primary-container/10 flex items-center justify-center rounded pointer-events-none"
+                  style={{ left: `${pendingZone.x}%`, top: `${pendingZone.y}%` }}
+                >
+                  <span className="font-label-sm text-label-sm text-primary">Prochain signataire</span>
                 </div>
-              </div>
-              <div className="absolute bottom-8 right-8">
-                <button className="bg-surface-container-lowest border border-primary text-primary shadow-lg rounded-full px-4 py-3 flex items-center gap-2 hover:bg-primary hover:text-on-primary transition-all font-label-md text-label-md font-bold">
-                  <Icon name="place_item" />
-                  Placer la signature
-                </button>
-              </div>
+              )}
+              {signers.map((signer, i) => (
+                <div
+                  key={`${signer.email}-${i}`}
+                  className="absolute w-40 h-16 -translate-x-1/2 -translate-y-1/2 border-2 border-outline-variant bg-surface flex items-center justify-center rounded pointer-events-none"
+                  style={{ left: `${signer.zone.x}%`, top: `${signer.zone.y}%` }}
+                >
+                  <span className="font-label-sm text-label-sm text-on-surface-variant truncate px-2">{signer.nom}</span>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -118,26 +163,31 @@ export function AssignSigners() {
         <section className="flex-[1] bg-surface-container-lowest flex flex-col min-w-[320px] lg:max-w-md">
           <div className="p-6 border-b border-outline-variant">
             <h2 className="font-headline-sm text-headline-sm font-semibold text-on-surface mb-2">Ajouter des signataires</h2>
-            <p className="font-body-sm text-body-sm text-on-surface-variant">Définissez l'ordre et les informations des personnes devant signer ce document.</p>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              Cliquez sur le document pour positionner une zone de signature, puis renseignez les informations du signataire.
+            </p>
           </div>
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {sendError && <FormAlert tone="error">{sendError}</FormAlert>}
+
             {signers.map((signer, i) => (
-              <div key={`${signer.name}-${i}`} className="bg-surface border border-outline-variant rounded-xl p-4 relative group">
+              <div key={`${signer.email}-${i}`} className="bg-surface border border-outline-variant rounded-xl p-4 relative group">
                 <div className="absolute -left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-sm text-[10px] font-bold border-2 border-surface-container-lowest shadow-sm">
                   {i + 1}
                 </div>
                 <div className="flex justify-between items-start mb-3 ml-2">
-                  <div>
-                    <h3 className="font-label-md text-label-md font-semibold text-on-surface">{signer.name}</h3>
-                    <p className="font-body-sm text-body-sm text-on-surface-variant">{signer.role}</p>
-                  </div>
+                  <h3 className="font-label-md text-label-md font-semibold text-on-surface">{signer.nom}</h3>
                   <button className="text-on-surface-variant hover:text-error transition-colors p-1 rounded-full" onClick={() => removeSigner(i)} type="button">
                     <Icon name="close" size={20} />
                   </button>
                 </div>
                 <div className="ml-2 flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
                   <Icon name="mail" size={16} />
-                  {signer.contact}
+                  {signer.email}
+                </div>
+                <div className="ml-2 flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+                  <Icon name="phone" size={16} />
+                  {signer.telephone}
                 </div>
               </div>
             ))}
@@ -147,19 +197,8 @@ export function AssignSigners() {
                 {signers.length + 1}
               </div>
               <div className="ml-2 space-y-4">
-                <div className="space-y-1">
-                  <label className="block font-label-sm text-label-sm text-on-surface-variant" htmlFor="role">
-                    Rôle / Fonction *
-                  </label>
-                  <input
-                    className="w-full bg-surface-container-lowest border border-outline rounded-lg px-3 py-2 text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow"
-                    id="role"
-                    placeholder="Ex: Directeur Financier"
-                    type="text"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                  />
-                </div>
+                {formError && <FormAlert tone="error">{formError}</FormAlert>}
+
                 <div className="space-y-1">
                   <label className="block font-label-sm text-label-sm text-on-surface-variant" htmlFor="nom">
                     Nom complet *
@@ -169,54 +208,64 @@ export function AssignSigners() {
                     id="nom"
                     placeholder="Saisir le nom"
                     type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    value={nom}
+                    onChange={(e) => setNom(e.target.value)}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="block font-label-sm text-label-sm text-on-surface-variant" htmlFor="contact">
-                    Email ou Mobile *
+                  <label className="block font-label-sm text-label-sm text-on-surface-variant" htmlFor="email">
+                    Email *
                   </label>
                   <input
                     className="w-full bg-surface-container-lowest border border-outline rounded-lg px-3 py-2 text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow"
-                    id="contact"
+                    id="email"
                     placeholder="contact@exemple.com"
-                    type="text"
-                    value={contact}
-                    onChange={(e) => setContact(e.target.value)}
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-                <div className="pt-2">
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <input
-                      className="w-4 h-4 rounded border-outline text-primary focus:ring-primary bg-surface-container-lowest cursor-pointer"
-                      type="checkbox"
-                      checked={requireOtp}
-                      onChange={(e) => setRequireOtp(e.target.checked)}
-                    />
-                    <span className="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">
-                      Exiger OTP par SMS (Sécurité Renforcée)
-                    </span>
+                <div className="space-y-1">
+                  <label className="block font-label-sm text-label-sm text-on-surface-variant" htmlFor="telephone">
+                    Téléphone *
                   </label>
+                  <input
+                    className="w-full bg-surface-container-lowest border border-outline rounded-lg px-3 py-2 text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow"
+                    id="telephone"
+                    placeholder="+229 97 00 00 00"
+                    type="tel"
+                    value={telephone}
+                    onChange={(e) => setTelephone(e.target.value)}
+                  />
+                  <p className="font-label-sm text-label-sm text-on-surface-variant">Requis pour l'OTP exigé avant validation de la signature.</p>
                 </div>
+                <p className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                  <Icon name="location_on" size={14} />
+                  {pendingZone ? `Zone positionnée (${pendingZone.x}%, ${pendingZone.y}%)` : 'Zone par défaut — cliquez sur le document pour la personnaliser.'}
+                </p>
                 <button
                   className="w-full border border-dashed border-outline text-secondary hover:text-primary hover:border-primary hover:bg-primary-container/5 transition-all rounded-xl py-3 px-4 flex items-center justify-center gap-2 font-label-md text-label-md"
                   type="submit"
                 >
                   <Icon name="person_add" />
-                  Ajouter un autre signataire
+                  Ajouter ce signataire
                 </button>
               </div>
             </form>
           </div>
           <div className="p-6 border-t border-outline-variant bg-surface-container-lowest mt-auto">
             <button
-              className="w-full bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container transition-colors rounded-xl py-3 px-4 flex items-center justify-center gap-2 font-label-md text-label-md font-bold shadow-sm"
-              onClick={() => setInvitesSent(true)}
+              className="w-full bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container transition-colors rounded-xl py-3 px-4 flex items-center justify-center gap-2 font-label-md text-label-md font-bold shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              onClick={handleSend}
+              disabled={signers.length === 0 || sending}
               type="button"
             >
-              <Icon name="send" />
-              Envoyer pour signature
+              {sending ? (
+                <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true" />
+              ) : (
+                <Icon name="send" />
+              )}
+              {sending ? 'Envoi…' : 'Envoyer pour signature'}
             </button>
           </div>
         </section>

@@ -12,8 +12,6 @@ import { MyFolders } from './pages/dashboard/MyFolders'
 import { NewDocument } from './pages/signature/NewDocument'
 import { AssignSigners } from './pages/signature/AssignSigners'
 import { SignerInvite } from './pages/signature/SignerInvite'
-import { SignatureOtp } from './pages/signature/SignatureOtp'
-import { SignatureSuccess } from './pages/signature/SignatureSuccess'
 import { ProofReport } from './pages/signature/ProofReport'
 
 import { PublicVerification } from './pages/verification/PublicVerification'
@@ -62,8 +60,6 @@ function App() {
 
         <Route path={ROUTES.newDocument} element={<NewDocument />} />
         <Route path={ROUTES.assignSigners} element={<AssignSigners />} />
-        <Route path={ROUTES.signatureOtp} element={<SignatureOtp />} />
-        <Route path={ROUTES.signatureSuccess} element={<SignatureSuccess />} />
         <Route path={ROUTES.proofReport} element={<ProofReport />} />
 
         <Route path={ROUTES.traceabilityList} element={<TraceabilityList />} />

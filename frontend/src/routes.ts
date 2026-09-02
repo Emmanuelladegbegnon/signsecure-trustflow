@@ -10,15 +10,16 @@ export const ROUTES = {
   myFolders: '/mes-dossiers',
 
   newDocument: '/documents/nouveau',
-  assignSigners: '/documents/signataires',
+  assignSigners: '/documents/:id/signataires',
   /**
    * Point d'entrée RÉEL du signataire : lien à usage unique envoyé par email
    * (jamais atteint depuis la navigation interne — voir CLAUDE.md § Sign).
+   * Le pad de signature, l'OTP et l'écran de succès sont des étapes internes
+   * de ce même composant (une seule session token, pas de navigation router
+   * intermédiaire) — voir pages/signature/SignerInvite.tsx.
    */
   signerInvite: '/signer/:token',
-  signatureOtp: '/documents/signature-otp',
-  signatureSuccess: '/documents/signature-reussie',
-  proofReport: '/documents/rapport-de-preuve',
+  proofReport: '/documents/:id/rapport-de-preuve',
 
   verifyPublic: '/verifier',
   verifyUnknown: '/verifier/inconnu',
@@ -48,3 +49,9 @@ export const ROUTES = {
 
 /** Construit l'URL réelle d'un lien de signature à usage unique à partir d'un token. */
 export const signerInviteUrl = (token: string) => `/signer/${token}`
+
+/** Étape "signataires" d'un dossier donné. */
+export const assignSignersUrl = (dossierId: string) => `/documents/${dossierId}/signataires`
+
+/** Rapport de preuve d'un dossier donné. */
+export const proofReportUrl = (dossierId: string) => `/documents/${dossierId}/rapport-de-preuve`

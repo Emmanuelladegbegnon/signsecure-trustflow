@@ -1,11 +1,15 @@
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { PublicShell } from '../../components/layout/PublicShell'
 import { Icon } from '../../components/ui/Icon'
-import { ROUTES } from '../../routes'
+import { proofReportUrl } from '../../routes'
 
-export function SignatureSuccess() {
-  const navigate = useNavigate()
+interface SignatureSuccessProps {
+  documentTitle: string
+  trackingCode: string
+  dossierId: string
+}
 
+export function SignatureSuccess({ documentTitle, trackingCode, dossierId }: SignatureSuccessProps) {
   return (
     <PublicShell>
       {/* Transactional success screen — no navigation shell by design */}
@@ -25,7 +29,7 @@ export function SignatureSuccess() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <h3 className="font-label-md text-label-md text-on-surface mb-1">Code de suivi</h3>
-              <p className="font-body-lg text-body-lg font-mono text-primary tracking-wider">SS-7K4M-29QX</p>
+              <p className="font-body-lg text-body-lg font-mono text-primary tracking-wider">{trackingCode}</p>
             </div>
             <div className="w-16 h-16 bg-white border border-outline-variant rounded flex items-center justify-center text-on-surface-variant">
               <Icon name="qr_code_2" size={40} />
@@ -34,33 +38,22 @@ export function SignatureSuccess() {
           <div className="flex flex-col gap-2 pt-4 border-t border-outline-variant/50">
             <div className="flex items-center gap-2 text-on-surface-variant">
               <Icon name="description" size={16} />
-              <span className="font-body-sm text-body-sm">Contrat_Partenariat_2023.pdf</span>
-            </div>
-            <div className="flex items-center gap-2 text-on-surface-variant">
-              <Icon name="schedule" size={16} />
-              <span className="font-body-sm text-body-sm">12 Oct 2023, 14:35 UTC</span>
+              <span className="font-body-sm text-body-sm">{documentTitle}</span>
             </div>
           </div>
         </div>
 
         <div className="w-full flex flex-col gap-4">
-          <button className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary font-label-md text-label-md py-3 px-6 rounded-lg hover:bg-primary-fixed-variant transition-colors shadow-sm">
-            <Icon name="download" size={20} />
-            Télécharger le PDF signé
-          </button>
-          <button
-            className="w-full flex items-center justify-center gap-2 bg-transparent border border-outline text-on-surface font-label-md text-label-md py-3 px-6 rounded-lg hover:bg-surface-container-high transition-colors"
-            onClick={() => navigate(ROUTES.proofReport)}
+          <Link
+            className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary font-label-md text-label-md py-3 px-6 rounded-lg hover:bg-primary-fixed-variant transition-colors shadow-sm"
+            to={proofReportUrl(dossierId)}
           >
             <Icon name="verified_user" size={20} />
             Voir le rapport de preuve
-          </button>
-          <button
-            className="mt-4 font-label-sm text-label-sm text-primary hover:underline text-center"
-            onClick={() => navigate(ROUTES.dashboard)}
-          >
-            Retour au tableau de bord
-          </button>
+          </Link>
+          <p className="font-label-sm text-label-sm text-on-surface-variant">
+            (nécessite un compte SignSecure — vous serez invité à vous connecter)
+          </p>
         </div>
       </main>
     </PublicShell>
