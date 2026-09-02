@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthContext'
 import { Icon } from '../ui/Icon'
 import { ROUTES } from '../../routes'
 import { ADMIN_NAV, PRIMARY_NAV, type NavKey } from './nav'
@@ -8,8 +9,19 @@ const linkBase =
 const linkInactive = 'text-on-surface-variant hover:bg-surface-container-high'
 const linkActive = 'text-primary font-bold border-r-4 border-primary bg-primary-container/10'
 
+function initialsOf(prenom: string, nom: string) {
+  return `${prenom.charAt(0)}${nom.charAt(0)}`.toUpperCase() || '·'
+}
+
 export function DesktopSidebar({ active }: { active: NavKey }) {
   const navigate = useNavigate()
+  const { user, logout } = useAuth()
+  const isAdmin = user?.roles.includes('Administrateur') ?? false
+
+  const handleLogout = async () => {
+    await logout()
+    navigate(ROUTES.login, { replace: true })
+  }
 
   return (
     <nav className="hidden md:flex flex-col h-screen p-unit overflow-y-auto bg-surface fixed left-0 top-0 w-[280px] border-r border-outline-variant shadow-sm z-50">
@@ -19,11 +31,11 @@ export function DesktopSidebar({ active }: { active: NavKey }) {
 
       <div className="flex items-center gap-4 px-4 mb-6">
         <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold shrink-0">
-          AK
+          {user ? initialsOf(user.prenom, user.nom) : '·'}
         </div>
-        <div>
-          <div className="font-label-md text-label-md font-semibold">Awa KONE</div>
-          <div className="font-label-sm text-label-sm text-on-surface-variant">Superviseur</div>
+        <div className="min-w-0">
+          <div className="font-label-md text-label-md font-semibold truncate">{user ? `${user.prenom} ${user.nom}` : '—'}</div>
+          <div className="font-label-sm text-label-sm text-on-surface-variant truncate">{user?.roles[0] ?? ''}</div>
         </div>
       </div>
 
@@ -47,19 +59,21 @@ export function DesktopSidebar({ active }: { active: NavKey }) {
         ))}
       </ul>
 
-      <div className="space-y-1 mb-2">
-        <p className="px-4 mb-1 font-label-sm text-label-sm text-on-surface-variant tracking-wide">ADMINISTRATION</p>
-        <ul className="space-y-1">
-          {ADMIN_NAV.map((item) => (
-            <li key={item.key}>
-              <Link to={item.to} className={`${linkBase} ${active === item.key ? linkActive : linkInactive}`}>
-                <Icon name={item.icon} filled={active === item.key} />
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {isAdmin && (
+        <div className="space-y-1 mb-2">
+          <p className="px-4 mb-1 font-label-sm text-label-sm text-on-surface-variant tracking-wide">ADMINISTRATION</p>
+          <ul className="space-y-1">
+            {ADMIN_NAV.map((item) => (
+              <li key={item.key}>
+                <Link to={item.to} className={`${linkBase} ${active === item.key ? linkActive : linkInactive}`}>
+                  <Icon name={item.icon} filled={active === item.key} />
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="mt-auto border-t border-outline-variant pt-4">
         <ul className="space-y-2">
@@ -70,10 +84,10 @@ export function DesktopSidebar({ active }: { active: NavKey }) {
             </Link>
           </li>
           <li>
-            <Link to={ROUTES.login} className={`${linkBase} ${linkInactive}`}>
+            <button type="button" onClick={handleLogout} className={`${linkBase} ${linkInactive} w-full text-left`}>
               <Icon name="logout" />
               Déconnexion
-            </Link>
+            </button>
           </li>
         </ul>
       </div>

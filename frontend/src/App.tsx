@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { ProtectedRoute } from './auth/ProtectedRoute'
 import { ROUTES } from './routes'
 
+import { AccountActivation } from './pages/auth/AccountActivation'
 import { Login } from './pages/auth/Login'
 import { OtpLogin } from './pages/auth/OtpLogin'
 
@@ -41,40 +43,45 @@ function App() {
     <Routes>
       <Route path="/" element={<Navigate to={ROUTES.login} replace />} />
 
+      {/* Public — sans token, en miroir des routes non protégées d'API_CONTRACT.md
+          (/api/auth/login, /api/auth/otp/*, /api/auth/invitation/*, /api/sign/link/*, /api/verify/*) */}
       <Route path={ROUTES.login} element={<Login />} />
       <Route path={ROUTES.otpLogin} element={<OtpLogin />} />
-
-      <Route path={ROUTES.dashboard} element={<Dashboard />} />
-      <Route path={ROUTES.myFolders} element={<MyFolders />} />
-
-      <Route path={ROUTES.newDocument} element={<NewDocument />} />
-      <Route path={ROUTES.assignSigners} element={<AssignSigners />} />
+      <Route path={ROUTES.accountActivation} element={<AccountActivation />} />
       <Route path={ROUTES.signerInvite} element={<SignerInvite />} />
-      <Route path={ROUTES.signatureOtp} element={<SignatureOtp />} />
-      <Route path={ROUTES.signatureSuccess} element={<SignatureSuccess />} />
-      <Route path={ROUTES.proofReport} element={<ProofReport />} />
-
       <Route path={ROUTES.verifyPublic} element={<PublicVerification />} />
       <Route path={ROUTES.verifyUnknown} element={<UnknownCode />} />
       <Route path={ROUTES.verifyValid} element={<ResultValid />} />
       <Route path={ROUTES.verifyRevoked} element={<ResultRevoked />} />
       <Route path={ROUTES.compareFiles} element={<FileComparison />} />
 
-      <Route path={ROUTES.traceabilityList} element={<TraceabilityList />} />
-      <Route path={ROUTES.traceabilityDetail} element={<TraceabilityDetail />} />
+      {/* Protégé — nécessite une session active (voir auth/ProtectedRoute) */}
+      <Route element={<ProtectedRoute />}>
+        <Route path={ROUTES.dashboard} element={<Dashboard />} />
+        <Route path={ROUTES.myFolders} element={<MyFolders />} />
 
-      <Route path={ROUTES.mobileRegistrationStep1} element={<RegistrationStep1 />} />
-      <Route path={ROUTES.mobileCapture} element={<CameraCapture />} />
-      <Route path={ROUTES.mobileCodeLabel} element={<CodeLabel />} />
-      <Route path={ROUTES.mobileObservations} element={<Observations />} />
-      <Route path={ROUTES.mobileRegistrationConfirm} element={<RegistrationConfirmation />} />
-      <Route path={ROUTES.mobileIncident} element={<ReportIncident />} />
-      <Route path={ROUTES.mobileTransferRequest} element={<TransferRequest />} />
-      <Route path={ROUTES.mobileTransferReception} element={<TransferReception />} />
+        <Route path={ROUTES.newDocument} element={<NewDocument />} />
+        <Route path={ROUTES.assignSigners} element={<AssignSigners />} />
+        <Route path={ROUTES.signatureOtp} element={<SignatureOtp />} />
+        <Route path={ROUTES.signatureSuccess} element={<SignatureSuccess />} />
+        <Route path={ROUTES.proofReport} element={<ProofReport />} />
 
-      <Route path={ROUTES.adminUsers} element={<UserManagement />} />
-      <Route path={ROUTES.adminAuditLog} element={<AuditLog />} />
-      <Route path={ROUTES.adminPermissions} element={<PermissionsMatrix />} />
+        <Route path={ROUTES.traceabilityList} element={<TraceabilityList />} />
+        <Route path={ROUTES.traceabilityDetail} element={<TraceabilityDetail />} />
+
+        <Route path={ROUTES.mobileRegistrationStep1} element={<RegistrationStep1 />} />
+        <Route path={ROUTES.mobileCapture} element={<CameraCapture />} />
+        <Route path={ROUTES.mobileCodeLabel} element={<CodeLabel />} />
+        <Route path={ROUTES.mobileObservations} element={<Observations />} />
+        <Route path={ROUTES.mobileRegistrationConfirm} element={<RegistrationConfirmation />} />
+        <Route path={ROUTES.mobileIncident} element={<ReportIncident />} />
+        <Route path={ROUTES.mobileTransferRequest} element={<TransferRequest />} />
+        <Route path={ROUTES.mobileTransferReception} element={<TransferReception />} />
+
+        <Route path={ROUTES.adminUsers} element={<UserManagement />} />
+        <Route path={ROUTES.adminAuditLog} element={<AuditLog />} />
+        <Route path={ROUTES.adminPermissions} element={<PermissionsMatrix />} />
+      </Route>
 
       <Route path="*" element={<Navigate to={ROUTES.login} replace />} />
     </Routes>

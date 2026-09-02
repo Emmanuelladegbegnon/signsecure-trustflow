@@ -3,6 +3,8 @@
 export const ROUTES = {
   login: '/connexion',
   otpLogin: '/otp',
+  /** Activation d'un compte créé par un administrateur, depuis le lien d'invitation reçu par email. */
+  accountActivation: '/activation/:token',
 
   dashboard: '/tableau-de-bord',
   myFolders: '/mes-dossiers',

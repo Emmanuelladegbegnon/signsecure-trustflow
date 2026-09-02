@@ -1,6 +1,10 @@
+import { useAuth } from '../../auth/AuthContext'
 import { Icon } from '../ui/Icon'
 
 export function TopHeader() {
+  const { user } = useAuth()
+  const initials = user ? `${user.prenom.charAt(0)}${user.nom.charAt(0)}`.toUpperCase() : '·'
+
   return (
     <header className="flex justify-between items-center w-full h-16 px-gutter z-40 bg-white shadow-sm sticky top-0">
       <div className="md:hidden">
@@ -24,7 +28,7 @@ export function TopHeader() {
           Démonstration
         </button>
         <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs md:hidden">
-          AK
+          {initials}
         </div>
       </div>
     </header>
