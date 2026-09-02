@@ -9,7 +9,11 @@ export const ROUTES = {
 
   newDocument: '/documents/nouveau',
   assignSigners: '/documents/signataires',
-  applySignature: '/documents/signer',
+  /**
+   * Point d'entrée RÉEL du signataire : lien à usage unique envoyé par email
+   * (jamais atteint depuis la navigation interne — voir CLAUDE.md § Sign).
+   */
+  signerInvite: '/signer/:token',
   signatureOtp: '/documents/signature-otp',
   signatureSuccess: '/documents/signature-reussie',
   proofReport: '/documents/rapport-de-preuve',
@@ -39,3 +43,6 @@ export const ROUTES = {
   adminAuditLog: '/admin/audit',
   adminPermissions: '/admin/permissions',
 } as const
+
+/** Construit l'URL réelle d'un lien de signature à usage unique à partir d'un token. */
+export const signerInviteUrl = (token: string) => `/signer/${token}`

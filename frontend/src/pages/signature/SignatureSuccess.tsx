@@ -18,7 +18,7 @@ export function SignatureSuccess() {
         </div>
         <h2 className="font-headline-md text-headline-md text-on-surface mb-2">Document signé avec succès</h2>
         <p className="font-body-md text-body-md text-on-surface-variant mb-8 max-w-sm">
-          La signature électronique a été appliquée et horodatée sur la blockchain. Le document est maintenant sécurisé et juridiquement contraignant.
+          La signature électronique a été appliquée et horodatée. L'événement est enregistré dans le journal d'audit chaîné du document.
         </p>
 
         <div className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-6 mb-8 text-left">

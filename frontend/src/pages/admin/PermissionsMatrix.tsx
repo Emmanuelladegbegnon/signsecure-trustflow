@@ -1,19 +1,22 @@
 import { useState } from 'react'
 import { AppShell } from '../../components/layout/AppShell'
 import { Icon } from '../../components/ui/Icon'
+import { ROLES, type Role } from '../../roles'
 
-const ROLES = [
-  { label: 'Administrateur', icon: 'admin_panel_settings' },
-  { label: 'Superviseur', icon: 'supervisor_account' },
-  { label: 'Opérateur', icon: 'edit_document' },
-  { label: 'Auditeur', icon: 'visibility' },
-]
+// Icônes par rôle canonique (CLAUDE.md § Modèle de rôles) — même ordre que ROLES.
+const ROLE_ICON: Record<Role, string> = {
+  'Agent de réception': 'move_to_inbox',
+  Signataire: 'draw',
+  Superviseur: 'supervisor_account',
+  Vérificateur: 'verified_user',
+  Administrateur: 'admin_panel_settings',
+}
 
 interface Permission {
   key: string
   label: string
   variant: 'checkbox' | 'toggle'
-  /** One value per role in ROLES order. Administrateur (index 0) is always locked/checked. */
+  /** Une valeur par rôle, dans l'ordre de ROLES. Administrateur est toujours verrouillé (accès total). */
   defaults: boolean[]
 }
 
@@ -21,21 +24,23 @@ const GROUPS: { name: string; permissions: Permission[] }[] = [
   {
     name: 'Gestion des Documents',
     permissions: [
-      { key: 'doc-create', label: 'Créer de nouveaux documents', variant: 'checkbox', defaults: [true, true, true, false] },
-      { key: 'doc-approve', label: 'Approuver/Signer', variant: 'checkbox', defaults: [true, true, false, false] },
+      // [Agent de réception, Signataire, Superviseur, Vérificateur, Administrateur]
+      { key: 'doc-create', label: 'Créer de nouveaux documents', variant: 'checkbox', defaults: [false, true, true, false, true] },
+      { key: 'doc-approve', label: 'Approuver/Signer', variant: 'checkbox', defaults: [false, true, true, false, true] },
     ],
   },
   {
     name: 'Gestion des Utilisateurs',
-    permissions: [{ key: 'user-manage', label: 'Ajouter/Supprimer des comptes', variant: 'toggle', defaults: [true, false, false, false] }],
+    permissions: [{ key: 'user-manage', label: 'Ajouter/Supprimer des comptes', variant: 'toggle', defaults: [false, false, false, false, true] }],
   },
 ]
 
 export function PermissionsMatrix() {
   const [matrix, setMatrix] = useState<Record<string, boolean[]>>(() => Object.fromEntries(GROUPS.flatMap((g) => g.permissions).map((p) => [p.key, [...p.defaults]])))
 
-  const toggleCell = (permKey: string, roleIndex: number) => {
-    if (roleIndex === 0) return // Administrateur permissions are locked
+  const toggleCell = (permKey: string, role: Role) => {
+    if (role === 'Administrateur') return // droits d'administrateur verrouillés : toujours accès total
+    const roleIndex = ROLES.indexOf(role)
     setMatrix((prev) => {
       const next = [...prev[permKey]]
       next[roleIndex] = !next[roleIndex]
@@ -65,10 +70,10 @@ export function PermissionsMatrix() {
                   Module / Permission
                 </th>
                 {ROLES.map((role) => (
-                  <th key={role.label} className="p-4 font-label-md text-label-md text-on-surface text-center min-w-[120px]">
+                  <th key={role} className="p-4 font-label-md text-label-md text-on-surface text-center min-w-[120px]">
                     <div className="flex flex-col items-center gap-1">
-                      <Icon name={role.icon} className="text-outline" />
-                      {role.label}
+                      <Icon name={ROLE_ICON[role]} className="text-outline" />
+                      {role}
                     </div>
                   </th>
                 ))}
@@ -87,20 +92,20 @@ export function PermissionsMatrix() {
                       <td className="p-4 font-body-sm text-body-sm text-on-surface-variant sticky left-0 bg-surface-container-lowest z-10 border-r border-outline-variant">{perm.label}</td>
                       {ROLES.map((role, roleIndex) => {
                         const checked = matrix[perm.key][roleIndex]
-                        const locked = roleIndex === 0
+                        const locked = role === 'Administrateur'
                         return (
-                          <td key={role.label} className="p-4 text-center">
+                          <td key={role} className="p-4 text-center">
                             {perm.variant === 'checkbox' ? (
                               <input
                                 checked={checked}
                                 disabled={locked}
-                                onChange={() => toggleCell(perm.key, roleIndex)}
+                                onChange={() => toggleCell(perm.key, role)}
                                 className={`w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary ${locked ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
                                 type="checkbox"
                               />
                             ) : (
                               <label className={`relative inline-flex items-center ${locked ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
-                                <input checked={checked} disabled={locked} onChange={() => toggleCell(perm.key, roleIndex)} className="sr-only peer" type="checkbox" />
+                                <input checked={checked} disabled={locked} onChange={() => toggleCell(perm.key, role)} className="sr-only peer" type="checkbox" />
                                 <div className="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
                               </label>
                             )}

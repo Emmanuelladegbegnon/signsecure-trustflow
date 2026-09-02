@@ -9,7 +9,7 @@ import { MyFolders } from './pages/dashboard/MyFolders'
 
 import { NewDocument } from './pages/signature/NewDocument'
 import { AssignSigners } from './pages/signature/AssignSigners'
-import { ApplySignature } from './pages/signature/ApplySignature'
+import { SignerInvite } from './pages/signature/SignerInvite'
 import { SignatureOtp } from './pages/signature/SignatureOtp'
 import { SignatureSuccess } from './pages/signature/SignatureSuccess'
 import { ProofReport } from './pages/signature/ProofReport'
@@ -49,7 +49,7 @@ function App() {
 
       <Route path={ROUTES.newDocument} element={<NewDocument />} />
       <Route path={ROUTES.assignSigners} element={<AssignSigners />} />
-      <Route path={ROUTES.applySignature} element={<ApplySignature />} />
+      <Route path={ROUTES.signerInvite} element={<SignerInvite />} />
       <Route path={ROUTES.signatureOtp} element={<SignatureOtp />} />
       <Route path={ROUTES.signatureSuccess} element={<SignatureSuccess />} />
       <Route path={ROUTES.proofReport} element={<ProofReport />} />

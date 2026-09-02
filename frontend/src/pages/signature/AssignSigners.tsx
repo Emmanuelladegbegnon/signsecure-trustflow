@@ -18,6 +18,7 @@ export function AssignSigners() {
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
   const [requireOtp, setRequireOtp] = useState(false)
+  const [invitesSent, setInvitesSent] = useState(false)
 
   const addSigner = (e: FormEvent) => {
     e.preventDefault()
@@ -30,6 +31,42 @@ export function AssignSigners() {
   }
 
   const removeSigner = (index: number) => setSigners((prev) => prev.filter((_, i) => i !== index))
+
+  if (invitesSent) {
+    return (
+      <AppShell active="sign">
+        <div className="max-w-lg mx-auto bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-8 md:p-12 flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full bg-primary-container/10 flex items-center justify-center mb-6">
+            <Icon name="mark_email_read" filled className="text-primary" size={32} />
+          </div>
+          <h1 className="font-headline-md text-headline-md text-on-surface mb-2">Invitations envoyées</h1>
+          <p className="font-body-md text-body-md text-on-surface-variant mb-8 max-w-sm">
+            Chaque signataire va recevoir un email avec un lien de signature personnel, à usage unique, valable 48h. Le
+            document apparaîtra comme « En attente » dans vos dossiers jusqu'à la signature de toutes les parties.
+          </p>
+          <div className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-4 mb-8 text-left flex flex-col gap-2">
+            {signers.map((signer, i) => (
+              <div key={`${signer.name}-${i}`} className="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+                <Icon name="mail" size={16} />
+                {signer.name} — {signer.contact}
+              </div>
+            ))}
+          </div>
+          <div className="w-full flex flex-col gap-3">
+            <button
+              className="w-full bg-primary text-on-primary font-label-md text-label-md py-3 rounded-lg hover:opacity-90 transition-opacity"
+              onClick={() => navigate(ROUTES.myFolders)}
+            >
+              Voir mes dossiers
+            </button>
+            <button className="font-label-sm text-label-sm text-primary hover:underline" onClick={() => navigate(ROUTES.dashboard)}>
+              Retour au tableau de bord
+            </button>
+          </div>
+        </div>
+      </AppShell>
+    )
+  }
 
   return (
     <AppShell active="sign" bleed>
@@ -175,7 +212,7 @@ export function AssignSigners() {
           <div className="p-6 border-t border-outline-variant bg-surface-container-lowest mt-auto">
             <button
               className="w-full bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container transition-colors rounded-xl py-3 px-4 flex items-center justify-center gap-2 font-label-md text-label-md font-bold shadow-sm"
-              onClick={() => navigate(ROUTES.applySignature)}
+              onClick={() => setInvitesSent(true)}
               type="button"
             >
               <Icon name="send" />

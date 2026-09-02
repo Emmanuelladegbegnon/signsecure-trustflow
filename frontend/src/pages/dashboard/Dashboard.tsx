@@ -16,7 +16,7 @@ const STATS = [
 const ACTIVITY = [
   { icon: 'description', name: 'Contrat_Fournisseur_Tech_2023.pdf', type: 'Signature B2B', status: 'valide', date: '12 Oct 2023, 14:30', actor: 'Awa KONE' },
   { icon: 'qr_code', name: 'Certificat_Origine_Cacao_Lot89.xml', type: 'Vérification QR', status: 'attente', date: '12 Oct 2023, 11:15', actor: 'Moussa DIALLO' },
-  { icon: 'inventory_2', name: 'Titre_Foncier_Parcelle_A12.pdf', type: 'Traçabilité', status: 'authentifie', date: '11 Oct 2023, 09:45', actor: 'Système Auto' },
+  { icon: 'inventory_2', name: 'Titre_Foncier_Parcelle_A12.pdf', type: 'Traçabilité', status: 'enregistre', date: '11 Oct 2023, 09:45', actor: 'Système Auto' },
   { icon: 'description', name: 'Accord_Confidentialité_ProjetX.docx', type: 'Signature Interne', status: 'rejete', date: '10 Oct 2023, 16:20', actor: 'Awa KONE' },
 ] as const
 
@@ -52,7 +52,7 @@ export function Dashboard() {
           </div>
           <div>
             <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold mb-1">Vérifier un code</h3>
-            <p className="font-body-sm text-body-sm text-on-surface-variant">Scanner un QR code pour authentifier.</p>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">Scanner un QR code pour vérifier.</p>
           </div>
         </button>
         <button

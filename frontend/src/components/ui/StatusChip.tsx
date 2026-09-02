@@ -3,7 +3,7 @@ import { Icon } from './Icon'
 export type StatusKind =
   | 'valide'
   | 'attente'
-  | 'authentifie'
+  | 'enregistre'
   | 'rejete'
   | 'actif'
   | 'inactif'
@@ -11,9 +11,11 @@ export type StatusKind =
   | 'invalide'
   | 'compromis'
 
+// Vocabulaire conforme à CLAUDE.md : jamais "authentifié"/"certifié"/"garanti" —
+// on décrit un enregistrement + les contrôles effectués, jamais une garantie absolue.
 const STATUS_CONFIG: Record<StatusKind, { label: string; icon: string; className: string }> = {
   valide: { label: 'Validé', icon: 'check_circle', className: 'bg-[#dcfce7] text-[#166534]' },
-  authentifie: { label: 'Authentifié', icon: 'verified', className: 'bg-[#dcfce7] text-[#166534]' },
+  enregistre: { label: 'Enregistré', icon: 'task_alt', className: 'bg-[#dcfce7] text-[#166534]' },
   actif: { label: 'Actif', icon: 'check_circle', className: 'bg-[#dcfce7] text-[#166534]' },
   attente: { label: 'En attente', icon: 'pending', className: 'bg-[#fef08a] text-[#854d0e]' },
   rejete: { label: 'Rejeté', icon: 'error', className: 'bg-[#fee2e2] text-[#991b1b]' },

@@ -2,25 +2,28 @@ import { useState } from 'react'
 import { AppShell } from '../../components/layout/AppShell'
 import { Icon } from '../../components/ui/Icon'
 import { StatusChip, type StatusKind } from '../../components/ui/StatusChip'
+import { ROLES, type Role } from '../../roles'
 
 interface UserRow {
   initials: string
   name: string
   email: string
-  roles: string[]
+  roles: Role[]
   status: StatusKind
 }
 
 const USERS: UserRow[] = [
   { initials: 'KD', name: 'Kouassi Diallo', email: 'k.diallo@entreprise.ci', roles: ['Administrateur', 'Signataire'], status: 'actif' },
   { initials: 'FT', name: 'Fatou Traoré', email: 'f.traore@entreprise.ci', roles: ['Signataire'], status: 'attente' },
-  { initials: 'JB', name: 'Jean Bamba', email: 'j.bamba@entreprise.ci', roles: ['Observateur'], status: 'inactif' },
+  { initials: 'JB', name: 'Jean Bamba', email: 'j.bamba@entreprise.ci', roles: ['Vérificateur'], status: 'inactif' },
 ]
 
-const ROLE_STYLES: Record<string, string> = {
+const ROLE_STYLES: Record<Role, string> = {
   Administrateur: 'bg-primary-container/20 text-primary-container border-primary-container/30',
   Signataire: 'bg-tertiary-container/20 text-tertiary-container border-tertiary-container/30',
-  Observateur: 'bg-secondary-container/50 text-on-secondary-container border-secondary-container',
+  Superviseur: 'bg-secondary-container/50 text-on-secondary-container border-secondary-container',
+  Vérificateur: 'bg-secondary-container/50 text-on-secondary-container border-secondary-container',
+  'Agent de réception': 'bg-secondary-container/50 text-on-secondary-container border-secondary-container',
 }
 
 export function UserManagement() {
@@ -54,9 +57,9 @@ export function UserManagement() {
         <div className="flex items-center gap-4 w-full md:w-auto">
           <select className="border border-outline-variant rounded-md px-3 py-2 bg-surface text-body-sm focus:border-primary outline-none w-full md:w-auto">
             <option>Tous les rôles</option>
-            <option>Administrateur</option>
-            <option>Signataire</option>
-            <option>Observateur</option>
+            {ROLES.map((role) => (
+              <option key={role}>{role}</option>
+            ))}
           </select>
           <select className="border border-outline-variant rounded-md px-3 py-2 bg-surface text-body-sm focus:border-primary outline-none w-full md:w-auto">
             <option>Tous les statuts</option>
@@ -150,9 +153,9 @@ export function UserManagement() {
                   Rôle
                 </label>
                 <select className="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-body-sm focus:border-primary outline-none" id="invite-role">
-                  <option>Administrateur</option>
-                  <option>Signataire</option>
-                  <option>Observateur</option>
+                  {ROLES.map((role) => (
+                    <option key={role}>{role}</option>
+                  ))}
                 </select>
               </div>
               <button

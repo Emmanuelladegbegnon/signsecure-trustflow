@@ -191,7 +191,7 @@ export function ApplySignature() {
                 />
               </div>
               <label className="font-body-sm text-body-sm text-on-surface cursor-pointer select-none" htmlFor="legal-check">
-                Je confirme apposer ma signature électronique sur ce document, reconnaissant sa pleine valeur légale et mon engagement contractuel envers les termes qui y sont stipulés.
+                Je confirme vouloir apposer ma signature électronique sur ce document et m'engager sur les termes qui y sont stipulés.
               </label>
             </div>
           </div>

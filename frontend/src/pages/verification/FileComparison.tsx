@@ -24,7 +24,7 @@ export function FileComparison() {
         <h1 className="font-headline-lg text-headline-lg text-on-surface">Vérification par fichier</h1>
       </div>
       <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl mb-8">
-        Comparez le document soumis avec la référence originale enregistrée dans la blockchain. Téléversez le fichier suspecté pour lancer l'analyse structurelle et cryptographique.
+        Comparez le document soumis avec la référence originale enregistrée sur la plateforme. Téléversez le fichier suspecté pour lancer l'analyse structurelle et cryptographique.
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">

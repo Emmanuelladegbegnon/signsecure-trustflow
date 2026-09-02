@@ -9,7 +9,16 @@ export function PublicVerification() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    navigate(code.trim() ? ROUTES.verifyValid : ROUTES.verifyUnknown)
+    const trimmed = code.trim()
+    if (!trimmed) {
+      navigate(ROUTES.verifyUnknown)
+      return
+    }
+    // Démo uniquement : un vrai back décidera le mode de comparaison à partir
+    // de l'origine réelle du document (Sign = hash exact, Trace = score OCR),
+    // jamais le préfixe du code saisi par l'utilisateur.
+    const isTraceCode = trimmed.toUpperCase().startsWith('TRC')
+    navigate(isTraceCode ? `${ROUTES.verifyValid}?origin=trace` : ROUTES.verifyValid)
   }
 
   return (

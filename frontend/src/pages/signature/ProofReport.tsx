@@ -4,13 +4,14 @@ const AUDIT_TRAIL = [
   { time: '23 Oct 2023, 09:00 UTC', title: 'Document Créé', detail: 'Créé par Système Automatisé (API)', icon: 'add_circle', tone: 'primary' as const },
   { time: '24 Oct 2023, 10:10 UTC', title: 'Document Ouvert', detail: 'Ouvert par Awa KONE (IP: 192.168.1.45)', icon: 'visibility', tone: 'neutral' as const },
   { time: '24 Oct 2023, 10:15 UTC', title: 'Signature Apposée', detail: 'Signé par Awa KONE. Authentification: SMS OTP.', icon: 'draw', tone: 'primary' as const },
-  { time: '24 Oct 2023, 14:30 UTC', title: 'Signature Apposée', detail: 'Signé par Moussa DIOP. Authentification: Biométrie.', icon: 'draw', tone: 'primary' as const },
-  { time: '24 Oct 2023, 14:32 UTC', title: 'Document Scellé', detail: 'Certificat final généré et scellé cryptographiquement.', icon: 'lock', tone: 'filled' as const },
+  { time: '24 Oct 2023, 14:30 UTC', title: 'Signature Apposée', detail: 'Signé par Moussa DIOP. Authentification: OTP Email.', icon: 'draw', tone: 'primary' as const },
+  { time: '24 Oct 2023, 14:32 UTC', title: 'Document Scellé', detail: 'Empreinte finale générée et journal d’audit clos pour cette signature.', icon: 'lock', tone: 'filled' as const },
 ]
 
+// MVP : seule l'authentification par OTP (SMS/email) est retenue — pas de biométrie (CLAUDE.md).
 const SIGNATORIES = [
   { name: 'Awa KONE', ip: '192.168.1.45', timestamp: '24 Oct 2023, 10:15 UTC', method: 'SMS OTP', icon: 'smartphone' },
-  { name: 'Moussa DIOP', ip: '41.202.73.112', timestamp: '24 Oct 2023, 14:30 UTC', method: 'Biométrie', icon: 'fingerprint' },
+  { name: 'Moussa DIOP', ip: '41.202.73.112', timestamp: '24 Oct 2023, 14:30 UTC', method: 'OTP Email', icon: 'mail' },
 ]
 
 export function ProofReport() {
@@ -28,7 +29,7 @@ export function ProofReport() {
             </div>
             <div className="text-right">
               <div className="font-headline-md text-headline-md font-bold text-primary mb-1">SignSecure TrustFlow</div>
-              <div className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Certificat Légal</div>
+              <div className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Rapport de Preuve</div>
             </div>
           </header>
 
@@ -118,7 +119,7 @@ export function ProofReport() {
 
           <footer className="bg-surface-container-low p-6 border-t border-outline-variant">
             <p className="font-body-sm text-body-sm text-on-surface-variant text-center max-w-2xl mx-auto">
-              Ce document constitue une preuve électronique au sens de la législation en vigueur. Les signatures électroniques apposées via la plateforme SignSecure TrustFlow bénéficient d'une présomption de fiabilité et ont la même valeur légale qu'une signature manuscrite. Toute altération de ce document annulera sa validité.
+              Ce rapport résume les contrôles effectués et les événements enregistrés par SignSecure TrustFlow au moment de la signature (démonstrateur MVP). Il ne constitue ni une signature électronique qualifiée ni un avis juridique. Toute altération de ce document après génération est détectable via son empreinte cryptographique.
             </p>
             <div className="mt-4 text-center print:hidden">
               <button
