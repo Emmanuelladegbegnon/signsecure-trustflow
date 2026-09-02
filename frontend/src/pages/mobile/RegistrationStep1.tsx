@@ -1,6 +1,10 @@
+import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { TRACE_DOCUMENT_TYPES } from '../../constants/traceTypes'
+import { FormAlert } from '../../components/ui/FormAlert'
 import { Icon } from '../../components/ui/Icon'
-import { ROUTES } from '../../routes'
+import { apiRequest, ApiRequestError } from '../../lib/httpClient'
+import { traceCaptureUrl } from '../../routes'
 
 const STEPS = [
   { label: 'Informations', active: true },
@@ -8,8 +12,69 @@ const STEPS = [
   { label: 'Validation', active: false },
 ]
 
+const CONFIDENTIALITE_OPTIONS = [
+  { value: 'standard', label: 'Standard' },
+  { value: 'confidentiel', label: 'Confidentiel' },
+]
+
+interface RegisterResponse {
+  dossierId: string
+}
+
 export function RegistrationStep1() {
   const navigate = useNavigate()
+
+  const [confirmed, setConfirmed] = useState(false)
+  const [type, setType] = useState('')
+  const [titre, setTitre] = useState('')
+  const [reference, setReference] = useState('')
+  const [organismeDeclare, setOrganismeDeclare] = useState('')
+  const [dateIndiquee, setDateIndiquee] = useState('')
+  const [nombrePages, setNombrePages] = useState('')
+  const [confidentialite, setConfidentialite] = useState('standard')
+  const [lieuReception, setLieuReception] = useState('')
+
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [apiError, setApiError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  const validate = () => {
+    const errors: Record<string, string> = {}
+    if (!confirmed) errors.confirmed = 'Confirmez que ce document a été signé hors SignSecure.'
+    if (!type) errors.type = 'Sélectionnez un type de document.'
+    if (!titre.trim()) errors.titre = 'Le titre du document est requis.'
+    if (!dateIndiquee) errors.dateIndiquee = 'La date indiquée sur le document est requise.'
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setApiError(null)
+    if (!validate()) return
+
+    setSubmitting(true)
+    try {
+      const { dossierId } = await apiRequest<RegisterResponse>('/trace/enregistrement', {
+        method: 'POST',
+        body: {
+          type,
+          titre: titre.trim(),
+          reference: reference.trim() || undefined,
+          organismeDeclare: organismeDeclare.trim() || undefined,
+          dateIndiquee,
+          nombrePages: nombrePages ? Number(nombrePages) : undefined,
+          confidentialite,
+          lieuReception: lieuReception.trim() || undefined,
+        },
+      })
+      navigate(traceCaptureUrl(dossierId))
+    } catch (err) {
+      setApiError(err instanceof ApiRequestError ? err.message : 'Une erreur inattendue est survenue. Réessayez.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col antialiased">
@@ -46,17 +111,22 @@ export function RegistrationStep1() {
           Veuillez renseigner les informations relatives au document physique pour l'intégrer à la chaîne de confiance.
         </p>
 
-        <form
-          className="flex flex-col gap-6"
-          onSubmit={(e) => {
-            e.preventDefault()
-            navigate(ROUTES.mobileCapture)
-          }}
-        >
+        {apiError && (
+          <div className="mb-6">
+            <FormAlert tone="error">{apiError}</FormAlert>
+          </div>
+        )}
+
+        <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
           <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm hover:border-primary transition-colors cursor-pointer group">
             <label className="flex items-start gap-3 cursor-pointer">
               <div className="flex items-center h-6">
-                <input className="w-5 h-5 rounded text-primary focus:ring-primary border-outline-variant bg-surface-container-lowest cursor-pointer" type="checkbox" />
+                <input
+                  className="w-5 h-5 rounded text-primary focus:ring-primary border-outline-variant bg-surface-container-lowest cursor-pointer"
+                  type="checkbox"
+                  checked={confirmed}
+                  onChange={(e) => setConfirmed(e.target.checked)}
+                />
               </div>
               <div className="flex flex-col">
                 <span className="font-label-md text-label-md text-on-surface">Je confirme que ce document a été signé hors SignSecure</span>
@@ -66,6 +136,12 @@ export function RegistrationStep1() {
               </div>
             </label>
           </div>
+          {fieldErrors.confirmed && (
+            <p className="font-label-sm text-label-sm text-error flex items-center gap-1 -mt-4">
+              <Icon name="error" size={14} />
+              {fieldErrors.confirmed}
+            </p>
+          )}
 
           <div className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant shadow-sm flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
@@ -74,17 +150,19 @@ export function RegistrationStep1() {
               </label>
               <div className="relative">
                 <select
-                  className="w-full h-12 bg-surface-container-lowest border border-outline-variant rounded-lg px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent font-body-md text-body-md text-on-surface transition-shadow"
+                  className={`w-full h-12 bg-surface-container-lowest border rounded-lg px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent font-body-md text-body-md text-on-surface transition-shadow ${
+                    fieldErrors.type ? 'border-error' : 'border-outline-variant'
+                  }`}
                   id="doc-type"
-                  defaultValue=""
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
                 >
-                  <option disabled value="">
-                    Sélectionner un type
-                  </option>
-                  <option value="contrat">Contrat Commercial</option>
-                  <option value="avenant">Avenant</option>
-                  <option value="attestation">Attestation Fiscale</option>
-                  <option value="pv">Procès-verbal</option>
+                  <option value="">Sélectionner un type</option>
+                  {TRACE_DOCUMENT_TYPES.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
                 <Icon name="expand_more" className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" />
               </div>
@@ -94,10 +172,14 @@ export function RegistrationStep1() {
                 Titre du document *
               </label>
               <input
-                className="w-full h-12 bg-surface-container-lowest border border-outline-variant rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent font-body-md text-body-md text-on-surface transition-shadow placeholder-on-surface-variant/50"
+                className={`w-full h-12 bg-surface-container-lowest border rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent font-body-md text-body-md text-on-surface transition-shadow placeholder-on-surface-variant/50 ${
+                  fieldErrors.titre ? 'border-error' : 'border-outline-variant'
+                }`}
                 id="doc-title"
                 placeholder="Ex: Contrat de prestation de services SA"
                 type="text"
+                value={titre}
+                onChange={(e) => setTitre(e.target.value)}
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -109,18 +191,69 @@ export function RegistrationStep1() {
                 id="doc-ref"
                 placeholder="Ex: REF-2023-10-A"
                 type="text"
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="font-label-md text-label-md text-on-surface" htmlFor="doc-organisme">
+                Organisme déclarant
+              </label>
+              <input
+                className="w-full h-12 bg-surface-container-lowest border border-outline-variant rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent font-body-md text-body-md text-on-surface transition-shadow placeholder-on-surface-variant/50"
+                id="doc-organisme"
+                placeholder="Ex: Banque Atlantique"
+                type="text"
+                value={organismeDeclare}
+                onChange={(e) => setOrganismeDeclare(e.target.value)}
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="flex flex-col gap-1.5">
                 <label className="font-label-md text-label-md text-on-surface" htmlFor="doc-date">
-                  Date de signature *
+                  Date indiquée sur le document *
+                </label>
+                <input
+                  className={`w-full h-12 bg-surface-container-lowest border rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent font-body-md text-body-md text-on-surface transition-shadow ${
+                    fieldErrors.dateIndiquee ? 'border-error' : 'border-outline-variant'
+                  }`}
+                  id="doc-date"
+                  type="date"
+                  value={dateIndiquee}
+                  onChange={(e) => setDateIndiquee(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-label-md text-label-md text-on-surface" htmlFor="doc-pages">
+                  Nombre de pages
                 </label>
                 <input
                   className="w-full h-12 bg-surface-container-lowest border border-outline-variant rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent font-body-md text-body-md text-on-surface transition-shadow"
-                  id="doc-date"
-                  type="date"
+                  id="doc-pages"
+                  type="number"
+                  min={1}
+                  value={nombrePages}
+                  onChange={(e) => setNombrePages(e.target.value)}
                 />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="flex flex-col gap-1.5">
+                <label className="font-label-md text-label-md text-on-surface" htmlFor="doc-confidentialite">
+                  Confidentialité
+                </label>
+                <select
+                  className="w-full h-12 bg-surface-container-lowest border border-outline-variant rounded-lg px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent font-body-md text-body-md text-on-surface transition-shadow"
+                  id="doc-confidentialite"
+                  value={confidentialite}
+                  onChange={(e) => setConfidentialite(e.target.value)}
+                >
+                  {CONFIDENTIALITE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="font-label-md text-label-md text-on-surface" htmlFor="doc-location">
@@ -132,6 +265,8 @@ export function RegistrationStep1() {
                     id="doc-location"
                     placeholder="Ex: Siège Abidjan"
                     type="text"
+                    value={lieuReception}
+                    onChange={(e) => setLieuReception(e.target.value)}
                   />
                   <Icon name="location_on" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
                 </div>
@@ -141,11 +276,13 @@ export function RegistrationStep1() {
 
           <div className="fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] p-4 flex justify-end z-50">
             <button
-              className="w-full md:w-auto h-12 bg-primary text-on-primary font-label-md text-label-md px-8 rounded-lg flex items-center justify-center gap-2 hover:bg-on-primary-fixed-variant transition-colors shadow-sm active:scale-95 duration-200"
+              className="w-full md:w-auto h-12 bg-primary text-on-primary font-label-md text-label-md px-8 rounded-lg flex items-center justify-center gap-2 hover:bg-on-primary-fixed-variant transition-colors shadow-sm active:scale-95 duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
               type="submit"
+              disabled={submitting}
             >
-              Suivant
-              <Icon name="arrow_forward" size={20} />
+              {submitting && <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true" />}
+              {submitting ? 'Enregistrement…' : 'Suivant'}
+              {!submitting && <Icon name="arrow_forward" size={20} />}
             </button>
           </div>
         </form>

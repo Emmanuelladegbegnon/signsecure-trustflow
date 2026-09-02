@@ -23,9 +23,7 @@ import { TraceabilityDetail } from './pages/traceability/TraceabilityDetail'
 
 import { RegistrationStep1 } from './pages/mobile/RegistrationStep1'
 import { CameraCapture } from './pages/mobile/CameraCapture'
-import { CodeLabel } from './pages/mobile/CodeLabel'
 import { Observations } from './pages/mobile/Observations'
-import { RegistrationConfirmation } from './pages/mobile/RegistrationConfirmation'
 import { ReportIncident } from './pages/mobile/ReportIncident'
 import { TransferRequest } from './pages/mobile/TransferRequest'
 import { TransferReception } from './pages/mobile/TransferReception'
@@ -63,9 +61,7 @@ function App() {
 
         <Route path={ROUTES.mobileRegistrationStep1} element={<RegistrationStep1 />} />
         <Route path={ROUTES.mobileCapture} element={<CameraCapture />} />
-        <Route path={ROUTES.mobileCodeLabel} element={<CodeLabel />} />
         <Route path={ROUTES.mobileObservations} element={<Observations />} />
-        <Route path={ROUTES.mobileRegistrationConfirm} element={<RegistrationConfirmation />} />
         <Route path={ROUTES.mobileIncident} element={<ReportIncident />} />
         <Route path={ROUTES.mobileTransferRequest} element={<TransferRequest />} />
         <Route path={ROUTES.mobileTransferReception} element={<TransferReception />} />

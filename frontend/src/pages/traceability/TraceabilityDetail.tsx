@@ -1,14 +1,63 @@
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { AppShell } from '../../components/layout/AppShell'
+import { FormAlert } from '../../components/ui/FormAlert'
+import { FullscreenSpinner } from '../../components/ui/FullscreenSpinner'
 import { Icon } from '../../components/ui/Icon'
+import { apiRequest, ApiRequestError } from '../../lib/httpClient'
+import { traceIncidentUrl, traceTransferRequestUrl } from '../../routes'
 
-const TIMELINE = [
-  { title: 'Réception confirmée', current: true, actor: 'Kouamé Diallo (Directeur Général)', actorIcon: 'person', time: '15 Oct 2023, 14:30 GMT', icon: 'check_circle' },
-  { title: 'Transfert demandé', current: false, actor: 'Awa KONE (Superviseur)', actorIcon: 'person', time: '14 Oct 2023, 09:15 GMT', icon: 'swap_horiz' },
-  { title: 'Archivé', current: false, actor: 'Système SignSecure (Auto)', actorIcon: 'dns', time: '12 Oct 2023, 11:45 GMT', icon: 'inventory_2' },
-  { title: 'Reçu', current: false, actor: 'API Partenaire (Banque Atlantique)', actorIcon: 'api', time: '12 Oct 2023, 11:42 GMT', icon: 'inbox' },
-]
+interface TimelineEvent {
+  type: string
+  acteur?: string
+  date?: string
+  details?: string
+}
+
+interface TimelineResponse {
+  evenements: TimelineEvent[]
+}
 
 export function TraceabilityDetail() {
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const [events, setEvents] = useState<TimelineEvent[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  const [archiving, setArchiving] = useState(false)
+  const [archiveError, setArchiveError] = useState<string | null>(null)
+  const [archived, setArchived] = useState(false)
+
+  useEffect(() => {
+    if (!id) return
+    const controller = new AbortController()
+    apiRequest<TimelineResponse>(`/trace/${id}/timeline`, { signal: controller.signal })
+      .then((res) => setEvents(res.evenements))
+      .catch((err) => setError(err instanceof ApiRequestError ? err.message : 'Impossible de charger la chaîne de garde.'))
+      .finally(() => setLoading(false))
+    return () => controller.abort()
+  }, [id])
+
+  const handleArchive = async () => {
+    if (!id || archiving) return
+    setArchiveError(null)
+    setArchiving(true)
+    try {
+      await apiRequest(`/trace/${id}/archiver`, { method: 'POST' })
+      setArchived(true)
+    } catch (err) {
+      setArchiveError(err instanceof ApiRequestError ? err.message : 'Une erreur inattendue est survenue. Réessayez.')
+    } finally {
+      setArchiving(false)
+    }
+  }
+
+  if (loading) return <FullscreenSpinner />
+
+  // Le plus récent en premier — hypothèse : le serveur renvoie l'ordre chronologique.
+  const timeline = [...(events ?? [])].reverse()
+
   return (
     <AppShell active="trace">
       <div className="max-w-5xl mx-auto flex flex-col lg:flex-row gap-8">
@@ -19,72 +68,108 @@ export function TraceabilityDetail() {
                 <Icon name="description" />
               </div>
               <div>
-                <h3 className="font-headline-sm text-headline-sm text-on-surface">Contrat Partenariat B2B</h3>
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-surface-container text-on-surface-variant mt-1">
-                  DOC-2023-8942
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-surface-container text-on-surface-variant">
+                  {id}
                 </span>
               </div>
             </div>
-            <div className="flex flex-col gap-3 py-4 border-y border-outline-variant">
-              <div className="flex justify-between items-center">
-                <span className="font-body-sm text-body-sm text-on-surface-variant">Statut actuel</span>
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full font-label-sm text-label-sm bg-[#e8f5e9] text-[#1b5e20]">Réception confirmée</span>
+
+            {archived && (
+              <div className="pt-2">
+                <FormAlert tone="success">Ce dossier a été archivé.</FormAlert>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="font-body-sm text-body-sm text-on-surface-variant">Créé le</span>
-                <span className="font-label-md text-label-md text-on-surface">12 Oct 2023</span>
+            )}
+            {archiveError && (
+              <div className="pt-2">
+                <FormAlert tone="error">{archiveError}</FormAlert>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="font-body-sm text-body-sm text-on-surface-variant">Niveau de sécurité</span>
-                <span className="flex items-center gap-1 font-label-md text-label-md text-on-surface">
-                  <Icon name="shield_lock" size={16} className="text-primary" />
-                  Élevé
-                </span>
+            )}
+
+            {!archived && (
+              <div className="flex flex-col gap-2 mt-2">
+                <button
+                  className="w-full py-2 border border-outline-variant text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors flex items-center justify-center gap-2"
+                  onClick={() => id && navigate(traceTransferRequestUrl(id))}
+                  type="button"
+                >
+                  <Icon name="send" />
+                  Demander un transfert
+                </button>
+                <button
+                  className="w-full py-2 border border-outline-variant text-error rounded-lg font-label-md text-label-md hover:bg-error-container transition-colors flex items-center justify-center gap-2"
+                  onClick={() => id && navigate(traceIncidentUrl(id))}
+                  type="button"
+                >
+                  <Icon name="report" />
+                  Déclarer un incident
+                </button>
+                <button
+                  className="w-full py-2 border border-outline text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                  onClick={handleArchive}
+                  disabled={archiving}
+                  type="button"
+                >
+                  {archiving ? (
+                    <span className="w-4 h-4 rounded-full border-2 border-outline/40 border-t-outline animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Icon name="archive" />
+                  )}
+                  {archiving ? 'Archivage…' : 'Archiver ce dossier'}
+                </button>
               </div>
-            </div>
-            <button className="w-full py-2 border border-outline text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors mt-2 flex items-center justify-center gap-2">
-              <Icon name="download" />
-              Télécharger l'Audit
-            </button>
+            )}
           </div>
         </div>
 
         <div className="lg:w-2/3">
           <div className="bg-surface-container-lowest rounded-xl p-8 shadow-sm border border-outline-variant">
             <h3 className="font-headline-sm text-headline-sm text-on-surface mb-8 border-b border-outline-variant pb-4">Chaîne de Garde (Custody Timeline)</h3>
-            <div className="relative pl-6 space-y-8">
-              <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-outline-variant" />
-              <div className="absolute left-[7px] top-2 w-0.5 bg-primary" style={{ height: 'calc(25% - 8px)' }} />
-              {TIMELINE.map((step) => (
-                <div key={step.title} className="relative">
-                  <div
-                    className={`absolute -left-6 flex items-center justify-center w-8 h-8 rounded-full border-4 border-surface-container-lowest shrink-0 shadow-sm z-10 ${
-                      step.current ? 'bg-primary text-on-primary' : 'bg-surface-container-highest text-on-surface-variant'
-                    }`}
-                  >
-                    <Icon name={step.icon} size={16} />
-                  </div>
-                  <div
-                    className={`ml-6 rounded-xl p-5 border shadow-sm ${
-                      step.current ? 'bg-surface border-primary/30' : 'bg-surface-container-lowest border-outline-variant opacity-80 hover:opacity-100 transition-opacity'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`font-label-md text-label-md font-bold ${step.current ? 'text-primary' : 'text-on-surface'}`}>{step.title}</span>
-                      {step.current && <span className="inline-flex px-1.5 py-0.5 bg-primary-container text-on-primary-container text-[10px] rounded font-bold">ACTUEL</span>}
+
+            {error && <FormAlert tone="error">{error}</FormAlert>}
+            {!error && timeline.length === 0 && <p className="font-body-sm text-body-sm text-on-surface-variant">Aucun événement pour ce dossier.</p>}
+
+            {timeline.length > 0 && (
+              <div className="relative pl-6 space-y-8">
+                <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-outline-variant" />
+                {timeline.map((event, i) => {
+                  const current = i === 0
+                  return (
+                    <div key={`${event.type}-${i}`} className="relative">
+                      <div
+                        className={`absolute -left-6 flex items-center justify-center w-8 h-8 rounded-full border-4 border-surface-container-lowest shrink-0 shadow-sm z-10 ${
+                          current ? 'bg-primary text-on-primary' : 'bg-surface-container-highest text-on-surface-variant'
+                        }`}
+                      >
+                        <Icon name={current ? 'check_circle' : 'fiber_manual_record'} size={16} />
+                      </div>
+                      <div
+                        className={`ml-6 rounded-xl p-5 border shadow-sm ${
+                          current ? 'bg-surface border-primary/30' : 'bg-surface-container-lowest border-outline-variant opacity-80 hover:opacity-100 transition-opacity'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`font-label-md text-label-md font-bold ${current ? 'text-primary' : 'text-on-surface'}`}>{event.type}</span>
+                          {current && <span className="inline-flex px-1.5 py-0.5 bg-primary-container text-on-primary-container text-[10px] rounded font-bold">ACTUEL</span>}
+                        </div>
+                        {event.acteur && (
+                          <p className="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+                            <Icon name="person" size={14} />
+                            {event.acteur}
+                          </p>
+                        )}
+                        {event.date && (
+                          <p className="font-label-sm text-label-sm text-on-surface-variant/70 mt-2 flex items-center gap-1">
+                            <Icon name="schedule" size={14} />
+                            {event.date}
+                          </p>
+                        )}
+                        {event.details && <p className="font-body-sm text-body-sm text-on-surface-variant mt-2">{event.details}</p>}
+                      </div>
                     </div>
-                    <p className="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
-                      <Icon name={step.actorIcon} size={14} />
-                      {step.actor}
-                    </p>
-                    <p className="font-label-sm text-label-sm text-on-surface-variant/70 mt-2 flex items-center gap-1">
-                      <Icon name="schedule" size={14} />
-                      {step.time}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,10 +1,13 @@
-import { useNavigate } from 'react-router-dom'
 import { Icon } from '../../components/ui/Icon'
-import { ROUTES } from '../../routes'
 
-export function CodeLabel() {
-  const navigate = useNavigate()
+interface CodeLabelProps {
+  trackingCode: string
+  etiquetteUrl: string
+  onFinish: () => void
+}
 
+/** Étape "étiquette" — rendue par Observations.tsx une fois POST /api/trace/:id/valider passé, avec le vrai code et la vraie étiquette renvoyés par le serveur. */
+export function CodeLabel({ trackingCode, etiquetteUrl, onFinish }: CodeLabelProps) {
   return (
     <div className="bg-surface text-on-surface min-h-screen flex flex-col items-center pt-8 pb-32 px-margin-mobile">
       <header className="w-full max-w-[400px] mb-8 text-center flex flex-col items-center">
@@ -19,12 +22,16 @@ export function CodeLabel() {
         <section className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant flex flex-col items-center relative overflow-hidden">
           <h2 className="font-label-md text-label-md text-on-surface-variant w-full text-left mb-4 uppercase">Aperçu de l'étiquette</h2>
           <div className="bg-surface-bright border-2 border-dashed border-outline-variant rounded-lg p-6 w-full flex flex-col items-center gap-4 relative z-10 shadow-sm">
-            <div className="bg-white p-3 rounded shadow-sm border border-surface-variant text-on-surface-variant">
-              <Icon name="qr_code_2" size={128} />
-            </div>
+            {etiquetteUrl ? (
+              <img src={etiquetteUrl} alt={`Étiquette pour ${trackingCode}`} className="w-32 h-32 object-contain bg-white p-2 rounded shadow-sm border border-surface-variant" />
+            ) : (
+              <div className="bg-white p-3 rounded shadow-sm border border-surface-variant text-on-surface-variant">
+                <Icon name="qr_code_2" size={128} />
+              </div>
+            )}
             <div className="text-center w-full">
               <div className="font-label-sm text-label-sm text-on-surface-variant uppercase mb-1">Code de suivi</div>
-              <div className="font-headline-sm text-headline-sm tracking-[0.2em] font-bold text-on-surface bg-surface-container py-2 px-4 rounded">STF-982-4A</div>
+              <div className="font-headline-sm text-headline-sm tracking-[0.2em] font-bold text-on-surface bg-surface-container py-2 px-4 rounded">{trackingCode}</div>
             </div>
             <div className="mt-2 flex items-center gap-2 bg-error-container text-on-error-container px-3 py-1.5 rounded-full w-full justify-center">
               <Icon name="warning" size={16} />
@@ -45,13 +52,18 @@ export function CodeLabel() {
       </main>
 
       <footer className="fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant p-4 flex flex-col gap-3 shadow-lg z-50">
-        <button className="w-full bg-primary hover:bg-primary/90 text-on-primary font-label-md text-label-md h-12 rounded-lg flex items-center justify-center gap-2 transition-colors active:scale-[0.98]">
+        <button
+          className="w-full bg-primary hover:bg-primary/90 text-on-primary font-label-md text-label-md h-12 rounded-lg flex items-center justify-center gap-2 transition-colors active:scale-[0.98]"
+          onClick={() => window.print()}
+          type="button"
+        >
           <Icon name="print" />
           Imprimer la fiche
         </button>
         <button
           className="w-full border border-outline hover:bg-surface-container text-on-surface font-label-md text-label-md h-12 rounded-lg flex items-center justify-center transition-colors active:scale-[0.98]"
-          onClick={() => navigate(ROUTES.mobileObservations)}
+          onClick={onFinish}
+          type="button"
         >
           Terminer
         </button>

@@ -1,21 +1,102 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthContext'
+import { FormAlert } from '../../components/ui/FormAlert'
 import { Icon } from '../../components/ui/Icon'
+import { apiRequest, ApiRequestError } from '../../lib/httpClient'
 import { ROUTES } from '../../routes'
+import { CodeLabel } from './CodeLabel'
+import { RegistrationConfirmation } from './RegistrationConfirmation'
 
 const CHECKS = [
-  { key: 'signature', label: 'Signature présente', hint: 'Vérifier toutes les pages requises', default: true },
-  { key: 'pages', label: 'Pages complètes', hint: 'Aucune page manquante ou altérée', default: true },
-  { key: 'stamp', label: 'Cachet visible', hint: 'Lisible et officiel', default: false },
-  { key: 'envelope', label: 'Enveloppe intacte', hint: 'Scellés originaux non brisés', default: true },
+  { key: 'signaturePresente', label: 'Signature présente', hint: 'Vérifier toutes les pages requises', default: true },
+  { key: 'pagesCompletes', label: 'Pages complètes', hint: 'Aucune page manquante ou altérée', default: true },
+  { key: 'cachetVisible', label: 'Cachet visible', hint: 'Lisible et officiel', default: false },
+  { key: 'documentLisible', label: 'Document lisible', hint: 'Texte net, sans altération', default: true },
+  { key: 'enveloppeIntacte', label: 'Enveloppe intacte', hint: 'Scellés originaux non brisés', default: true },
 ] as const
+
+type Step = { kind: 'form' } | { kind: 'pending' } | { kind: 'label'; trackingCode: string; etiquetteUrl: string } | { kind: 'done'; trackingCode: string }
+
+interface ValidateResponse {
+  success: true
+  trackingCode: string
+  etiquetteUrl: string
+}
 
 export function Observations() {
   const navigate = useNavigate()
+  const { id } = useParams<{ id: string }>()
+  const { user } = useAuth()
+  const canValidate = user?.roles.includes('Superviseur') ?? false
+
   const [checks, setChecks] = useState<Record<string, boolean>>(() => Object.fromEntries(CHECKS.map((c) => [c.key, c.default])))
   const [note, setNote] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [step, setStep] = useState<Step>({ kind: 'form' })
 
   const toggle = (key: string) => setChecks((prev) => ({ ...prev, [key]: !prev[key] }))
+
+  const handleSubmit = async () => {
+    if (!id || submitting) return
+    setError(null)
+    setSubmitting(true)
+    try {
+      await apiRequest(`/trace/${id}/observations`, {
+        method: 'POST',
+        body: { ...checks, anomalie: note.trim() || undefined },
+      })
+
+      if (canValidate) {
+        const validated = await apiRequest<ValidateResponse>(`/trace/${id}/valider`, { method: 'POST' })
+        setStep({ kind: 'label', trackingCode: validated.trackingCode, etiquetteUrl: validated.etiquetteUrl })
+      } else {
+        setStep({ kind: 'pending' })
+      }
+    } catch (err) {
+      setError(err instanceof ApiRequestError ? err.message : 'Une erreur inattendue est survenue. Réessayez.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (step.kind === 'label') {
+    return (
+      <CodeLabel
+        trackingCode={step.trackingCode}
+        etiquetteUrl={step.etiquetteUrl}
+        onFinish={() => setStep({ kind: 'done', trackingCode: step.trackingCode })}
+      />
+    )
+  }
+
+  if (step.kind === 'done') {
+    return <RegistrationConfirmation trackingCode={step.trackingCode} onDone={() => navigate(ROUTES.traceabilityList)} />
+  }
+
+  if (step.kind === 'pending') {
+    return (
+      <div className="bg-background text-on-background min-h-screen flex items-center justify-center p-margin-mobile">
+        <div className="max-w-md w-full bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-8 text-center flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center mb-4">
+            <Icon name="hourglass_top" className="text-on-secondary-container" size={28} />
+          </div>
+          <h1 className="font-headline-md text-headline-md text-on-surface mb-2">Dossier soumis</h1>
+          <p className="font-body-md text-body-md text-on-surface-variant mb-8">
+            Les observations ont été enregistrées. Un superviseur doit valider ce dossier avant que le code de suivi et l'étiquette ne soient
+            générés.
+          </p>
+          <button
+            className="w-full bg-primary text-on-primary font-label-md text-label-md py-3 rounded-lg hover:opacity-90 transition-opacity"
+            onClick={() => navigate(ROUTES.traceabilityList)}
+          >
+            Retour à l'accueil
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-background text-on-background antialiased font-body-md flex flex-col min-h-screen">
@@ -34,6 +115,8 @@ export function Observations() {
           <h2 className="font-headline-md text-headline-md text-on-surface mb-2">Vérification du Document</h2>
           <p className="font-body-sm text-body-sm text-on-surface-variant">Veuillez confirmer les points de contrôle suivants pour le document en cours de traitement.</p>
         </div>
+
+        {error && <FormAlert tone="error">{error}</FormAlert>}
 
         <section className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
           {CHECKS.map((check, i) => (
@@ -91,11 +174,14 @@ export function Observations() {
             Précédent
           </button>
           <button
-            className="flex-1 py-3 px-4 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-medium hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm text-center flex items-center justify-center gap-2"
-            onClick={() => navigate(ROUTES.mobileRegistrationConfirm)}
+            className="flex-1 py-3 px-4 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-medium hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm text-center flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            onClick={handleSubmit}
+            disabled={submitting}
+            type="button"
           >
-            Suivant
-            <Icon name="arrow_forward" size={18} />
+            {submitting && <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true" />}
+            {submitting ? 'Envoi…' : 'Suivant'}
+            {!submitting && <Icon name="arrow_forward" size={18} />}
           </button>
         </div>
       </div>

@@ -26,20 +26,30 @@ export const ROUTES = {
   verifyResult: '/verifier/resultat/:code',
   compareFiles: '/verifier/:code/comparaison',
 
-  /** List of documents/assets currently being tracked. */
+  /** Liste des documents en cours de traçabilité (GET /api/documents, filtré côté client sur origine=trace — pas d'endpoint de liste dédié dans le contrat). */
   traceabilityList: '/tracabilite',
-  /** Full custody-chain timeline for a single tracked document. */
-  traceabilityDetail: '/tracabilite/detail',
+  /** Chaîne de garde d'un dossier Trace donné (GET /api/trace/:id/timeline). */
+  traceabilityDetail: '/tracabilite/:id/detail',
 
+  /** POST /api/trace/enregistrement — crée le dossier (brouillon). */
   mobileRegistrationStep1: '/mobile/enregistrement/etape-1',
-  mobileCapture: '/mobile/enregistrement/capture',
-  mobileCodeLabel: '/mobile/enregistrement/code-etiquette',
-  mobileObservations: '/mobile/enregistrement/observations',
-  mobileRegistrationConfirm: '/mobile/enregistrement/confirmation',
-  mobileIncident: '/mobile/incident',
+  /** POST /api/trace/:id/capture — étapes suivantes toutes rattachées au dossier créé. */
+  mobileCapture: '/mobile/enregistrement/:id/capture',
+  /**
+   * POST /api/trace/:id/observations, puis — si le compte a le rôle
+   * Superviseur — POST /api/trace/:id/valider dans la foulée (le contrat
+   * n'expose aucun endpoint de "file d'attente à valider" séparé). Le code
+   * de suivi et l'étiquette générés sont affichés en état interne de cette
+   * même page (pages/mobile/Observations.tsx), pas des routes à part.
+   */
+  mobileObservations: '/mobile/enregistrement/:id/observations',
+  /** POST /api/trace/:id/incident. */
+  mobileIncident: '/mobile/trace/:id/incident',
 
-  mobileTransferRequest: '/mobile/transfert/demande',
-  mobileTransferReception: '/mobile/transfert/reception',
+  /** POST /api/trace/:id/transfert. */
+  mobileTransferRequest: '/mobile/trace/:id/transfert',
+  /** POST /api/trace/transfert/:transfertId/confirmer. */
+  mobileTransferReception: '/mobile/transfert/:transfertId/reception',
 
   adminUsers: '/admin/utilisateurs',
   adminAuditLog: '/admin/audit',
@@ -60,3 +70,21 @@ export const verifyResultUrl = (code: string) => `/verifier/resultat/${encodeURI
 
 /** Comparaison de fichier pour un code de suivi donné. */
 export const compareFilesUrl = (code: string) => `/verifier/${encodeURIComponent(code)}/comparaison`
+
+/** Chaîne de garde d'un dossier Trace donné. */
+export const traceabilityDetailUrl = (id: string) => `/tracabilite/${id}/detail`
+
+/** Étape "capture photo" d'un dossier Trace donné. */
+export const traceCaptureUrl = (id: string) => `/mobile/enregistrement/${id}/capture`
+
+/** Étape "observations" d'un dossier Trace donné. */
+export const traceObservationsUrl = (id: string) => `/mobile/enregistrement/${id}/observations`
+
+/** Déclaration d'incident pour un dossier Trace donné. */
+export const traceIncidentUrl = (id: string) => `/mobile/trace/${id}/incident`
+
+/** Demande de transfert pour un dossier Trace donné. */
+export const traceTransferRequestUrl = (id: string) => `/mobile/trace/${id}/transfert`
+
+/** Confirmation de réception pour un transfert donné. */
+export const traceTransferReceptionUrl = (transfertId: string) => `/mobile/transfert/${transfertId}/reception`

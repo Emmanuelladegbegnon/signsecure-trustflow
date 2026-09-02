@@ -1,8 +1,61 @@
-import { useNavigate } from 'react-router-dom'
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { FormAlert } from '../../components/ui/FormAlert'
 import { Icon } from '../../components/ui/Icon'
+import { apiRequest, ApiRequestError } from '../../lib/httpClient'
+import { ROUTES } from '../../routes'
+
+const INCIDENT_TYPES = [
+  { value: 'falsification', label: 'Falsification de document' },
+  { value: 'usurpation', label: "Usurpation d'identité" },
+  { value: 'perte', label: 'Perte de données' },
+  { value: 'technique', label: 'Problème technique (Signature)' },
+  { value: 'autre', label: 'Autre' },
+]
 
 export function ReportIncident() {
   const navigate = useNavigate()
+  const { id } = useParams<{ id: string }>()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [type, setType] = useState('')
+  const [description, setDescription] = useState('')
+  const [photo, setPhoto] = useState<File | null>(null)
+  const [fieldError, setFieldError] = useState<string | null>(null)
+  const [apiError, setApiError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleFile = (e: ChangeEvent<HTMLInputElement>) => setPhoto(e.target.files?.[0] ?? null)
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setFieldError(null)
+    setApiError(null)
+    if (!id) return
+    if (!type) {
+      setFieldError("Sélectionnez un type d'incident.")
+      return
+    }
+    if (!description.trim()) {
+      setFieldError('La description est requise.')
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('type', type)
+    formData.append('description', description.trim())
+    if (photo) formData.append('photo', photo)
+
+    setSubmitting(true)
+    try {
+      await apiRequest(`/trace/${id}/incident`, { method: 'POST', body: formData })
+      navigate(ROUTES.traceabilityList)
+    } catch (err) {
+      setApiError(err instanceof ApiRequestError ? err.message : 'Une erreur inattendue est survenue. Réessayez.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <div className="bg-surface text-on-surface flex flex-col min-h-screen antialiased">
@@ -25,13 +78,9 @@ export function ReportIncident() {
           </div>
         </section>
 
-        <form
-          className="flex flex-col gap-6"
-          onSubmit={(e) => {
-            e.preventDefault()
-            navigate(-1)
-          }}
-        >
+        {(fieldError || apiError) && <FormAlert tone="error">{fieldError ?? apiError}</FormAlert>}
+
+        <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
           <div className="flex flex-col gap-1.5">
             <label className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" htmlFor="incident_type">
               Type d'incident
@@ -41,16 +90,15 @@ export function ReportIncident() {
                 className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary shadow-sm transition-all"
                 id="incident_type"
                 name="incident_type"
-                defaultValue=""
+                value={type}
+                onChange={(e) => setType(e.target.value)}
               >
-                <option disabled value="">
-                  Sélectionnez un type
-                </option>
-                <option value="falsification">Falsification de document</option>
-                <option value="usurpation">Usurpation d'identité</option>
-                <option value="perte">Perte de données</option>
-                <option value="technique">Problème technique (Signature)</option>
-                <option value="autre">Autre</option>
+                <option value="">Sélectionnez un type</option>
+                {INCIDENT_TYPES.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
               <Icon name="expand_more" className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" />
             </div>
@@ -66,28 +114,37 @@ export function ReportIncident() {
               name="incident_description"
               placeholder="Décrivez les circonstances, l'heure, et les parties impliquées..."
               rows={5}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Pièce(s) jointe(s) (Optionnel)</span>
+            <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Pièce jointe (Optionnel)</span>
             <button
               className="w-full flex items-center justify-center gap-2 py-4 border-2 border-dashed border-outline-variant rounded-lg text-primary bg-surface-container-lowest hover:bg-surface-container-low transition-colors group"
               type="button"
+              onClick={() => fileInputRef.current?.click()}
             >
               <Icon name="add_a_photo" className="text-primary group-hover:scale-110 transition-transform" />
-              <span className="font-label-md text-label-md">Ajouter une photo ou un document</span>
+              <span className="font-label-md text-label-md">{photo ? photo.name : 'Ajouter une photo'}</span>
             </button>
-            <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">Formats acceptés: JPG, PNG, PDF. Max 5MB.</p>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+            <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">Formats acceptés: JPG, PNG. Max 5MB.</p>
           </div>
 
           <div className="fixed bottom-0 left-0 w-full p-margin-mobile bg-surface shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] border-t border-outline-variant z-50">
             <button
-              className="w-full bg-error text-on-error font-label-md text-label-md py-3.5 px-6 rounded-lg shadow-sm hover:bg-error/90 active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="w-full bg-error text-on-error font-label-md text-label-md py-3.5 px-6 rounded-lg shadow-sm hover:bg-error/90 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               type="submit"
+              disabled={submitting}
             >
-              <Icon name="report" filled />
-              Déclarer l'incident
+              {submitting ? (
+                <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true" />
+              ) : (
+                <Icon name="report" filled />
+              )}
+              {submitting ? 'Envoi…' : "Déclarer l'incident"}
             </button>
           </div>
         </form>
