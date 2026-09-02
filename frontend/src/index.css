@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-on-background antialiased;
+  }
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+.material-symbols-outlined.filled {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes scale-in {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .animate-scale-in {
+    animation: scale-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  @keyframes slide-up-fade {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-entrance {
+    animation: slide-up-fade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+/* Decorative teal dot-pattern used on the login screen's brand panel */
+.pattern-bg {
+  background-color: #0f766e;
+  background-image: radial-gradient(circle at 100% 150%, #005c55 24%, white 24%, white 28%, #005c55 28%, #005c55 36%, white 36%, white 40%, transparent 40%, transparent),
+    radial-gradient(circle at 0 150%, #005c55 24%, white 24%, white 28%, #005c55 28%, #005c55 36%, white 36%, white 40%, transparent 40%, transparent),
+    radial-gradient(circle at 50% 100%, white 10%, #005c55 10%, #005c55 23%, white 23%, white 30%, #005c55 30%, #005c55 43%, white 43%, white 50%, #005c55 50%, #005c55 63%, white 63%, white 71%, transparent 71%, transparent),
+    radial-gradient(circle at 100% 50%, white 5%, #005c55 5%, #005c55 15%, white 15%, white 20%, #005c55 20%, #005c55 29%, white 29%, white 34%, #005c55 34%, #005c55 44%, white 44%, white 49%, transparent 49%, transparent),
+    radial-gradient(circle at 0 50%, white 5%, #005c55 5%, #005c55 15%, white 15%, white 20%, #005c55 20%, #005c55 29%, white 29%, white 34%, #005c55 34%, #005c55 44%, white 44%, white 49%, transparent 49%, transparent);
+  background-size: 100px 50px;
+  opacity: 0.8;
+  mix-blend-mode: overlay;
+}
+
+/* Thin custom scrollbar used on data-dense admin screens */
+.custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: #f7f9fb; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background-color: #e0e3e5; border-radius: 4px; }
