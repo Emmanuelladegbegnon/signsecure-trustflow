@@ -36,7 +36,7 @@ export function FileComparison() {
   useEffect(() => {
     if (!code) return
     const controller = new AbortController()
-    apiRequest<VerifyReference>(`/verify/${code}`, { auth: false, signal: controller.signal })
+    apiRequest<VerifyReference>(`/verify/${encodeURIComponent(code)}`, { auth: false, signal: controller.signal })
       .then((res) => setReference(res))
       .catch((err) => setReferenceError(err instanceof ApiRequestError ? err.message : 'Impossible de charger le document de référence.'))
       .finally(() => setLoadingReference(false))
@@ -51,7 +51,7 @@ export function FileComparison() {
     const formData = new FormData()
     formData.append('fichier', candidate)
     try {
-      const res = await apiRequest<CompareResult>(`/verify/${code}/comparer`, { method: 'POST', body: formData, auth: false })
+      const res = await apiRequest<CompareResult>(`/verify/${encodeURIComponent(code)}/comparer`, { method: 'POST', body: formData, auth: false })
       setResult(res)
     } catch (err) {
       setCompareError(err instanceof ApiRequestError ? err.message : 'Une erreur inattendue est survenue. Réessayez.')

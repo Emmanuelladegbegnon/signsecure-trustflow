@@ -53,7 +53,7 @@ export function VerificationResult() {
     const controller = new AbortController()
     setLoading(true)
     setError(null)
-    apiRequest<VerifyResponse>(`/verify/${code}`, { auth: false, signal: controller.signal })
+    apiRequest<VerifyResponse>(`/verify/${encodeURIComponent(code)}`, { auth: false, signal: controller.signal })
       .then((res) => setData(res))
       .catch((err) => setError(err instanceof ApiRequestError ? err.message : 'Impossible de contacter le service de vérification.'))
       .finally(() => setLoading(false))
