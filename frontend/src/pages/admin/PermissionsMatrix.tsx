@@ -1,124 +1,77 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AppShell } from '../../components/layout/AppShell'
+import { FormAlert } from '../../components/ui/FormAlert'
 import { Icon } from '../../components/ui/Icon'
-import { ROLES, type Role } from '../../roles'
+import { apiRequest, ApiRequestError } from '../../lib/httpClient'
 
-// Icônes par rôle canonique (CLAUDE.md § Modèle de rôles) — même ordre que ROLES.
-const ROLE_ICON: Record<Role, string> = {
-  'Agent de réception': 'move_to_inbox',
-  Signataire: 'draw',
-  Superviseur: 'supervisor_account',
-  Vérificateur: 'verified_user',
-  Administrateur: 'admin_panel_settings',
+interface Profil {
+  id: string
+  nom: string
+  description: string
+  permissions: string[]
 }
 
-interface Permission {
-  key: string
-  label: string
-  variant: 'checkbox' | 'toggle'
-  /** Une valeur par rôle, dans l'ordre de ROLES. Administrateur est toujours verrouillé (accès total). */
-  defaults: boolean[]
+interface ProfilsResponse {
+  profils: Profil[]
 }
 
-const GROUPS: { name: string; permissions: Permission[] }[] = [
-  {
-    name: 'Gestion des Documents',
-    permissions: [
-      // [Agent de réception, Signataire, Superviseur, Vérificateur, Administrateur]
-      { key: 'doc-create', label: 'Créer de nouveaux documents', variant: 'checkbox', defaults: [false, true, true, false, true] },
-      { key: 'doc-approve', label: 'Approuver/Signer', variant: 'checkbox', defaults: [false, true, true, false, true] },
-    ],
-  },
-  {
-    name: 'Gestion des Utilisateurs',
-    permissions: [{ key: 'user-manage', label: 'Ajouter/Supprimer des comptes', variant: 'toggle', defaults: [false, false, false, false, true] }],
-  },
-]
-
+/**
+ * API_CONTRACT.md n'expose que GET /api/admin/roles/profils — des profils de
+ * permissions PRÉDÉFINIS et en lecture seule, pour accélérer la création de
+ * compte (voir POST /api/admin/users). Il n'existe aucun endpoint pour
+ * éditer une matrice de permissions en direct : la maquette d'origine
+ * (cases à cocher + "Enregistrer les modifications") n'a donc rien à
+ * enregistrer côté serveur — remplacée ici par une vue de référence fidèle
+ * au contrat plutôt que de simuler une édition qui n'existe pas.
+ */
 export function PermissionsMatrix() {
-  const [matrix, setMatrix] = useState<Record<string, boolean[]>>(() => Object.fromEntries(GROUPS.flatMap((g) => g.permissions).map((p) => [p.key, [...p.defaults]])))
+  const [profils, setProfils] = useState<Profil[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const toggleCell = (permKey: string, role: Role) => {
-    if (role === 'Administrateur') return // droits d'administrateur verrouillés : toujours accès total
-    const roleIndex = ROLES.indexOf(role)
-    setMatrix((prev) => {
-      const next = [...prev[permKey]]
-      next[roleIndex] = !next[roleIndex]
-      return { ...prev, [permKey]: next }
-    })
-  }
+  useEffect(() => {
+    const controller = new AbortController()
+    apiRequest<ProfilsResponse>('/admin/roles/profils', { signal: controller.signal })
+      .then((res) => setProfils(res.profils))
+      .catch((err) => setError(err instanceof ApiRequestError ? err.message : 'Impossible de charger les profils de permissions.'))
+      .finally(() => setLoading(false))
+    return () => controller.abort()
+  }, [])
 
   return (
     <AppShell active="permissions">
-      <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-        <div>
-          <h2 className="font-headline-lg text-headline-lg text-on-surface mb-2">Matrice des Rôles</h2>
-          <p className="font-body-md text-body-md text-on-surface-variant">Configurez les droits d'accès granulaires pour chaque type d'utilisateur du système.</p>
-        </div>
-        <div className="flex gap-3">
-          <button className="px-4 py-2 border border-outline-variant text-primary font-label-md text-label-md rounded-lg hover:bg-surface transition-colors">Réinitialiser</button>
-          <button className="px-4 py-2 bg-primary text-white font-label-md text-label-md rounded-lg hover:bg-primary-container transition-colors shadow-sm">Enregistrer les modifications</button>
-        </div>
+      <div className="mb-8">
+        <h2 className="font-headline-lg text-headline-lg text-on-surface mb-2">Profils de permissions</h2>
+        <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl">
+          Profils prédéfinis utilisés pour accélérer la création de compte. Cette vue est en lecture seule — il n'existe pas encore d'endpoint pour éditer les
+          permissions en direct ; contactez l'équipe back si un profil doit changer.
+        </p>
       </div>
 
-      <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
-        <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-outline-variant bg-surface-container-low">
-                <th className="p-4 font-label-md text-label-md text-on-surface-variant w-[30%] min-w-[250px] sticky left-0 bg-surface-container-low z-10 border-r border-outline-variant">
-                  Module / Permission
-                </th>
-                {ROLES.map((role) => (
-                  <th key={role} className="p-4 font-label-md text-label-md text-on-surface text-center min-w-[120px]">
-                    <div className="flex flex-col items-center gap-1">
-                      <Icon name={ROLE_ICON[role]} className="text-outline" />
-                      {role}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {GROUPS.map((group) => (
-                <>
-                  <tr key={group.name} className="bg-surface border-b border-outline-variant">
-                    <td className="p-3 font-label-md text-label-md text-on-surface font-semibold sticky left-0 z-10 bg-surface" colSpan={ROLES.length + 1}>
-                      {group.name}
-                    </td>
-                  </tr>
-                  {group.permissions.map((perm) => (
-                    <tr key={perm.key} className="border-b border-outline-variant matrix-hover transition-colors">
-                      <td className="p-4 font-body-sm text-body-sm text-on-surface-variant sticky left-0 bg-surface-container-lowest z-10 border-r border-outline-variant">{perm.label}</td>
-                      {ROLES.map((role, roleIndex) => {
-                        const checked = matrix[perm.key][roleIndex]
-                        const locked = role === 'Administrateur'
-                        return (
-                          <td key={role} className="p-4 text-center">
-                            {perm.variant === 'checkbox' ? (
-                              <input
-                                checked={checked}
-                                disabled={locked}
-                                onChange={() => toggleCell(perm.key, role)}
-                                className={`w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary ${locked ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
-                                type="checkbox"
-                              />
-                            ) : (
-                              <label className={`relative inline-flex items-center ${locked ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
-                                <input checked={checked} disabled={locked} onChange={() => toggleCell(perm.key, role)} className="sr-only peer" type="checkbox" />
-                                <div className="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
-                              </label>
-                            )}
-                          </td>
-                        )
-                      })}
-                    </tr>
-                  ))}
-                </>
+      {error && <FormAlert tone="error">{error}</FormAlert>}
+      {loading && <p className="font-body-sm text-body-sm text-on-surface-variant">Chargement…</p>}
+      {!loading && !error && profils.length === 0 && <p className="font-body-sm text-body-sm text-on-surface-variant">Aucun profil défini.</p>}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {profils.map((profil) => (
+          <div key={profil.id} className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-primary-container/10 rounded-lg text-primary">
+                <Icon name="badge" />
+              </div>
+              <h3 className="font-headline-sm text-headline-sm text-on-surface">{profil.nom}</h3>
+            </div>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">{profil.description}</p>
+            <div className="flex flex-col gap-2 pt-2 border-t border-outline-variant/50">
+              {profil.permissions.map((permission) => (
+                <div key={permission} className="flex items-center gap-2 font-body-sm text-body-sm text-on-surface">
+                  <Icon name="check_circle" filled size={16} className="text-primary" />
+                  {permission}
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </div>
+        ))}
       </div>
     </AppShell>
   )
