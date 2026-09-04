@@ -1,0 +1,276 @@
+// SignSecure TrustFlow — schéma de données.
+// Voir ../../API_CONTRACT.md pour le contrat d'API et ../../CLAUDE.md pour les
+// règles produit/sécurité qui ont guidé ces choix (isolation par organisation,
+// document_status et custody_status distincts, pas de stockage de l'image de
+// signature, journal d'audit chaîné par hash, etc.)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  AGENT_RECEPTION
+  SIGNATAIRE
+  SUPERVISEUR
+  VERIFICATEUR
+  ADMINISTRATEUR
+}
+
+enum UserStatus {
+  INVITE
+  ACTIF
+  SUSPENDU
+}
+
+enum DocumentOrigin {
+  SIGN
+  TRACE
+}
+
+enum OtpPurpose {
+  LOGIN
+  SIGNATURE
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  nom       String
+  createdAt DateTime @default(now())
+
+  users       User[]
+  documents   Document[]
+  auditEvents AuditEvent[]
+}
+
+model User {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  nom          String
+  prenom       String
+  email        String     @unique
+  telephone    String
+  passwordHash String?
+  statut       UserStatus @default(INVITE)
+
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
+  roles UserRole[]
+
+  createdAt DateTime @default(now())
+
+  invitationTokens InvitationToken[]
+  otpChallenges    OtpChallenge[]
+  createdDocuments Document[] @relation("DocumentCreatedBy")
+  revokedDocuments Document[] @relation("DocumentRevokedBy")
+  incidentsCreated Incident[]
+  transfersReceived Transfer[] @relation("TransferDestinataire")
+  transfersCreated  Transfer[] @relation("TransferCreatedBy")
+  heldDocuments     Document[] @relation("DocumentCurrentHolder")
+  auditEvents       AuditEvent[]
+}
+
+model UserRole {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role
+
+  @@unique([userId, role])
+}
+
+/// Lien d'invitation envoyé par un administrateur (POST /api/admin/users) — active
+/// le compte déjà créé, jamais une auto-inscription.
+model InvitationToken {
+  token     String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+/// Code à usage unique — connexion (2FA, lié à un User) ou confirmation de
+/// signature (lié à un Signatory). Le code lui-même n'est jamais stocké en
+/// clair, seulement son hash.
+model OtpChallenge {
+  id      String     @id @default(cuid())
+  purpose OtpPurpose
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  signatoryId String?
+  signatory   Signatory? @relation(fields: [signatoryId], references: [id], onDelete: Cascade)
+
+  codeHash     String
+  channel      String
+  attempts     Int       @default(0)
+  expiresAt    DateTime
+  consumedAt   DateTime?
+  nextResendAt DateTime
+  createdAt    DateTime  @default(now())
+}
+
+/// "Dossier" — né dans Sign (PDF numérique à signer) ou dans Trace (document
+/// physique enregistré par photo/scan). document_status (`statut`) et
+/// custody_status restent volontairement deux champs distincts.
+model Document {
+  id             String         @id @default(cuid())
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+
+  origine       DocumentOrigin
+  titre         String
+  type          String
+  statut        String
+  custodyStatus String?
+
+  trackingCode String? @unique
+
+  createdByUserId String
+  createdBy       User     @relation("DocumentCreatedBy", fields: [createdByUserId], references: [id])
+  createdAt       DateTime @default(now())
+
+  // --- Sign ---
+  fichierPath     String?
+  finalPdfPath    String?
+  hashSha256      String?
+  revocationMotif String?
+  revokedAt       DateTime?
+  revokedByUserId String?
+  revokedBy       User?      @relation("DocumentRevokedBy", fields: [revokedByUserId], references: [id])
+
+  // --- Trace ---
+  reference        String?
+  organismeDeclare String?
+  dateIndiquee     String?
+  nombrePages      Int?
+  confidentialite  String?
+  lieuReception    String?
+  observationsJson Json?
+  archivedAt       DateTime?
+
+  /// Détenteur physique actuel — dérivé du dernier Transfer confirmé, mis à jour
+  /// uniquement par la couche métier (jamais par un endpoint directement).
+  currentHolderId String?
+  currentHolder   User?   @relation("DocumentCurrentHolder", fields: [currentHolderId], references: [id])
+
+  signataires Signatory[]
+  artifacts   Artifact[]
+  incidents   Incident[]
+  transfers   Transfer[]
+  auditEvents AuditEvent[]
+}
+
+/// Signataire assigné à un document Sign, et point d'ancrage du lien de
+/// signature à usage unique (GET/POST /api/sign/link/:token).
+model Signatory {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  nom       String
+  email     String
+  telephone String
+  zonePage  Int
+  zoneX     Float
+  zoneY     Float
+  ordre     Int      @default(0)
+
+  linkToken     String?   @unique
+  linkExpiresAt DateTime?
+  linkUsedAt    DateTime?
+
+  consentedAt DateTime?
+  signedAt    DateTime?
+  ipAddress   String?
+  methode     String?
+
+  otpChallenges OtpChallenge[]
+  createdAt     DateTime       @default(now())
+}
+
+/// Photo/page capturée pour un dossier Trace (POST /api/trace/:id/capture).
+model Artifact {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  path       String
+  pageIndex  Int
+  createdAt  DateTime @default(now())
+}
+
+model Incident {
+  id          String   @id @default(cuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  type        String
+  description String
+  photoPath   String?
+  statut      String   @default("INCIDENT_OPEN")
+
+  createdByUserId String
+  createdBy       User     @relation(fields: [createdByUserId], references: [id])
+  createdAt       DateTime @default(now())
+}
+
+model Transfer {
+  id             String   @id @default(cuid())
+  documentId     String
+  document       Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  destinataireId String
+  destinataire   User     @relation("TransferDestinataire", fields: [destinataireId], references: [id])
+  lieu           String?
+  motif          String?
+  statut         String   @default("PENDING")
+
+  createdByUserId String
+  createdBy       User      @relation("TransferCreatedBy", fields: [createdByUserId], references: [id])
+  createdAt       DateTime  @default(now())
+  confirmedAt     DateTime?
+}
+
+/// Journal d'audit — chaîné : chaque événement inclut le hash de l'événement
+/// précédent, pour rendre détectable toute altération a posteriori.
+model AuditEvent {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  actorLabel String
+
+  action     String
+  objectType String
+  objectId   String
+
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id])
+
+  ip              String
+  timestampServer DateTime @default(now())
+
+  previousEventHash String
+  eventHash         String
+
+  @@index([organizationId, timestampServer])
+}
+
+/// Profils de permissions prédéfinis, en LECTURE SEULE côté API
+/// (GET /api/admin/roles/profils) — accélèrent la création de compte, ne sont
+/// pas éditables via le contrat actuel.
+model PermissionProfile {
+  id          String @id @default(cuid())
+  nom         String
+  description String
+  permissions Json
+}
