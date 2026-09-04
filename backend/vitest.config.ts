@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
+    include: ['src/**/*.test.ts'], // évite de ramasser aussi des .test.js compilés dans dist/
     environment: 'node',
     env: { DATABASE_URL: 'file:./prisma/test.db', JWT_SECRET: 'test-secret-do-not-use-in-prod', OTP_PROVIDER: 'test' },
     globalSetup: ['./src/test/globalSetup.ts'],

@@ -290,9 +290,12 @@ export async function getProofReport(documentId: string, organizationId: string)
 }
 
 export async function revokeDocument(documentId: string, motif: string, actor: Actor) {
-  const document = await getOwnedSignDocument(documentId, actor.organizationId)
-  void document
-  return transitionDocumentRevoked(documentId, actor.organizationId, motif, toAuditContext(actor))
+  await getOwnedSignDocument(documentId, actor.organizationId)
+  // Ne jamais renvoyer la ligne Prisma brute au client (API_CONTRACT.md attend
+  // { success: true } — la ligne complète exposerait entre autres les chemins
+  // serveur fichierPath/finalPdfPath).
+  await transitionDocumentRevoked(documentId, actor.organizationId, motif, toAuditContext(actor))
+  return { success: true as const }
 }
 
 /**

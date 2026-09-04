@@ -5,6 +5,14 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    // httpClient.ts appelle VITE_API_BASE_URL ?? '/api' — ce proxy fait
+    // pointer ce chemin relatif vers le backend en dev, sans CORS ni config
+    // supplémentaire à faire sur chaque poste.
+    proxy: {
+      '/api': { target: 'http://localhost:4000', changeOrigin: true },
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
