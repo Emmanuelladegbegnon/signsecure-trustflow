@@ -58,6 +58,9 @@ export const env = {
   // SHA-256 est envoyée au serveur d'horodatage, jamais le document.
   tsaUrl: process.env.TSA_URL ?? '',
 
+  // Secret des jetons de page imprimés dans les QR (lib/pageToken.ts). À défaut, dérivé de JWT_SECRET.
+  pageTokenSecret: process.env.PAGE_TOKEN_SECRET || `page-token:${process.env.JWT_SECRET ?? ''}`,
+
   // Domaine public imprimé sous le QR du PDF signé (ancre contre les faux sites de vérification).
   publicVerifyBaseUrl: process.env.PUBLIC_VERIFY_BASE_URL ?? process.env.FRONTEND_BASE_URL ?? 'http://localhost:5174',
 

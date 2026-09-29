@@ -14,10 +14,11 @@
  * changerait le fichier, donc son hash) : il est affiché par Verify et dans
  * le rapport de preuve.
  */
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
+import { degrees, PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import QRCode from 'qrcode'
 import { env } from '../../env.js'
 import { sealPdf } from '../../lib/pdfSeal.js'
+import { pageToken } from '../../lib/pageToken.js'
 import { sha256Hex } from '../../lib/storage.js'
 
 export interface SignatureZone {
@@ -27,13 +28,26 @@ export interface SignatureZone {
 }
 
 const SIGNATURE_WIDTH_RATIO = 0.18 // largeur de la signature ≈ 18% de la largeur de page
+const PARAPHE_WIDTH_RATIO = 0.07 // paraphe ≈ 7% de la largeur de page
+const FOOTER_BAND_HEIGHT = 54
 
 export async function countPdfPages(pdfBytes: Uint8Array): Promise<number> {
   return (await PDFDocument.load(pdfBytes)).getPageCount()
 }
 
-/** Embarque une signature (image PNG/JPEG en base64 data URL ou brute) dans le PDF, à la zone indiquée. */
-export async function embedSignature(sourceBytes: Uint8Array, zone: SignatureZone, signatureImageBase64: string): Promise<Uint8Array> {
+/**
+ * Embarque une signature (image PNG/JPEG en base64 data URL ou brute) dans le
+ * PDF, à la zone indiquée, et la même image en réduction (paraphe) sur toutes
+ * les autres pages : sur un exemplaire imprimé, chaque page porte la marque
+ * de chaque signataire. `slot` = rang du signataire, pour que les paraphes ne
+ * se chevauchent pas.
+ */
+export async function embedSignature(
+  sourceBytes: Uint8Array,
+  zone: SignatureZone,
+  signatureImageBase64: string,
+  slot = 0,
+): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.load(sourceBytes)
 
   const pageIndex = Math.min(Math.max(zone.page - 1, 0), pdfDoc.getPageCount() - 1)
@@ -54,11 +68,25 @@ export async function embedSignature(sourceBytes: Uint8Array, zone: SignatureZon
   const y = pageHeight - (zone.y / 100) * pageHeight - drawHeight
 
   page.drawImage(image, { x, y, width: drawWidth, height: drawHeight })
+
+  pdfDoc.getPages().forEach((other, index) => {
+    if (index === pageIndex) return
+    const { width: w } = other.getSize()
+    const parapheWidth = w * PARAPHE_WIDTH_RATIO
+    const parapheHeight = parapheWidth * (image.height / image.width)
+    other.drawImage(image, {
+      x: w - 20 - (slot + 1) * (parapheWidth + 6),
+      y: FOOTER_BAND_HEIGHT + 6,
+      width: parapheWidth,
+      height: parapheHeight,
+    })
+  })
   return pdfDoc.save()
 }
 
-export function verificationUrl(trackingCode: string): string {
-  return `${env.publicVerifyBaseUrl.replace(/\/$/, '')}/verifier/resultat/${encodeURIComponent(trackingCode)}`
+export function verificationUrl(trackingCode: string, page?: number): string {
+  const base = `${env.publicVerifyBaseUrl.replace(/\/$/, '')}/verifier/resultat/${encodeURIComponent(trackingCode)}`
+  return page ? `${base}?page=${page}&k=${pageToken(trackingCode, page)}` : base
 }
 
 /** Domaine affiché en clair sous le QR : permet de repérer un QR piégé qui mènerait ailleurs. */
@@ -73,17 +101,22 @@ function displayDomain(): string {
 async function addVerificationFooter(pdfDoc: PDFDocument, trackingCode: string): Promise<void> {
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
-  const qrPng = await QRCode.toBuffer(verificationUrl(trackingCode), { errorCorrectionLevel: 'M', margin: 1, width: 240 })
-  const qr = await pdfDoc.embedPng(qrPng)
-
   const pages = pdfDoc.getPages()
   const total = pages.length
   const domain = displayDomain()
   const qrSize = 46
-  const bandHeight = qrSize + 8
+  const bandHeight = FOOTER_BAND_HEIGHT
   const grey = rgb(0.25, 0.25, 0.3)
 
+  // Un QR propre à chaque page : il ouvre l'aperçu scellé de CETTE page.
+  const qrs = await Promise.all(
+    pages.map(async (_, index) =>
+      pdfDoc.embedPng(await QRCode.toBuffer(verificationUrl(trackingCode, index + 1), { errorCorrectionLevel: 'M', margin: 1, width: 240 })),
+    ),
+  )
+
   pages.forEach((page, index) => {
+    const qr = qrs[index]!
     const { width } = page.getSize()
     page.drawRectangle({ x: 0, y: 0, width, height: bandHeight, color: rgb(1, 1, 1), opacity: 0.92 })
     page.drawLine({ start: { x: 16, y: bandHeight }, end: { x: width - 16, y: bandHeight }, thickness: 0.5, color: rgb(0.8, 0.8, 0.85) })
@@ -98,7 +131,13 @@ async function addVerificationFooter(pdfDoc: PDFDocument, trackingCode: string):
       font,
       color: grey,
     })
-    page.drawText(`Page ${index + 1}/${total} — document de ${total} page${total > 1 ? 's' : ''}`, { x: textX, y: bandHeight - 37, size: 7, font, color: grey })
+    page.drawText(`Page ${index + 1}/${total} — scannez le QR de cette page pour afficher son aperçu scellé et la comparer`, {
+      x: textX,
+      y: bandHeight - 37,
+      size: 7,
+      font,
+      color: grey,
+    })
     page.drawText('Cachet électronique SignSecure de démonstration, non qualifié. Pour contrôler l\'intégrité, soumettre ce fichier sur la page de vérification.', {
       x: textX,
       y: bandHeight - 48,
@@ -124,4 +163,31 @@ export async function finalizeSignedPdf(
   const withFooter = await pdfDoc.save({ useObjectStreams: false })
   const bytes = await sealPdf(withFooter, sealedAt)
   return { bytes, hashSha256: sha256Hex(bytes), pageCount: pdfDoc.getPageCount() }
+}
+
+/**
+ * Aperçu de contrôle d'UNE page de la version finale, filigrané. Montré à qui
+ * présente le QR de cette page (jeton valide) : il possède déjà cette page,
+ * l'aperçu ne lui révèle rien de plus, mais lui permet de repérer une page
+ * substituée sur son exemplaire imprimé.
+ */
+export async function extractPagePreview(finalBytes: Uint8Array, pageNumber: number): Promise<{ bytes: Uint8Array; total: number }> {
+  const source = await PDFDocument.load(finalBytes)
+  const total = source.getPageCount()
+  if (pageNumber < 1 || pageNumber > total) throw new RangeError('Page hors du document.')
+  const preview = await PDFDocument.create()
+  const [copied] = await preview.copyPages(source, [pageNumber - 1])
+  const page = preview.addPage(copied!)
+  const font = await preview.embedFont(StandardFonts.HelveticaBold)
+  const { width, height } = page.getSize()
+  page.drawText(`APERÇU DE CONTRÔLE — PAGE ${pageNumber}/${total} — NE VAUT PAS ORIGINAL`, {
+    x: width * 0.08,
+    y: height * 0.35,
+    size: Math.max(width / 32, 12),
+    font,
+    color: rgb(0.8, 0.1, 0.1),
+    opacity: 0.25,
+    rotate: degrees(35),
+  })
+  return { bytes: await preview.save(), total }
 }

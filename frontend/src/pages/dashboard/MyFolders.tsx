@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppShell } from '../../components/layout/AppShell'
 import { DOCUMENT_TYPES } from '../../constants/documentTypes'
@@ -37,6 +37,13 @@ export function MyFolders() {
   const [statutFilter, setStatutFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [dateFilter, setDateFilter] = useState('')
+  // Recherche serveur (intitulé, code, référence, organisme, nom ou email d'un
+  // signataire) : retrouver un dossier dont le code imprimé est illisible ou douteux.
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300)
+    return () => clearTimeout(timer)
+  }, [search])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -47,6 +54,7 @@ export function MyFolders() {
     if (statutFilter) params.set('statut', statutFilter)
     if (typeFilter) params.set('type', typeFilter)
     if (dateFilter) params.set('date', dateFilter)
+    if (debouncedSearch) params.set('q', debouncedSearch)
     const query = params.toString()
 
     apiRequest<DocumentsResponse>(`/documents${query ? `?${query}` : ''}`, { signal: controller.signal })
@@ -61,13 +69,9 @@ export function MyFolders() {
         if (!controller.signal.aborted) setLoading(false)
       })
     return () => controller.abort()
-  }, [statutFilter, typeFilter, dateFilter])
+  }, [statutFilter, typeFilter, dateFilter, debouncedSearch])
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return dossiers
-    return dossiers.filter((d) => d.titre.toLowerCase().includes(q) || d.trackingCode.toLowerCase().includes(q))
-  }, [dossiers, search])
+  const filtered = dossiers
 
   const hasActiveFilters = Boolean(statutFilter || typeFilter || dateFilter)
   const clearFilters = () => {
@@ -106,7 +110,7 @@ export function MyFolders() {
             <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
             <input
               className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-              placeholder="Rechercher par titre ou code..."
+              placeholder="Titre, code, référence, nom ou email d’un signataire…"
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}

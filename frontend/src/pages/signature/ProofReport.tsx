@@ -39,7 +39,7 @@ interface ProofReportData {
     sha256Final: string | null
     sha256Original: string | null
     nombrePages: number | null
-    cachet: { date: string; nature: string } | null
+    cachet: { date: string; nature: string; empreinteCertificat: string | null; conformeAuCertificatPublie: boolean } | null
     horodatageTiers: { date: string; service: string | null } | null
   }
   journal: { chaineIntacte: boolean }
@@ -313,6 +313,14 @@ export function ProofReport() {
                   <Field label="Cachet de plateforme">
                     {data.empreinte.cachet ? `${data.empreinte.cachet.nature} — ${formatDate(data.empreinte.cachet.date)}` : '—'}
                   </Field>
+                  {data.empreinte.cachet?.empreinteCertificat && (
+                    <Field label="Certificat du cachet (SHA-256)" mono>
+                      {data.empreinte.cachet.empreinteCertificat}
+                      {data.empreinte.cachet.conformeAuCertificatPublie
+                        ? ' — identique au certificat publié'
+                        : ' — DIFFÉRENT du certificat actuellement publié : changement de clé à expliquer'}
+                    </Field>
+                  )}
                   <Field label="Horodatage par un tiers (RFC 3161)">
                     {data.empreinte.horodatageTiers
                       ? `${formatDate(data.empreinte.horodatageTiers.date)}${data.empreinte.horodatageTiers.service ? ` — ${data.empreinte.horodatageTiers.service}` : ''}`

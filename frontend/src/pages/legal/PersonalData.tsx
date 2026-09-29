@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { apiRequest } from '../../lib/httpClient'
 import { Icon } from '../../components/ui/Icon'
 import { ROUTES } from '../../routes'
 
@@ -40,7 +42,22 @@ const TREATMENTS: Treatment[] = [
  * art. 405 déclaration préalable, art. 415 information des personnes,
  * art. 433 durée de conservation limitée).
  */
+interface SealCertificate {
+  empreinteSha256: string
+  sujet: string
+  valideJusquau: string
+}
+
 export function PersonalData() {
+  const [cert, setCert] = useState<SealCertificate | null>(null)
+  useEffect(() => {
+    const controller = new AbortController()
+    apiRequest<SealCertificate>('/verify/cachet/certificat', { auth: false, signal: controller.signal })
+      .then(setCert)
+      .catch(() => undefined)
+    return () => controller.abort()
+  }, [])
+
   return (
     <div className="min-h-screen bg-background text-on-background">
       <main className="max-w-3xl mx-auto px-margin-mobile py-12 flex flex-col gap-8">
@@ -84,6 +101,21 @@ export function PersonalData() {
             <li>L'identité des signataires n'est pas vérifiée : elle est déclarée par l'émetteur du document.</li>
             <li>SignSecure n'est pas un prestataire de services de confiance qualifié et ne délivre aucun certificat.</li>
           </ul>
+
+          <h2 className="font-headline-sm text-headline-sm text-on-surface mt-4">Certificat du cachet de plateforme</h2>
+          <p>
+            Les PDF signés portent un cachet de démonstration, non qualifié. Voici l'empreinte du certificat en service. Si l'empreinte affichée
+            par votre lecteur PDF (propriétés de la signature) est différente, ce document n'a pas été scellé par cette plateforme ou la clé a
+            changé.
+          </p>
+          <p className="font-mono text-[12px] break-all bg-surface-container-low rounded-lg p-3 text-on-surface">
+            {cert ? cert.empreinteSha256 : 'Chargement…'}
+          </p>
+          {cert && (
+            <p className="font-body-sm text-body-sm">
+              Valide jusqu'au {new Date(cert.valideJusquau).toLocaleDateString('fr-FR')} — {cert.sujet}
+            </p>
+          )}
 
           <h2 className="font-headline-sm text-headline-sm text-on-surface mt-4">Vos droits</h2>
           <p>

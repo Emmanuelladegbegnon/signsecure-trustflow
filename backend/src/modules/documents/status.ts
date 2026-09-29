@@ -82,6 +82,7 @@ export async function transitionDocumentSignedIfComplete(
     finalPdfPath: string
     hashSha256: string
     sealedAt: Date
+    sealCertFingerprint: string
     nombrePagesPdf: number
     tsaTokenPath?: string | null
     tsaGenTime?: Date | null

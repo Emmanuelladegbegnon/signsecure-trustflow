@@ -283,3 +283,50 @@ export async function getAuditIntegrity(organizationId: string) {
     })),
   }
 }
+
+/**
+ * Contrôle d'un ancrage reçu hors système : le hash collé (tiré d'un email
+ * d'ancrage) doit toujours figurer dans le journal, et la chaîne doit être
+ * intacte jusqu'à lui. S'il a disparu, le journal a été réécrit.
+ */
+export async function checkAnchorHash(organizationId: string, hash: string, actor: Actor) {
+  const normalized = hash.trim().toLowerCase()
+  const events = await prisma.auditEvent.findMany({ where: { organizationId }, orderBy: { timestampServer: 'asc' }, select: { id: true, eventHash: true, timestampServer: true } })
+  const position = events.findIndex((e) => e.eventHash === normalized)
+  const chain = await verifyAuditChain(organizationId)
+  const brokenIndex = chain.brokenAtEventId ? events.findIndex((e) => e.id === chain.brokenAtEventId) : -1
+  const anchor = await prisma.auditAnchor.findFirst({ where: { organizationId, lastEventHash: normalized } })
+
+  await recordAuditEvent({
+    organizationId,
+    actorId: actor.id,
+    actorLabel: actor.label,
+    action: 'AUDIT_ANCHOR_CHECKED',
+    objectType: 'AuditAnchor',
+    objectId: anchor?.id ?? 'externe',
+    ip: actor.ip,
+    userAgent: actor.userAgent,
+    details: { hash: normalized, trouve: position >= 0 },
+  })
+
+  if (position < 0) {
+    return {
+      trouve: false as const,
+      conclusion:
+        "Ce hash ne figure plus dans le journal. Si vous l'avez reçu dans un email d'ancrage de cette organisation, le journal a été modifié depuis : alertez un administrateur et conservez l'email.",
+    }
+  }
+  const intactUpToHere = brokenIndex < 0 || brokenIndex > position
+  return {
+    trouve: true as const,
+    evenementId: events[position]!.id,
+    date: events[position]!.timestampServer,
+    position: position + 1,
+    nombreEvenements: events.length,
+    chaineIntacteJusquIci: intactUpToHere,
+    ancrageEnregistre: Boolean(anchor),
+    conclusion: intactUpToHere
+      ? "Hash présent à sa position et chaîne conforme jusqu'à lui : aucune réécriture détectée pour cette période."
+      : "Hash présent, mais la chaîne est rompue avant lui : des événements antérieurs ont été modifiés.",
+  }
+}

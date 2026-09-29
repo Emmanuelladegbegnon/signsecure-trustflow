@@ -34,8 +34,8 @@ documentsRouter.get(
   '/',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const { statut, type, date } = req.query as Record<string, string | undefined>
-    res.json(await signService.listDocuments(req.auth!.organizationId, { statut, type, date }))
+    const { statut, type, date, q, pages } = req.query as Record<string, string | undefined>
+    res.json(await signService.listDocuments(req.auth!.organizationId, { statut, type, date, q, pages }))
   }),
 )
 

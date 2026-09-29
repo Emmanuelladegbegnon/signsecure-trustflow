@@ -12,6 +12,33 @@ const verifyLimiter = rateLimit({ windowMs: 15 * 60_000, limit: 60, standardHead
 export const verifyRouter = Router()
 verifyRouter.use(verifyLimiter)
 
+// Routes à chemin fixe déclarées AVANT '/:code' pour ne pas être capturées par lui.
+verifyRouter.get('/cachet/certificat', (_req, res) => {
+  res.json(verifyService.getPublishedSealCertificate())
+})
+
+verifyRouter.post(
+  '/recherche-par-fichier',
+  uploadComparisonFile.single('fichier'),
+  asyncHandler(async (req, res) => {
+    if (!req.file) {
+      res.status(400).json({ error: { code: 'MISSING_FILE', message: 'Le fichier PDF est requis.' } })
+      return
+    }
+    res.json(await verifyService.findByFile(req.file.buffer, requestMeta(req)))
+  }),
+)
+
+verifyRouter.get(
+  '/:code/pages/:page',
+  asyncHandler(async (req, res) => {
+    const preview = await verifyService.getPagePreview(req.params.code, Number(req.params.page), String(req.query.k ?? ''), requestMeta(req))
+    res.setHeader('Cache-Control', 'no-store')
+    res.setHeader('X-Nombre-Pages', String(preview.total))
+    res.type('application/pdf').send(Buffer.from(preview.bytes))
+  }),
+)
+
 verifyRouter.get(
   '/:code',
   asyncHandler(async (req, res) => {

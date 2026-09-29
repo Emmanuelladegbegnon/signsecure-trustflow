@@ -16,6 +16,7 @@ import { withKeyedLock } from '../../lib/keyedLock.js'
 import { requestTimestamp } from '../../lib/tsa.js'
 import { documentsDir, readStoredFile, sha256Hex, storeUploadedFile, timestampsDir, writeStoredFile } from '../../lib/storage.js'
 import { countPdfPages, embedSignature, finalizeSignedPdf } from './pdf.js'
+import { getSealCertificateInfo } from '../../lib/pdfSeal.js'
 import {
   transitionDocumentRevoked,
   transitionDocumentSent,
@@ -485,7 +486,12 @@ export async function verifySignatureOtp(token: string, codes: { code: string; c
     const version = alreadySigned + 1
     const isLast = document.signataires.every((s) => s.id === signatory.id || s.signedAt !== null)
 
-    const signedBytes = await embedSignature(await readStoredFile(sourcePath), { page: signatory.zonePage, x: signatory.zoneX, y: signatory.zoneY }, imageBase64)
+    const signedBytes = await embedSignature(
+      await readStoredFile(sourcePath),
+      { page: signatory.zonePage, x: signatory.zoneX, y: signatory.zoneY },
+      imageBase64,
+      signatory.ordre,
+    )
 
     const signedAt = new Date()
     const auditCtx = { actorId: null, actorLabel: `Signataire ${signatory.nom}`, ip: meta.ip, userAgent: meta.userAgent }
@@ -510,6 +516,7 @@ export async function verifySignatureOtp(token: string, codes: { code: string; c
         finalPdfPath: versionPath,
         hashSha256: final.hashSha256,
         sealedAt: signedAt,
+        sealCertFingerprint: getSealCertificateInfo().empreinteSha256,
         nombrePagesPdf: final.pageCount,
         tsaTokenPath,
         tsaGenTime: timestamp?.genTime ?? null,
@@ -562,6 +569,7 @@ export async function verifySignatureOtp(token: string, codes: { code: string; c
         details: {
           sha256Final: finalData.hashSha256,
           cachet: 'PAdES auto-signé, démonstration, non qualifié',
+          empreinteCertificat: finalData.sealCertFingerprint,
           horodatageTiers: finalData.tsaGenTime ? finalData.tsaGenTime.toISOString() : null,
         },
       })
@@ -639,7 +647,13 @@ export async function getProofReport(documentId: string, organizationId: string)
       sha256Original: document.originalHashSha256,
       nombrePages: document.nombrePagesPdf,
       cachet: document.sealedAt
-        ? { date: document.sealedAt, nature: 'Cachet de plateforme PAdES auto-signé — démonstration, non qualifié' }
+        ? {
+            date: document.sealedAt,
+            nature: 'Cachet de plateforme PAdES auto-signé — démonstration, non qualifié',
+            empreinteCertificat: document.sealCertFingerprint,
+            // Comparaison avec le certificat actuellement publié : une différence signale un changement de clé.
+            conformeAuCertificatPublie: document.sealCertFingerprint === getSealCertificateInfo().empreinteSha256,
+          }
         : null,
       horodatageTiers: document.tsaGenTime ? { date: document.tsaGenTime, service: document.tsaUrl } : null,
     },
@@ -667,11 +681,27 @@ export async function revokeDocument(documentId: string, motif: string, actor: A
  */
 export async function listDocuments(
   organizationId: string,
-  filters: { statut?: string; type?: string; date?: string },
+  filters: { statut?: string; type?: string; date?: string; q?: string; pages?: string },
 ) {
+  // Recherche interne sans code de suivi : intitulé, code, référence,
+  // organisme, nom ou email d'un signataire (toujours limitée à l'organisation).
+  const q = filters.q?.trim()
+  const pages = filters.pages ? Number(filters.pages) : undefined
   const documents = await prisma.document.findMany({
     where: {
       organizationId,
+      ...(q
+        ? {
+            OR: [
+              { titre: { contains: q } },
+              { trackingCode: { contains: q.toUpperCase() } },
+              { reference: { contains: q } },
+              { organismeDeclare: { contains: q } },
+              { signataires: { some: { OR: [{ nom: { contains: q } }, { email: { contains: q.toLowerCase() } }] } } },
+            ],
+          }
+        : {}),
+      ...(pages && Number.isInteger(pages) ? { OR: [{ nombrePagesPdf: pages }, { nombrePages: pages }] } : {}),
       ...(filters.statut ? { statut: filters.statut } : {}),
       ...(filters.type ? { type: filters.type } : {}),
       ...(filters.date ? { createdAt: { gte: new Date(`${filters.date}T00:00:00`), lt: new Date(`${filters.date}T23:59:59`) } } : {}),

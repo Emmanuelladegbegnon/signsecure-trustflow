@@ -170,6 +170,8 @@ model Document {
   nombrePagesPdf     Int?
   /// Cachet de plateforme PAdES (auto-signé, non qualifié) apposé sur la version finale.
   sealedAt           DateTime?
+  /// Empreinte SHA-256 du certificat de cachet utilisé : un changement de clé (serveur compromis) devient visible.
+  sealCertFingerprint String?
   /// Jeton d'horodatage RFC 3161 (DER) de l'empreinte finale, si un TSA est configuré.
   tsaTokenPath       String?
   tsaGenTime         DateTime?
@@ -202,6 +204,8 @@ model Document {
   transfers   Transfer[]
   auditEvents AuditEvent[]
   comparisons TraceComparison[]
+
+  @@index([hashSha256])
 }
 
 /// Signataire assigné à un document Sign, et point d'ancrage du lien de

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../../auth/AuthContext'
 import { FormAlert } from '../../components/ui/FormAlert'
 import { Icon } from '../../components/ui/Icon'
@@ -33,6 +33,24 @@ export function AuditIntegrityPanel() {
   const [error, setError] = useState<string | null>(null)
   const [anchoring, setAnchoring] = useState(false)
   const [info, setInfo] = useState<string | null>(null)
+  const [hashToCheck, setHashToCheck] = useState('')
+  const [checking, setChecking] = useState(false)
+  const [checkResult, setCheckResult] = useState<{ trouve: boolean; conclusion: string; chaineIntacteJusquIci?: boolean } | null>(null)
+  const [checkError, setCheckError] = useState<string | null>(null)
+
+  const checkAnchor = async (e: FormEvent) => {
+    e.preventDefault()
+    setCheckError(null)
+    setCheckResult(null)
+    setChecking(true)
+    try {
+      setCheckResult(await apiRequest('/admin/audit/controle-ancrage', { method: 'POST', body: { hash: hashToCheck.trim() } }))
+    } catch (err) {
+      setCheckError(err instanceof ApiRequestError ? err.message : 'Le contrôle a échoué.')
+    } finally {
+      setChecking(false)
+    }
+  }
 
   const load = (signal?: AbortSignal) =>
     apiRequest<IntegrityResponse>('/admin/audit/integrite', { signal })
@@ -97,6 +115,36 @@ export function AuditIntegrityPanel() {
 
       {error && <FormAlert tone="error">{error}</FormAlert>}
       {info && <FormAlert tone="success">{info}</FormAlert>}
+
+      <form className="flex flex-col gap-2" onSubmit={checkAnchor}>
+        <label className="font-label-md text-label-md text-on-surface" htmlFor="hash-ancrage">
+          Contrôler un hash reçu par email d'ancrage
+        </label>
+        <p className="font-body-sm text-body-sm text-on-surface-variant">
+          Collez le hash d'un ancien email : s'il a disparu du journal, celui-ci a été réécrit depuis, par exemple après une compromission du
+          serveur.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            id="hash-ancrage"
+            className="flex-1 border border-outline-variant rounded-lg px-3 py-2 font-mono text-[12px] bg-surface"
+            placeholder="64 caractères hexadécimaux"
+            value={hashToCheck}
+            onChange={(e) => setHashToCheck(e.target.value)}
+          />
+          <button
+            type="submit"
+            disabled={checking || !hashToCheck.trim()}
+            className="border border-outline px-4 py-2 rounded-lg font-label-md text-label-md disabled:opacity-60"
+          >
+            {checking ? 'Contrôle…' : 'Contrôler'}
+          </button>
+        </div>
+        {checkError && <FormAlert tone="error">{checkError}</FormAlert>}
+        {checkResult && (
+          <FormAlert tone={checkResult.trouve && checkResult.chaineIntacteJusquIci ? 'success' : 'error'}>{checkResult.conclusion}</FormAlert>
+        )}
+      </form>
 
       <div>
         <h3 className="font-label-md text-label-md text-on-surface mb-2">Ancrages externes (dernier hash envoyé hors du système)</h3>

@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { asyncHandler } from '../../middleware/asyncHandler.js'
 import { requireAuth, requireRole } from '../../middleware/auth.js'
 import { validateBody } from '../../middleware/validate.js'
+import { z } from 'zod'
 import { actorFromAuth } from '../../lib/actor.js'
 import { auditQuerySchema, bulkCreateUsersSchema, createUserSchema, updateRolesSchema, updateStatusSchema } from './schemas.js'
 import * as adminService from './service.js'
@@ -97,5 +98,14 @@ adminRouter.post(
   requireRole('ADMINISTRATEUR'),
   asyncHandler(async (req, res) => {
     res.status(201).json(await adminService.anchorAuditChain(actorFromAuth(req)))
+  }),
+)
+
+adminRouter.post(
+  '/audit/controle-ancrage',
+  requireRole('ADMINISTRATEUR', 'VERIFICATEUR', 'SUPERVISEUR'),
+  validateBody(z.object({ hash: z.string().trim().regex(/^[0-9a-fA-F]{64}$/, 'Collez un hash SHA-256 (64 caractères hexadécimaux).') })),
+  asyncHandler(async (req, res) => {
+    res.json(await adminService.checkAnchorHash(req.auth!.organizationId, req.body.hash, actorFromAuth(req)))
   }),
 )

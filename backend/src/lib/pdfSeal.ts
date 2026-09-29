@@ -66,6 +66,37 @@ function ensureSealP12(): Buffer {
   return p12
 }
 
+export interface SealCertificateInfo {
+  /** SHA-256 du certificat (DER), en hexadécimal groupé par 2. */
+  empreinteSha256: string
+  sujet: string
+  valideJusquau: string
+}
+
+let cachedInfo: SealCertificateInfo | null = null
+
+/**
+ * Empreinte publique du certificat de cachet. Publiée sur la page Données
+ * personnelles et enregistrée sur chaque document scellé : si la clé est
+ * remplacée (serveur compromis), les nouveaux PDF portent une empreinte
+ * différente de celle publiée et de celle des documents antérieurs.
+ */
+export function getSealCertificateInfo(): SealCertificateInfo {
+  if (cachedInfo) return cachedInfo
+  const p12Der = ensureSealP12().toString('binary')
+  const p12 = forge.pkcs12.pkcs12FromAsn1(forge.asn1.fromDer(p12Der), passphrase())
+  const bag = p12.getBags({ bagType: forge.pki.oids.certBag! })[forge.pki.oids.certBag!]?.[0]
+  if (!bag?.cert) throw new Error('Certificat de cachet introuvable dans le fichier .p12.')
+  const der = forge.asn1.toDer(forge.pki.certificateToAsn1(bag.cert)).getBytes()
+  const hex = forge.md.sha256.create().update(der).digest().toHex().toUpperCase()
+  cachedInfo = {
+    empreinteSha256: hex.match(/.{2}/g)!.join(':'),
+    sujet: bag.cert.subject.getField('CN')?.value ?? SEAL_SIGNER_NAME,
+    valideJusquau: bag.cert.validity.notAfter.toISOString(),
+  }
+  return cachedInfo
+}
+
 /**
  * Appose le cachet sur un PDF déjà finalisé (signatures incrustées, pied de
  * page de vérification ajouté). Le résultat ne doit plus être modifié : le

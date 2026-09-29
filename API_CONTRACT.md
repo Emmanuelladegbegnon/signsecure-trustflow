@@ -12,6 +12,7 @@ Se référer à CLAUDE.md pour les règles de sécurité, le vocabulaire autoris
 - Toutes les dates sont en ISO-8601, calculées et renvoyées côté serveur.
 - Rate limiting obligatoire sur tous les endpoints sous `/api/verify/*` (risque d'énumération, accès public sans compte), ainsi que sous `/api/sign/link/*`.
 - Session : le token référence une session serveur. Après `SESSION_IDLE_MINUTES` (15 min par défaut) sans requête, toute route protégée répond 401 `SESSION_IDLE_TIMEOUT` ; `POST /api/auth/logout` révoque la session (le token devient inutilisable).
+- Codes de suivi : format `SGN-XXXXXXXX-C` / `TRC-XXXXXXXX-C`, où `C` est un caractère de contrôle (Luhn mod 32, algorithme public). Les codes émis avant son introduction (sans `-C`) restent acceptés.
 - Fichiers : stockés chiffrés au repos (AES-256-GCM) et servis uniquement par les endpoints authentifiés décrits ci-dessous.
 
 ---
@@ -92,7 +93,7 @@ Erreurs : 409 `RESEND_TOO_SOON`, 409 `TOO_MANY_CODES` (5 codes maximum par lien)
 ### POST /api/sign/link/:token/otp/verify
 Entrée : `{ code, codeEmail? }` — `code` = code SMS ; `codeEmail` exigé pour un document sensible
 Sortie (200) : `{ success: true, dossierId, trackingCode }`
-Effet serveur : crée une NOUVELLE version du PDF avec la signature intégrée (la précédente n'est jamais modifiée) et détruit toute donnée temporaire de signature. Au dernier signataire : ajoute le pied de page de vérification (QR, code, domaine officiel, pages), appose le cachet PAdES de plateforme (auto-signé, démonstration, non qualifié), calcule le hash SHA-256 de référence côté serveur, et demande un horodatage RFC 3161 si `TSA_URL` est configurée.
+Effet serveur : crée une NOUVELLE version du PDF avec la signature intégrée (et son paraphe en réduction sur chaque autre page) (la précédente n'est jamais modifiée) et détruit toute donnée temporaire de signature. Au dernier signataire : ajoute le pied de page de vérification (un QR propre à chaque page avec jeton de page, code, domaine officiel, page x/N), appose le cachet PAdES de plateforme (auto-signé, démonstration, non qualifié), calcule le hash SHA-256 de référence côté serveur, et demande un horodatage RFC 3161 si `TSA_URL` est configurée.
 
 ### GET /api/documents/:id/fichier
 Entrée : aucune — endpoint authentifié, dossier vérifié dans l'organisation de l'appelant
@@ -109,7 +110,7 @@ Sortie (200) : rapport en 5 blocs —
                   authentification: { lienUnique, canauxOtp: ["sms", "email"?] },
                   contexte: { ip, userAgent },
                   dates: { consentement, validation } }],
-  empreinte: { sha256Final, sha256Original, nombrePages, cachet: { date, nature } | null, horodatageTiers: { date, service } | null },
+  empreinte: { sha256Final, sha256Original, nombrePages, cachet: { date, nature, empreinteCertificat, conformeAuCertificatPublie } | null, horodatageTiers: { date, service } | null },
   journal: { chaineIntacte },
   timeline: [...], hash, disclaimer }`
 `identite` indique toujours que l'identité est déclarée par l'émetteur, non vérifiée.
@@ -124,7 +125,7 @@ Entrée : `{ motif }` — rôle Superviseur requis
 Sortie (200) : `{ success: true }`
 
 ### GET /api/documents
-Entrée : query params `statut`, `type`, `date`
+Entrée : query params `statut`, `type`, `date`, `q` (recherche dans intitulé, code, référence, organisme, nom ou email d'un signataire), `pages` (nombre de pages)
 Sortie (200) : `{ dossiers: [{ id, trackingCode, titre, statut, origine, date }] }`
 
 ---
@@ -133,9 +134,24 @@ Sortie (200) : `{ dossiers: [{ id, trackingCode, titre, statut, origine, date }]
 
 ### GET /api/verify/:code
 Entrée : code de suivi dans l'URL
-Sortie (200, origine SIGN) : `{ statut, origine: "SIGN", integrite: { methode: "hash_exact", hashDisponible, hash, nombrePages, cachetPlateforme, horodatageTiers }, signature: { type, titre, dateScellement }, revocation? }`
+Sortie (200, origine SIGN) : `{ statut, origine: "SIGN", integrite: { methode: "hash_exact", hashDisponible, hash, nombrePages, cachetPlateforme, empreinteCertificatCachet, horodatageTiers, apercuParPage }, signature: { type, titre, dateScellement }, revocation? }`
+Sortie (200, caractère de contrôle faux) : `{ statut: "UNKNOWN_CODE", controle: "CARACTERE_DE_CONTROLE_INVALIDE" }`
 Sortie (200, origine TRACE) : `{ statut, origine: "TRACE", integrite: { methode: "examen_humain" }, tracabilite: { reference, nombrePages, dateEnregistrement, incidentEnCours } }`
 Sortie (200, code introuvable) : `{ statut: "UNKNOWN_CODE" }` — jamais 404, pour éviter l'énumération par timing
+
+### GET /api/verify/:code/pages/:page?k=<jeton>
+Entrée : numéro de page et jeton imprimés dans le QR de cette page (HMAC lié au code et à la page)
+Sortie (200) : `application/pdf` d'une seule page — aperçu filigrané « ne vaut pas original » de la page telle que scellée ; en-tête `X-Nombre-Pages`
+Erreur : 400 `INVALID_PAGE_LINK` (réponse identique pour un code inconnu, une page hors document ou un jeton invalide)
+But : comparer une feuille imprimée à la page scellée correspondante ; un QR recopié d'une vraie page fait apparaître la vraie page.
+
+### POST /api/verify/recherche-par-fichier
+Entrée : `multipart/form-data` — `fichier` (PDF, gardé en mémoire)
+Sortie (200) : `{ trouve: true, trackingCode, statut, hashSoumis }` | `{ trouve: false, hashSoumis }`
+But : retrouver un document dont le code imprimé est illisible ou douteux. Correspondance exacte d'empreinte avec une version finale ; ne fonctionne pas sur un scan.
+
+### GET /api/verify/cachet/certificat
+Sortie (200) : `{ empreinteSha256, sujet, valideJusquau, nature }` — empreinte du certificat de cachet en service, publiée pour détecter un changement de clé
 
 ### POST /api/verify/:code/comparer
 Entrée : `multipart/form-data` — fichier soumis par le tiers (gardé en mémoire, jamais écrit sur disque)
@@ -250,6 +266,11 @@ Sortie (200) : `{ evenements: [{ actorId, action, objectType, objectId, timestam
 ### GET /api/admin/audit/integrite
 Entrée : aucune — rôle Administrateur ou Vérificateur
 Sortie (200) : `{ chaineIntacte, ruptureEvenementId, ancrages: [{ id, date, lastEventHash, nombreEvenements, chaineIntacte, destinataires, horodatageTiers }] }`
+
+### POST /api/admin/audit/controle-ancrage
+Entrée : `{ hash }` (64 hex, tiré d'un email d'ancrage) — rôle Administrateur, Vérificateur ou Superviseur
+Sortie (200) : `{ trouve: true, evenementId, date, position, nombreEvenements, chaineIntacteJusquIci, ancrageEnregistre, conclusion }` | `{ trouve: false, conclusion }`
+But : détecter une réécriture du journal (hash reçu autrefois mais absent aujourd'hui).
 
 ### POST /api/admin/audit/ancrage
 Entrée : aucune — rôle Administrateur
