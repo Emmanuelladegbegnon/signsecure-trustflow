@@ -34,6 +34,7 @@ export interface AuditContext {
   actorId: string | null
   actorLabel: string
   ip: string
+  userAgent?: string | null
 }
 
 async function writeStatus(
@@ -53,6 +54,7 @@ async function writeStatus(
     objectId: documentId,
     documentId,
     ip: ctx.ip,
+    userAgent: ctx.userAgent,
   })
   return document
 }
@@ -76,20 +78,22 @@ export async function transitionDocumentSent(documentId: string, organizationId:
 export async function transitionDocumentSignedIfComplete(
   documentId: string,
   organizationId: string,
-  data: { finalPdfPath: string; hashSha256: string },
+  data: {
+    finalPdfPath: string
+    hashSha256: string
+    sealedAt: Date
+    nombrePagesPdf: number
+    tsaTokenPath?: string | null
+    tsaGenTime?: Date | null
+    tsaUrl?: string | null
+  },
   ctx: AuditContext,
 ) {
   const document = await prisma.document.findUniqueOrThrow({ where: { id: documentId }, include: { signataires: true } })
   const allSigned = document.signataires.every((s) => s.signedAt !== null)
   if (!allSigned) return document
 
-  return writeStatus(
-    documentId,
-    organizationId,
-    { statut: DocumentStatus.SIGNED, finalPdfPath: data.finalPdfPath, hashSha256: data.hashSha256 },
-    ctx,
-    'DOCUMENT_SIGNED',
-  )
+  return writeStatus(documentId, organizationId, { statut: DocumentStatus.SIGNED, ...data }, ctx, 'DOCUMENT_SIGNED')
 }
 
 /** SIGNED → REVOKED, réservé au rôle Superviseur (vérifié dans la route). */

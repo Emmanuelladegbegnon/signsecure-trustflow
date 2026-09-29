@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { AppShell } from '../../components/layout/AppShell'
 import { FormAlert } from '../../components/ui/FormAlert'
 import { Icon } from '../../components/ui/Icon'
-import { DOCUMENT_TYPES } from '../../constants/documentTypes'
+import { Stepper } from '../../components/ui/Stepper'
+import { DOCUMENT_TYPES, isExcludedFromDigital } from '../../constants/documentTypes'
+import { SIGN_STEPS } from '../../constants/steps'
 import { apiRequest, ApiRequestError } from '../../lib/httpClient'
 import { assignSignersUrl } from '../../routes'
 
-const STEPS = ['Upload', 'Détails', 'Signataires']
 const MAX_SIZE_BYTES = 10 * 1024 * 1024
 
 interface CreateDocumentResponse {
@@ -22,8 +23,11 @@ export function NewDocument() {
   const [file, setFile] = useState<File | null>(null)
   const [titre, setTitre] = useState('')
   const [type, setType] = useState('')
+  const [sensible, setSensible] = useState(false)
+  const [art267Ack, setArt267Ack] = useState(false)
+  const excluded = isExcludedFromDigital(type)
   const [dragActive, setDragActive] = useState(false)
-  const [fieldErrors, setFieldErrors] = useState<{ file?: string; titre?: string; type?: string }>({})
+  const [fieldErrors, setFieldErrors] = useState<{ file?: string; titre?: string; type?: string; art267?: string }>({})
   const [apiError, setApiError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -54,6 +58,7 @@ export function NewDocument() {
     if (!file) errors.file = 'Sélectionnez un fichier PDF.'
     if (!titre.trim()) errors.titre = 'Le titre du dossier est requis.'
     if (!type) errors.type = 'Sélectionnez un type de document.'
+    if (excluded && !art267Ack) errors.art267 = 'Confirmez avoir pris connaissance de la restriction légale avant de continuer.'
     setFieldErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -67,6 +72,7 @@ export function NewDocument() {
     formData.append('fichier', file)
     formData.append('titre', titre.trim())
     formData.append('type', type)
+    formData.append('sensible', String(sensible))
 
     setSubmitting(true)
     try {
@@ -87,21 +93,7 @@ export function NewDocument() {
       </div>
 
       <div className="mb-12">
-        <div className="flex items-center justify-between relative max-w-2xl mx-auto">
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-surface-variant -z-10" />
-          {STEPS.map((label, i) => (
-            <div key={label} className="flex flex-col items-center gap-2">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-label-sm text-label-sm shadow-sm ring-4 ring-background ${
-                  i === 0 ? 'bg-primary text-on-primary' : 'bg-surface-variant text-on-surface-variant'
-                }`}
-              >
-                {i + 1}
-              </div>
-              <span className={`font-label-sm text-label-sm ${i === 0 ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>{label}</span>
-            </div>
-          ))}
-        </div>
+        <Stepper steps={SIGN_STEPS} currentStep={0} />
       </div>
 
       <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-6 md:p-8 max-w-3xl mx-auto">
@@ -192,7 +184,10 @@ export function NewDocument() {
                 id="type-document"
                 name="type-document"
                 value={type}
-                onChange={(e) => setType(e.target.value)}
+                onChange={(e) => {
+                  setType(e.target.value)
+                  setArt267Ack(false)
+                }}
               >
                 <option value="">Sélectionnez un type</option>
                 {DOCUMENT_TYPES.map((opt) => (
@@ -212,6 +207,41 @@ export function NewDocument() {
               </p>
             )}
           </div>
+          {excluded && (
+            <div className="rounded-lg border border-error/40 bg-error-container/30 p-4 flex flex-col gap-3">
+              <p className="font-body-sm text-body-sm text-on-surface flex items-start gap-2">
+                <Icon name="gavel" size={18} className="text-error shrink-0 mt-0.5" />
+                <span>
+                  <strong>Attention — art. 267 du Code du numérique :</strong> les actes relevant du droit de la famille, des successions, et les
+                  actes de sûreté (sauf s'ils sont passés pour les besoins d'une profession) sont exclus de la forme électronique. Une version
+                  signée dans SignSecure pourrait ne pas être recevable. Pour ces actes, privilégiez la signature papier, puis enregistrez-la
+                  dans Trace.
+                </span>
+              </p>
+              <label className="flex items-start gap-2 font-body-sm text-body-sm text-on-surface cursor-pointer">
+                <input type="checkbox" className="mt-1" checked={art267Ack} onChange={(e) => setArt267Ack(e.target.checked)} />
+                J'ai pris connaissance de cette restriction ; ce document relève d'un usage professionnel ou d'une exception admise.
+              </label>
+              {fieldErrors.art267 && (
+                <p className="font-label-sm text-label-sm text-error flex items-center gap-1">
+                  <Icon name="error" size={14} />
+                  {fieldErrors.art267}
+                </p>
+              )}
+            </div>
+          )}
+
+          <label className="flex items-start gap-3 rounded-lg border border-outline-variant p-4 cursor-pointer hover:bg-surface-container-low transition-colors">
+            <input type="checkbox" className="mt-1" checked={sensible} onChange={(e) => setSensible(e.target.checked)} />
+            <span className="flex flex-col gap-1">
+              <span className="font-label-md text-label-md text-on-surface">Document sensible — double code de validation</span>
+              <span className="font-body-sm text-body-sm text-on-surface-variant">
+                Chaque signataire devra saisir deux codes, l'un reçu par SMS et l'autre par email. Cela réduit le risque qu'une seule ligne
+                téléphonique détournée (SIM swap) suffise à signer.
+              </span>
+            </span>
+          </label>
+
           <div className="pt-6 border-t border-outline-variant flex justify-end">
             <button
               className="bg-primary text-on-primary px-8 py-3 rounded-lg font-label-md text-label-md flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"

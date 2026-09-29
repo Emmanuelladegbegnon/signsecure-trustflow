@@ -31,8 +31,15 @@ export function TraceabilityList() {
     const controller = new AbortController()
     apiRequest<DocumentsResponse>('/documents', { signal: controller.signal })
       .then((res) => setDossiers(res.dossiers.filter((d) => d.origine === 'trace')))
-      .catch((err) => setError(err instanceof ApiRequestError ? err.message : 'Impossible de charger les documents tracés.'))
-      .finally(() => setLoading(false))
+      .catch((err) => {
+        // Ignore l'abandon déclenché par le cleanup (StrictMode double-monte
+        // cet effet en dev) — pas un vrai échec réseau.
+        if (controller.signal.aborted) return
+        setError(err instanceof ApiRequestError ? err.message : 'Impossible de charger les documents tracés.')
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
     return () => controller.abort()
   }, [])
 

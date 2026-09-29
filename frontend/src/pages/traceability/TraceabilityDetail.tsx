@@ -4,8 +4,9 @@ import { AppShell } from '../../components/layout/AppShell'
 import { FormAlert } from '../../components/ui/FormAlert'
 import { FullscreenSpinner } from '../../components/ui/FullscreenSpinner'
 import { Icon } from '../../components/ui/Icon'
-import { apiRequest, ApiRequestError } from '../../lib/httpClient'
+import { apiRequest, ApiRequestError, fetchAuthedFileUrl } from '../../lib/httpClient'
 import { traceIncidentUrl, traceTransferRequestUrl } from '../../routes'
+import { TraceComparisonPanel } from './TraceComparisonPanel'
 
 interface TimelineEvent {
   type: string
@@ -16,6 +17,19 @@ interface TimelineEvent {
 
 interface TimelineResponse {
   evenements: TimelineEvent[]
+}
+
+interface PhotoMeta {
+  id: string
+  pageIndex: number
+  url: string
+  /** Empreinte SHA-256 calculée par le serveur à la réception de la photo. */
+  sha256?: string | null
+  dateCapture?: string
+}
+
+interface PhotosResponse {
+  photos: PhotoMeta[]
 }
 
 export function TraceabilityDetail() {
@@ -29,14 +43,63 @@ export function TraceabilityDetail() {
   const [archiveError, setArchiveError] = useState<string | null>(null)
   const [archived, setArchived] = useState(false)
 
+  // Photos/scans de référence capturés à la réception — élément constitutif
+  // du dossier de preuve (CLAUDE.md § Trace). Chargées via un endpoint
+  // authentifié, jamais par URL de stockage directe.
+  const [photos, setPhotos] = useState<PhotoMeta[]>([])
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({})
+  const [photosError, setPhotosError] = useState<string | null>(null)
+  const [photosLoading, setPhotosLoading] = useState(true)
+
   useEffect(() => {
     if (!id) return
     const controller = new AbortController()
     apiRequest<TimelineResponse>(`/trace/${id}/timeline`, { signal: controller.signal })
       .then((res) => setEvents(res.evenements))
-      .catch((err) => setError(err instanceof ApiRequestError ? err.message : 'Impossible de charger la chaîne de garde.'))
-      .finally(() => setLoading(false))
+      .catch((err) => {
+        // Ignore l'abandon déclenché par le cleanup (StrictMode double-monte
+        // cet effet en dev) — pas un vrai échec réseau.
+        if (controller.signal.aborted) return
+        setError(err instanceof ApiRequestError ? err.message : 'Impossible de charger la chaîne de garde.')
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
     return () => controller.abort()
+  }, [id])
+
+  useEffect(() => {
+    if (!id) return
+    const controller = new AbortController()
+    const objectUrls: string[] = []
+    setPhotosLoading(true)
+    apiRequest<PhotosResponse>(`/trace/${id}/photos`, { signal: controller.signal })
+      .then(async (res) => {
+        setPhotos(res.photos)
+        const entries = await Promise.all(
+          res.photos.map(async (p) => {
+            try {
+              const url = await fetchAuthedFileUrl(p.url, controller.signal)
+              objectUrls.push(url)
+              return [p.id, url] as const
+            } catch {
+              return null
+            }
+          }),
+        )
+        setPhotoUrls(Object.fromEntries(entries.filter((e): e is readonly [string, string] => e !== null)))
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return
+        setPhotosError(err instanceof ApiRequestError ? err.message : 'Impossible de charger les photos de référence.')
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setPhotosLoading(false)
+      })
+    return () => {
+      controller.abort()
+      objectUrls.forEach((u) => URL.revokeObjectURL(u))
+    }
   }, [id])
 
   const handleArchive = async () => {
@@ -72,6 +135,47 @@ export function TraceabilityDetail() {
                   {id}
                 </span>
               </div>
+            </div>
+
+            <div>
+              <span className="font-label-sm text-label-sm text-on-surface-variant block mb-2">Photos de référence</span>
+              {photosLoading && <div className="h-24 rounded-lg border border-outline-variant bg-surface-container-low animate-pulse" />}
+              {!photosLoading && photosError && <FormAlert tone="error">{photosError}</FormAlert>}
+              {!photosLoading && !photosError && photos.length === 0 && (
+                <p className="font-body-sm text-body-sm text-on-surface-variant">Aucune photo capturée pour ce dossier.</p>
+              )}
+              {!photosLoading && photos.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {photos.map((p) =>
+                    photoUrls[p.id] ? (
+                      <a
+                        key={p.id}
+                        href={photoUrls[p.id]}
+                        target="_blank"
+                        rel="noreferrer"
+                        title={`Page ${p.pageIndex + 1}${p.sha256 ? ` — SHA-256 ${p.sha256}` : ''}`}
+                      >
+                        <img
+                          src={photoUrls[p.id]}
+                          alt={`Référence page ${p.pageIndex + 1}`}
+                          className="w-full aspect-square object-cover rounded-lg border border-outline-variant hover:opacity-80 transition-opacity"
+                        />
+                      </a>
+                    ) : (
+                      <div key={p.id} className="w-full aspect-square rounded-lg border border-outline-variant bg-surface-container-low" />
+                    ),
+                  )}
+                </div>
+              )}
+              {!photosLoading && photos.some((p) => p.sha256) && (
+                <ul className="mt-2 flex flex-col gap-0.5 font-mono text-[10px] text-on-surface-variant">
+                  {photos.map((p) => (
+                    <li key={p.id} title={p.sha256 ?? undefined}>
+                      p.{p.pageIndex + 1} · {p.sha256 ? `${p.sha256.slice(0, 12)}…` : '—'}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             {archived && (
@@ -171,6 +275,7 @@ export function TraceabilityDetail() {
               </div>
             )}
           </div>
+          {id && <TraceComparisonPanel documentId={id} photos={photos} photoUrls={photoUrls} />}
         </div>
       </div>
     </AppShell>

@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import rateLimit from 'express-rate-limit'
-import { readFile, unlink } from 'node:fs/promises'
 import { asyncHandler } from '../../middleware/asyncHandler.js'
+import { requestMeta } from '../../lib/actor.js'
 import { uploadComparisonFile } from '../../lib/storage.js'
 import * as verifyService from './service.js'
 
@@ -15,7 +15,7 @@ verifyRouter.use(verifyLimiter)
 verifyRouter.get(
   '/:code',
   asyncHandler(async (req, res) => {
-    res.json(await verifyService.verifyByCode(req.params.code, req.ip ?? ''))
+    res.json(await verifyService.verifyByCode(req.params.code, requestMeta(req)))
   }),
 )
 
@@ -27,12 +27,7 @@ verifyRouter.post(
       res.status(400).json({ error: { code: 'MISSING_FILE', message: 'Le fichier à comparer est requis.' } })
       return
     }
-    try {
-      const buffer = await readFile(req.file.path)
-      res.json(await verifyService.compareFile(req.params.code, buffer, req.ip ?? ''))
-    } finally {
-      // Fichier tiers soumis pour une comparaison ponctuelle — pas de raison de le conserver au-delà du calcul.
-      await unlink(req.file.path).catch(() => undefined)
-    }
+    // Fichier tiers gardé en mémoire le temps du calcul d'empreinte — jamais écrit sur disque.
+    res.json(await verifyService.compareFile(req.params.code, req.file.buffer, requestMeta(req)))
   }),
 )

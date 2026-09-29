@@ -1,21 +1,18 @@
 import { randomUUID } from 'node:crypto'
 import type { Role } from '@prisma/client'
+import type { Actor } from '../../lib/actor.js'
 import { prisma } from '../../db.js'
 import { env } from '../../env.js'
 import { ApiError } from '../../lib/errors.js'
-import { recordAuditEvent } from '../../lib/audit.js'
+import { recordAuditEvent, verifyAuditChain } from '../../lib/audit.js'
+import { anchorOrganizationAuditChain } from '../../lib/auditAnchor.js'
 import { fromRoleLabel, toRoleLabels } from '../../lib/roles.js'
 import { toStatusLabel } from '../../lib/userStatus.js'
 import { sendEmail } from '../../lib/notify.js'
+import { normalizePhone } from '../../lib/phone.js'
 
 const INVITATION_EXPIRY_DAYS = 7
 
-interface Actor {
-  id: string
-  organizationId: string
-  label: string
-  ip: string
-}
 
 export async function listUsers(organizationId: string) {
   const users = await prisma.user.findMany({ where: { organizationId }, include: { roles: true }, orderBy: { createdAt: 'asc' } })
@@ -45,6 +42,10 @@ async function createInvitedUser(
   actor: Actor,
 ) {
   const roles = resolveRoles(input.roles)
+  // Numéro normalisé au format international : il sert de second canal (SMS)
+  // pour l'OTP de signature, distinct de l'email.
+  const telephone = normalizePhone(input.telephone)
+  if (!telephone) throw ApiError.badRequest('INVALID_PHONE', `Numéro de téléphone invalide pour ${input.email}.`)
 
   const existing = await prisma.user.findUnique({ where: { email: input.email } })
   if (existing) throw ApiError.conflict('EMAIL_ALREADY_USED', 'Un compte existe déjà avec cet email.')
@@ -55,7 +56,7 @@ async function createInvitedUser(
       nom: input.nom,
       prenom: input.prenom,
       email: input.email,
-      telephone: input.telephone,
+      telephone,
       statut: 'INVITE',
       roles: { create: roles.map((role) => ({ role })) },
     },
@@ -80,6 +81,7 @@ async function createInvitedUser(
     objectType: 'User',
     objectId: user.id,
     ip: actor.ip,
+    userAgent: actor.userAgent,
   })
 
   return user
@@ -140,6 +142,91 @@ export async function updateUserRoles(userId: string, labels: string[], actor: A
     objectType: 'User',
     objectId: userId,
     ip: actor.ip,
+    userAgent: actor.userAgent,
+  })
+
+  return { success: true as const }
+}
+
+/**
+ * Suspension / réactivation d'un compte — transition de statut centralisée
+ * (CLAUDE.md § "couche métier partagée") : jamais d'écriture directe de
+ * `statut` depuis la route. requireAuth revérifie ce statut en base à chaque
+ * requête (middleware/auth.ts), donc une suspension coupe l'accès
+ * immédiatement, même sur un token encore valide.
+ */
+export async function updateUserStatus(userId: string, statusLabel: 'actif' | 'suspendu', actor: Actor) {
+  if (userId === actor.id) {
+    throw ApiError.badRequest('CANNOT_SELF_SUSPEND', 'Vous ne pouvez pas modifier le statut de votre propre compte.')
+  }
+
+  const user = await prisma.user.findFirst({ where: { id: userId, organizationId: actor.organizationId } })
+  if (!user) throw ApiError.notFound('Utilisateur introuvable.')
+
+  if (statusLabel === 'suspendu') {
+    if (user.statut !== 'ACTIF') {
+      throw ApiError.conflict('INVALID_STATUS_TRANSITION', 'Seul un compte actif peut être suspendu.')
+    }
+    await prisma.user.update({ where: { id: userId }, data: { statut: 'SUSPENDU' } })
+    await recordAuditEvent({
+      organizationId: actor.organizationId,
+      actorId: actor.id,
+      actorLabel: actor.label,
+      action: 'USER_SUSPENDED',
+      objectType: 'User',
+      objectId: userId,
+      ip: actor.ip,
+      userAgent: actor.userAgent,
+    })
+  } else {
+    if (user.statut !== 'SUSPENDU') {
+      throw ApiError.conflict('INVALID_STATUS_TRANSITION', 'Seul un compte suspendu peut être réactivé.')
+    }
+    // La réactivation remet aussi le compteur de tentatives échouées à zéro :
+    // pas de raison de garder un verrouillage hérité d'avant la suspension.
+    await prisma.user.update({ where: { id: userId }, data: { statut: 'ACTIF', failedLoginAttempts: 0, lockedUntil: null } })
+    await recordAuditEvent({
+      organizationId: actor.organizationId,
+      actorId: actor.id,
+      actorLabel: actor.label,
+      action: 'USER_REACTIVATED',
+      objectType: 'User',
+      objectId: userId,
+      ip: actor.ip,
+      userAgent: actor.userAgent,
+    })
+  }
+
+  return { success: true as const }
+}
+
+/**
+ * Annulation d'une invitation jamais activée — suppression définitive
+ * autorisée uniquement au statut INVITE : ce compte n'a jamais pu se
+ * connecter ni agir (requireAuth exige statut ACTIF), donc il ne peut être
+ * référencé comme acteur d'aucun événement d'audit ni d'aucun dossier.
+ * Un compte ACTIF ou SUSPENDU ne se supprime jamais — seule la suspension
+ * (ci-dessus) retire l'accès, pour ne jamais perdre la traçabilité d'actions
+ * réellement effectuées.
+ */
+export async function deleteInvitedUser(userId: string, actor: Actor) {
+  const user = await prisma.user.findFirst({ where: { id: userId, organizationId: actor.organizationId } })
+  if (!user) throw ApiError.notFound('Utilisateur introuvable.')
+  if (user.statut !== 'INVITE') {
+    throw ApiError.conflict('CANNOT_DELETE_ACTIVE_USER', 'Seule une invitation encore en attente peut être supprimée — suspendez un compte déjà actif à la place.')
+  }
+
+  await prisma.user.delete({ where: { id: userId } })
+
+  await recordAuditEvent({
+    organizationId: actor.organizationId,
+    actorId: actor.id,
+    actorLabel: actor.label,
+    action: 'USER_INVITATION_CANCELLED',
+    objectType: 'User',
+    objectId: userId,
+    ip: actor.ip,
+    userAgent: actor.userAgent,
   })
 
   return { success: true as const }
@@ -166,6 +253,33 @@ export async function getAuditLog(organizationId: string, filters: { acteur?: st
       timestampServer: e.timestampServer,
       ip: e.ip,
       hash: e.eventHash,
+    })),
+  }
+}
+
+/** Ancrage manuel du journal (en plus de l'ancrage planifié) — voir lib/auditAnchor.ts. */
+export async function anchorAuditChain(actor: Actor) {
+  const anchor = await anchorOrganizationAuditChain(actor.organizationId, { actorId: actor.id, actorLabel: actor.label, ip: actor.ip })
+  if (!anchor) throw ApiError.badRequest('EMPTY_AUDIT_LOG', "Le journal d'audit est vide : rien à ancrer.")
+  return { ancrageId: anchor.id, lastEventHash: anchor.lastEventHash, destinataires: anchor.sentTo, date: anchor.createdAt }
+}
+
+export async function getAuditIntegrity(organizationId: string) {
+  const [chain, anchors] = await Promise.all([
+    verifyAuditChain(organizationId),
+    prisma.auditAnchor.findMany({ where: { organizationId }, orderBy: { createdAt: 'desc' }, take: 20 }),
+  ])
+  return {
+    chaineIntacte: chain.intact,
+    ruptureEvenementId: chain.brokenAtEventId ?? null,
+    ancrages: anchors.map((a) => ({
+      id: a.id,
+      date: a.createdAt,
+      lastEventHash: a.lastEventHash,
+      nombreEvenements: a.eventCount,
+      chaineIntacte: a.chainIntact,
+      destinataires: a.sentTo,
+      horodatageTiers: a.tsaGenTime,
     })),
   }
 }

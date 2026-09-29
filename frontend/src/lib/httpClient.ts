@@ -30,6 +30,17 @@ export function setAuthToken(token: string | null) {
   authToken = token
 }
 
+let unauthorizedHandler: ((error: ApiRequestError) => void) | null = null
+
+/**
+ * Appelé quand le serveur refuse une requête authentifiée (401) — session
+ * expirée sur inactivité, révoquée ou invalide. Enregistré par AuthContext
+ * pour nettoyer la session locale et renvoyer vers la connexion.
+ */
+export function setUnauthorizedHandler(handler: ((error: ApiRequestError) => void) | null) {
+  unauthorizedHandler = handler
+}
+
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
   body?: unknown
@@ -83,8 +94,47 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   if (!response.ok) {
     const shaped = (payload as { error?: ApiErrorShape } | null)?.error
-    throw new ApiRequestError(response.status, shaped ?? { code: 'UNKNOWN_ERROR', message: `Erreur inattendue (${response.status}).` })
+    const error = new ApiRequestError(response.status, shaped ?? { code: 'UNKNOWN_ERROR', message: `Erreur inattendue (${response.status}).` })
+    if (auth && response.status === 401) unauthorizedHandler?.(error)
+    throw error
   }
 
   return payload as T
+}
+
+/**
+ * Récupère un fichier binaire sur un endpoint authentifié (PDF, photo) et
+ * renvoie une URL objet locale utilisable dans un <iframe>/<img src>.
+ * L'appelant doit révoquer l'URL (URL.revokeObjectURL) une fois l'aperçu
+ * démonté ou remplacé, pour ne pas fuiter la mémoire du navigateur.
+ */
+export async function fetchAuthedFileUrl(path: string, signal?: AbortSignal): Promise<string> {
+  if (!authToken) {
+    throw new ApiRequestError(401, { code: 'NO_TOKEN', message: 'Session expirée. Veuillez vous reconnecter.' })
+  }
+
+  let response: Response
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, { headers: { Authorization: `Bearer ${authToken}` }, signal })
+  } catch {
+    throw new ApiRequestError(0, {
+      code: 'NETWORK_ERROR',
+      message: 'Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.',
+    })
+  }
+
+  if (!response.ok) {
+    let shaped: ApiErrorShape | undefined
+    try {
+      shaped = ((await response.json()) as { error?: ApiErrorShape }).error
+    } catch {
+      // réponse d'erreur non-JSON — message générique ci-dessous
+    }
+    const error = new ApiRequestError(response.status, shaped ?? { code: 'UNKNOWN_ERROR', message: `Erreur inattendue (${response.status}).` })
+    if (response.status === 401) unauthorizedHandler?.(error)
+    throw error
+  }
+
+  const blob = await response.blob()
+  return URL.createObjectURL(blob)
 }

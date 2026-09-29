@@ -9,6 +9,7 @@ import path from 'node:path'
 
 const TEST_DB_PATH = path.resolve(import.meta.dirname, '../../prisma/test.db')
 const TEST_DATABASE_URL = 'file:./prisma/test.db'
+const TEST_UPLOAD_DIR = path.resolve(import.meta.dirname, '../../.test-uploads')
 
 export async function setup() {
   if (existsSync(TEST_DB_PATH)) rmSync(TEST_DB_PATH)
@@ -21,4 +22,5 @@ export async function setup() {
 
 export async function teardown() {
   if (existsSync(TEST_DB_PATH)) rmSync(TEST_DB_PATH)
+  if (existsSync(TEST_UPLOAD_DIR)) rmSync(TEST_UPLOAD_DIR, { recursive: true, force: true })
 }

@@ -5,11 +5,18 @@ import { Icon } from '../../components/ui/Icon'
 import { apiRequest, ApiRequestError } from '../../lib/httpClient'
 import { traceObservationsUrl } from '../../routes'
 
+/**
+ * Capture des photos de référence Trace — caméra uniquement. L'import depuis
+ * la galerie est volontairement absent : il permettrait de joindre une photo
+ * retouchée ou prise avant la réception. Le serveur calcule l'empreinte
+ * SHA-256 de chaque photo reçue et l'horodate lui-même.
+ * Limite assumée : un navigateur ne peut pas prouver qu'une image vient de
+ * la caméra ; cette contrainte réduit le risque, elle ne l'élimine pas.
+ */
 export function CameraCapture() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const cameraInputRef = useRef<HTMLInputElement>(null)
-  const galleryInputRef = useRef<HTMLInputElement>(null)
 
   const [photos, setPhotos] = useState<File[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -49,7 +56,9 @@ export function CameraCapture() {
           <Icon name="shield" filled size={16} className="text-primary-fixed-dim" />
           <span className="font-label-sm text-label-sm text-white uppercase tracking-wider">Mode Sécurisé</span>
         </div>
-        <div className="w-10" />
+        <div className="bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
+          <span className="font-label-sm text-label-sm text-white whitespace-nowrap">Étape 2/3 — Photos</span>
+        </div>
       </header>
 
       <div className="flex-1 relative flex flex-col justify-center items-center px-4">
@@ -76,8 +85,11 @@ export function CameraCapture() {
               </div>
               <div className="mt-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-2">
                 <Icon name="camera_alt" size={18} className="text-primary-fixed-dim" />
-                <span className="font-label-md text-label-md text-white">Appuyez pour photographier le document</span>
+                <span className="font-label-md text-label-md text-white">Photographiez chaque page du document</span>
               </div>
+              <p className="mt-3 font-label-sm text-label-sm text-white/60 text-center">
+                Une photo par page est exigée avant validation. L'heure retenue est celle du serveur à la réception.
+              </p>
             </>
           ) : (
             <p className="font-label-md text-label-md text-white/70 text-center mb-2">
@@ -110,10 +122,10 @@ export function CameraCapture() {
         )}
 
         <div className="flex justify-between items-center w-full max-w-sm mx-auto">
-          <button className="flex flex-col items-center gap-1 opacity-80 hover:opacity-100 transition-opacity p-2" onClick={() => galleryInputRef.current?.click()} type="button">
-            <Icon name="note_add" />
-            <span className="font-label-sm text-[10px] text-white">Ajouter</span>
-          </button>
+          <div className="flex flex-col items-center gap-1 opacity-70 p-2 w-16 text-center">
+            <Icon name="no_photography" />
+            <span className="font-label-sm text-[10px] text-white leading-tight">Galerie désactivée</span>
+          </div>
           <button
             className="relative w-20 h-20 rounded-full border-4 border-white flex items-center justify-center group active:scale-95 transition-transform duration-150"
             onClick={() => cameraInputRef.current?.click()}
@@ -143,8 +155,7 @@ export function CameraCapture() {
         </div>
       </div>
 
-      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={addPhotos} />
-      <input ref={galleryInputRef} type="file" accept="image/*" multiple className="hidden" onChange={addPhotos} />
+      <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" onChange={addPhotos} />
     </div>
   )
 }

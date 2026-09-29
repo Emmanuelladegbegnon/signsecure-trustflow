@@ -30,3 +30,8 @@ export const incidentSchema = z.object({
   type: z.string().min(1),
   description: z.string().min(1),
 })
+
+export const comparisonSchema = z.object({
+  conclusion: z.enum(['CONCORDANCE_CONSTATEE', 'DIVERGENCES_CONSTATEES', 'EXAMEN_NON_CONCLUANT']),
+  commentaire: z.string().trim().min(1, 'Décrivez ce qui a été comparé et constaté.').max(2000),
+})

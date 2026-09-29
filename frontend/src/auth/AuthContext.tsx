@@ -1,11 +1,13 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { apiRequest, setAuthToken } from '../lib/httpClient'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { apiRequest, setAuthToken, setUnauthorizedHandler } from '../lib/httpClient'
+import { SESSION_NOTICE_KEY } from './sessionNotice'
 
 export interface AuthUser {
   id: string
   nom: string
   prenom: string
   email?: string
+  telephone?: string
   roles: string[]
 }
 
@@ -42,12 +44,69 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 // comptes internes (pas de "souviens-toi de moi" en MVP).
 const TOKEN_STORAGE_KEY = 'signsecure_auth_token'
 
+// Aligné sur SESSION_IDLE_MINUTES côté serveur (15 min par défaut) : le serveur
+// reste seul juge, cette minuterie évite seulement de laisser un écran ouvert
+// sur un poste partagé.
+const IDLE_TIMEOUT_MS = 15 * 60_000
+const ACTIVITY_EVENTS = ['mousedown', 'keydown', 'touchstart', 'scroll'] as const
+
+function readStorage(key: string): string | null {
+  try {
+    return sessionStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+function writeStorage(key: string, value: string | null) {
+  try {
+    if (value === null) sessionStorage.removeItem(key)
+    else sessionStorage.setItem(key, value)
+  } catch {
+    // stockage indisponible (navigation privée stricte) : sans conséquence
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('restoring')
   const [user, setUser] = useState<AuthUser | null>(null)
 
+  const clearSession = useCallback((notice?: string) => {
+    writeStorage(TOKEN_STORAGE_KEY, null)
+    if (notice) writeStorage(SESSION_NOTICE_KEY, notice)
+    setAuthToken(null)
+    setUser(null)
+    setStatus('unauthenticated')
+  }, [])
+
+  // Toute réponse 401 sur une requête authentifiée ferme la session locale.
   useEffect(() => {
-    const stored = sessionStorage.getItem(TOKEN_STORAGE_KEY)
+    setUnauthorizedHandler((error) => {
+      clearSession(error.code === 'SESSION_IDLE_TIMEOUT' ? error.message : 'Votre session a expiré. Veuillez vous reconnecter.')
+    })
+    return () => setUnauthorizedHandler(null)
+  }, [clearSession])
+
+  // Déconnexion automatique après inactivité côté client.
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    let timer = window.setTimeout(onIdle, IDLE_TIMEOUT_MS)
+    function onIdle() {
+      apiRequest('/auth/logout', { method: 'POST' }).catch(() => undefined)
+      clearSession("Vous avez été déconnecté après 15 minutes d'inactivité.")
+    }
+    const reset = () => {
+      window.clearTimeout(timer)
+      timer = window.setTimeout(onIdle, IDLE_TIMEOUT_MS)
+    }
+    ACTIVITY_EVENTS.forEach((evt) => window.addEventListener(evt, reset, { passive: true }))
+    return () => {
+      window.clearTimeout(timer)
+      ACTIVITY_EVENTS.forEach((evt) => window.removeEventListener(evt, reset))
+    }
+  }, [status, clearSession])
+
+  useEffect(() => {
+    const stored = readStorage(TOKEN_STORAGE_KEY)
     if (!stored) {
       setStatus('unauthenticated')
       return

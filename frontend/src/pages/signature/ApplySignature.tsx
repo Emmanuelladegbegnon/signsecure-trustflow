@@ -1,11 +1,17 @@
 import { useRef, useState, type ChangeEvent, type PointerEvent } from 'react'
 import { FormAlert } from '../../components/ui/FormAlert'
 import { Icon } from '../../components/ui/Icon'
+import { PdfViewer } from '../../components/ui/PdfViewer'
+import { Stepper } from '../../components/ui/Stepper'
+import { EXTERNAL_SIGNER_STEPS } from '../../constants/steps'
+import { forgetRememberedSignature, getRememberedSignature, rememberSignature } from '../../lib/signatureMemory'
 
 type SignatureTab = 'dessiner' | 'importer' | 'enregistree'
 
 interface ApplySignatureProps {
   documentTitle: string
+  /** URL publique (endpoint /sign/link/:token/fichier) du PDF réel à afficher — null tant qu'il n'est pas encore chargé. */
+  pdfUrl: string | null
   /** Envoie consentement + image au serveur — l'appelant ne doit jamais garder cette image en mémoire au-delà de cet appel (CLAUDE.md § Sign). */
   onSubmit: (consentement: true, signatureImageBase64: string) => Promise<void>
   submitting: boolean
@@ -15,14 +21,21 @@ interface ApplySignatureProps {
 /**
  * Étape "dessiner ma signature" du parcours signataire. Composant purement
  * présentationnel : c'est SignerInvite qui pilote l'appel réseau et détruit
- * l'image immédiatement après envoi — jamais stockée ni mise en cache ici
- * au-delà du temps de l'appel.
+ * l'image côté serveur immédiatement après envoi — jamais stockée ni mise en
+ * cache serveur au-delà du traitement de cette signature précise.
+ *
+ * Exception délibérée, uniquement côté client : le dernier dessin est gardé
+ * en mémoire d'onglet (signatureMemory.ts, jamais écrit sur disque, jamais
+ * transmis avant validation d'une signature précise) pour éviter de
+ * redessiner à l'identique en cas de signatures multiples dans la même
+ * session — accessible via l'onglet "Enregistrée" ci-dessous.
  */
-export function ApplySignature({ documentTitle, onSubmit, submitting, error }: ApplySignatureProps) {
+export function ApplySignature({ documentTitle, pdfUrl, onSubmit, submitting, error }: ApplySignatureProps) {
   const [tab, setTab] = useState<SignatureTab>('dessiner')
   const [legalCheck, setLegalCheck] = useState(false)
   const [hasSignature, setHasSignature] = useState(false)
   const [importedImage, setImportedImage] = useState<string | null>(null)
+  const [rememberedImage, setRememberedImage] = useState<string | null>(() => getRememberedSignature())
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const drawing = useRef(false)
@@ -72,18 +85,29 @@ export function ApplySignature({ documentTitle, onSubmit, submitting, error }: A
     reader.readAsDataURL(file)
   }
 
-  const hasUsableSignature = (tab === 'dessiner' && hasSignature) || (tab === 'importer' && Boolean(importedImage))
+  const hasUsableSignature =
+    (tab === 'dessiner' && hasSignature) || (tab === 'importer' && Boolean(importedImage)) || (tab === 'enregistree' && Boolean(rememberedImage))
   const canConfirm = legalCheck && hasUsableSignature && !submitting
 
   const handleConfirm = async () => {
     if (!canConfirm) return
-    const image = tab === 'dessiner' ? canvasRef.current?.toDataURL('image/png') : importedImage
+    const image = tab === 'dessiner' ? canvasRef.current?.toDataURL('image/png') : tab === 'importer' ? importedImage : rememberedImage
     if (!image) return
     await onSubmit(true, image)
-    // Sécurité (CLAUDE.md) : rien ne doit rester en mémoire côté client une fois envoyé.
+    // Sécurité (CLAUDE.md) : rien ne doit rester en mémoire côté serveur une
+    // fois envoyé. Côté client, on garde volontairement ce dessin en mémoire
+    // d'onglet (signatureMemory.ts) pour une éventuelle prochaine signature
+    // dans la même session — voir le commentaire en tête de fichier.
+    rememberSignature(image)
+    setRememberedImage(image)
     clearCanvas()
     setImportedImage(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const clearRememberedSignature = () => {
+    forgetRememberedSignature()
+    setRememberedImage(null)
   }
 
   return (
@@ -95,8 +119,13 @@ export function ApplySignature({ documentTitle, onSubmit, submitting, error }: A
           <div className="h-6 w-px bg-outline-variant mx-2 hidden sm:block" />
           <span className="font-label-md text-label-md text-on-surface-variant hidden sm:block truncate">{documentTitle}</span>
         </div>
-        <button className="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-all">Aide</button>
       </header>
+
+      <div className="shrink-0 border-b border-outline-variant bg-surface-container-lowest px-gutter py-3">
+        <div className="max-w-xs mx-auto">
+          <Stepper steps={EXTERNAL_SIGNER_STEPS} currentStep={0} />
+        </div>
+      </div>
 
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         <div className="flex-1 bg-surface-container-low p-4 md:p-8 flex justify-center overflow-hidden">
@@ -109,38 +138,28 @@ export function ApplySignature({ documentTitle, onSubmit, submitting, error }: A
                 <Icon name="zoom_in" size={20} className="cursor-pointer hover:text-primary" />
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-8 relative">
-              <div className="space-y-6 text-on-surface-variant font-body-sm mb-12 opacity-70">
-                <div className="h-4 bg-surface-container-high rounded w-3/4" />
-                <div className="h-4 bg-surface-container-high rounded w-full" />
-                <div className="h-4 bg-surface-container-high rounded w-5/6" />
-                <div className="h-4 bg-surface-container-high rounded w-full" />
-                <br />
-                <div className="h-4 bg-surface-container-high rounded w-2/3" />
-                <div className="h-4 bg-surface-container-high rounded w-full" />
-                <div className="h-4 bg-surface-container-high rounded w-4/5" />
-              </div>
-              <p className="font-label-sm text-label-sm text-on-surface-variant mb-8 flex items-center gap-1">
-                <Icon name="info" size={14} />
-                Aperçu indicatif — la mise en page définitive du PDF est calculée côté serveur.
-              </p>
-              <div className="flex justify-end mt-12">
-                <div className="w-1/2">
-                  <p className="font-label-md text-label-md text-on-surface mb-2">Votre signature</p>
-                  <div className="relative w-full max-w-[280px] h-[120px] bg-yellow-50 border-2 border-dashed border-yellow-400 rounded flex flex-col items-center justify-center">
-                    {hasUsableSignature ? (
-                      <>
-                        <Icon name="check_circle" filled className="text-yellow-700" />
-                        <span className="font-label-md text-label-md text-yellow-800 text-center px-4">Signature prête à être envoyée</span>
-                      </>
-                    ) : (
-                      <>
-                        <Icon name="draw" className="text-yellow-600 mb-2 opacity-60" />
-                        <span className="font-label-md text-label-md text-yellow-800 text-center px-4">Zone de signature</span>
-                      </>
-                    )}
-                  </div>
+            <div className="flex-1 overflow-hidden relative flex flex-col">
+              {pdfUrl ? (
+                <PdfViewer url={pdfUrl} className="flex-1 w-full p-4" />
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-on-surface-variant gap-2">
+                  <span className="w-4 h-4 rounded-full border-2 border-outline-variant border-t-primary animate-spin" aria-hidden="true" />
+                  Chargement du document…
                 </div>
+              )}
+              <div className="shrink-0 border-t border-outline-variant bg-surface-container-lowest px-6 py-3 flex items-center justify-between gap-3">
+                <p className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                  <Icon name="info" size={14} />
+                  La zone et la mise en page exactes de votre signature sont calculées côté serveur au moment de la validation.
+                </p>
+                <span
+                  className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-sm text-label-sm border ${
+                    hasUsableSignature ? 'bg-yellow-50 border-yellow-400 text-yellow-800' : 'bg-surface border-outline-variant text-on-surface-variant'
+                  }`}
+                >
+                  <Icon name={hasUsableSignature ? 'check_circle' : 'draw'} filled={hasUsableSignature} size={16} />
+                  {hasUsableSignature ? 'Signature prête à être envoyée' : 'Signature pas encore fournie'}
+                </span>
               </div>
             </div>
           </div>
@@ -216,11 +235,32 @@ export function ApplySignature({ documentTitle, onSubmit, submitting, error }: A
                 <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleFileChange} />
               </div>
             )}
-            {tab === 'enregistree' && (
-              <div className="w-full h-[200px] bg-surface rounded border border-outline-variant flex flex-col items-center justify-center gap-2 text-on-surface-variant">
-                <Icon name="history" size={28} />
-                <span className="font-body-sm text-body-sm">Aucune signature enregistrée pour ce compte</span>
-              </div>
+            {tab === 'enregistree' &&
+              (rememberedImage ? (
+                <div className="relative w-full h-[200px] bg-surface rounded border border-outline-variant flex items-center justify-center overflow-hidden">
+                  <img src={rememberedImage} alt="Dernière signature utilisée dans cette session" className="max-h-full max-w-full object-contain" />
+                  <button
+                    type="button"
+                    onClick={clearRememberedSignature}
+                    className="absolute top-2 right-2 text-on-surface-variant hover:text-error text-sm flex items-center gap-1 bg-white/80 px-2 py-1 rounded shadow-sm"
+                    title="Oublier cette signature et en redessiner une nouvelle"
+                  >
+                    <Icon name="delete" size={16} />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-full h-[200px] bg-surface rounded border border-outline-variant flex flex-col items-center justify-center gap-2 text-on-surface-variant text-center px-6">
+                  <Icon name="history" size={28} />
+                  <span className="font-body-sm text-body-sm">
+                    Aucune signature à réutiliser pour l'instant — elle apparaîtra ici après votre première signature dans cette session.
+                  </span>
+                </div>
+              ))}
+            {tab === 'enregistree' && rememberedImage && (
+              <p className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                <Icon name="info" size={14} />
+                Conservée uniquement dans cet onglet, le temps de la session — jamais sur nos serveurs.
+              </p>
             )}
 
             <div className="flex items-start gap-3 mt-auto pt-4">

@@ -3,6 +3,11 @@ import { z } from 'zod'
 export const createDocumentSchema = z.object({
   titre: z.string().min(1, 'Le titre est requis.'),
   type: z.string().min(1, 'Le type est requis.'),
+  // multipart/form-data : booléen transmis sous forme de chaîne.
+  sensible: z
+    .union([z.boolean(), z.enum(['true', 'false'])])
+    .optional()
+    .transform((v) => v === true || v === 'true'),
 })
 
 const zoneSchema = z.object({
@@ -24,13 +29,20 @@ export const assignSignatoriesSchema = z.object({
     .min(1, 'Au moins un signataire est requis.'),
 })
 
+export const startOwnSignatureSchema = z.object({
+  zone: zoneSchema,
+})
+
 export const applySignatureSchema = z.object({
   signatureImageBase64: z.string().min(1, 'La signature est requise.'),
   consentement: z.literal(true, { message: 'Le consentement explicite est requis.' }),
 })
 
 export const signOtpVerifySchema = z.object({
+  /** Code reçu par SMS. */
   code: z.string().length(6),
+  /** Code reçu par email — exigé en plus pour un document marqué sensible. */
+  codeEmail: z.string().length(6).optional(),
 })
 
 export const revokeDocumentSchema = z.object({

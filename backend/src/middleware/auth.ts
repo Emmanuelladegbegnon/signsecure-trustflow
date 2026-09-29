@@ -3,7 +3,12 @@ import type { Role } from '@prisma/client'
 import { prisma } from '../db.js'
 import { ApiError } from '../lib/errors.js'
 import { verifySessionToken } from '../lib/jwt.js'
+import { recordAuditEvent } from '../lib/audit.js'
+import { env } from '../env.js'
 import { asyncHandler } from './asyncHandler.js'
+
+// Évite une écriture en base à chaque requête : l'activité n'est rafraîchie qu'au-delà de ce délai.
+const ACTIVITY_REFRESH_MS = 30_000
 
 /**
  * Vérifie le Bearer token et réhydrate req.auth depuis la base (pas seulement
@@ -21,10 +26,33 @@ export const requireAuth = asyncHandler(async (req: Request, _res: Response, nex
     throw ApiError.unauthorized('Session invalide ou expirée.')
   }
 
+  const session = payload.sid ? await prisma.session.findUnique({ where: { id: payload.sid } }) : null
+  if (!session || session.userId !== payload.sub || session.revokedAt) throw ApiError.unauthorized('Session invalide ou expirée.')
+
+  // Expiration sur inactivité, décidée côté serveur (CLAUDE.md § Sécurité).
+  const now = Date.now()
+  if (now - session.lastActivityAt.getTime() > env.sessionIdleMinutes * 60_000) {
+    await prisma.session.update({ where: { id: session.id }, data: { revokedAt: new Date(now), revokedReason: 'IDLE_TIMEOUT' } })
+    await recordAuditEvent({
+      organizationId: payload.organizationId,
+      actorId: payload.sub,
+      actorLabel: 'Système (expiration de session)',
+      action: 'SESSION_EXPIRED_IDLE',
+      objectType: 'Session',
+      objectId: session.id,
+      ip: req.ip ?? '',
+      userAgent: req.get('user-agent') ?? null,
+    })
+    throw new ApiError(401, 'SESSION_IDLE_TIMEOUT', `Session expirée après ${env.sessionIdleMinutes} minutes d'inactivité. Veuillez vous reconnecter.`)
+  }
+  if (now - session.lastActivityAt.getTime() > ACTIVITY_REFRESH_MS) {
+    await prisma.session.update({ where: { id: session.id }, data: { lastActivityAt: new Date(now) } })
+  }
+
   const user = await prisma.user.findUnique({ where: { id: payload.sub }, include: { roles: true } })
   if (!user || user.statut !== 'ACTIF') throw ApiError.unauthorized('Session invalide ou expirée.')
 
-  req.auth = { sub: user.id, organizationId: user.organizationId, roles: user.roles.map((r) => r.role), nom: user.nom, prenom: user.prenom }
+  req.auth = { sub: user.id, organizationId: user.organizationId, roles: user.roles.map((r) => r.role), sid: session.id, nom: user.nom, prenom: user.prenom }
   next()
 })
 

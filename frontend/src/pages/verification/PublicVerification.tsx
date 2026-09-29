@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Icon } from '../../components/ui/Icon'
-import { verifyResultUrl } from '../../routes'
+import { OFFICIAL_VERIFY_HOST } from '../../constants/officialDomain'
+import { ROUTES, verifyResultUrl } from '../../routes'
 
 export function PublicVerification() {
   const navigate = useNavigate()
@@ -15,9 +16,9 @@ export function PublicVerification() {
     e.preventDefault()
     setTouched(true)
     if (!trimmed) return
-    // Le vrai verdict (code inconnu, valide, révoqué, hash exact vs score OCR)
-    // vient entièrement de GET /api/verify/:code, appelé par la page de résultat.
-    navigate(verifyResultUrl(trimmed))
+    // Le résultat (code inconnu, signé, révoqué, enregistré via Trace) vient
+    // entièrement de GET /api/verify/:code, appelé par la page de résultat.
+    navigate(verifyResultUrl(trimmed.toUpperCase()))
   }
 
   return (
@@ -44,7 +45,7 @@ export function PublicVerification() {
                   invalid ? 'border-error' : 'border-outline-variant'
                 }`}
                 id="tracking-code"
-                placeholder="Ex: SSTF-8492-XXXX"
+                placeholder="Ex : SGN-7KQ2M9XA"
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
@@ -71,21 +72,23 @@ export function PublicVerification() {
             <span className="font-label-sm text-label-sm text-outline uppercase tracking-wider">ou utiliser</span>
             <div className="h-px bg-outline-variant flex-1" />
           </div>
-          <button
-            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-outline-variant bg-surface text-secondary/60 cursor-not-allowed"
-            type="button"
-            disabled
-            title="Scan QR bientôt disponible"
-          >
-            <Icon name="qr_code_scanner" size={24} />
-            <span className="font-label-sm text-label-sm">Scanner QR (bientôt disponible)</span>
-          </button>
+          <div className="flex items-start gap-3 p-4 rounded-xl border border-outline-variant bg-surface">
+            <Icon name="qr_code_scanner" size={24} className="text-primary shrink-0" />
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              Scannez le QR imprimé en bas du document avec l'appareil photo de votre téléphone. Avant de lire le résultat, vérifiez que
+              l'adresse ouverte est bien <strong className="text-on-surface">{OFFICIAL_VERIFY_HOST}</strong>. En cas de doute, saisissez
+              plutôt le code à la main ici.
+            </p>
+          </div>
         </div>
 
         <p className="font-body-sm text-body-sm text-on-surface-variant mt-8 text-center flex items-center justify-center gap-2">
           <Icon name="lock" size={16} className="text-primary-container" />
           Aucune inscription requise
         </p>
+        <Link to={ROUTES.personalData} className="font-label-sm text-label-sm text-primary hover:underline mt-2">
+          Données personnelles
+        </Link>
       </div>
     </div>
   )

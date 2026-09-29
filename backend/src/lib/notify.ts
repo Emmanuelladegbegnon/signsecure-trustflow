@@ -1,9 +1,16 @@
+import { env } from '../env.js'
+import { sendRealEmail } from './mailer.js'
+
 /**
  * Envoi d'email "métier" (invitation de compte, lien de signature) — distinct
- * des OTP (voir otpProvider.ts). Même choix MVP : journalisation serveur
- * uniquement, aucun compte SMTP/SendGrid requis pour faire tourner le projet.
- * Remplacer sendEmail par un vrai envoi en branchant un provider ici.
+ * des OTP (voir otpProvider.ts). Contrôlé par EMAIL_PROVIDER : "console"
+ * (défaut) journalise côté serveur sans compte SMTP requis ; "smtp" envoie un
+ * vrai email via mailer.ts (voir .env.example pour les variables SMTP_*).
  */
 export async function sendEmail(to: string, subject: string, body: string): Promise<void> {
+  if (env.emailProvider === 'smtp') {
+    await sendRealEmail(to, subject, body)
+    return
+  }
   console.log(`[EMAIL] → ${to} | ${subject}\n${body}`)
 }

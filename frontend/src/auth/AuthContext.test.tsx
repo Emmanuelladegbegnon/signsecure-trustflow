@@ -11,6 +11,7 @@ const { apiRequestMock, setAuthTokenMock } = vi.hoisted(() => ({
 vi.mock('../lib/httpClient', () => ({
   apiRequest: apiRequestMock,
   setAuthToken: setAuthTokenMock,
+  setUnauthorizedHandler: vi.fn(),
 }))
 
 const TOKEN_KEY = 'signsecure_auth_token'

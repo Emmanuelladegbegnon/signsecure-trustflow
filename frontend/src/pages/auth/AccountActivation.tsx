@@ -42,7 +42,12 @@ export function AccountActivation() {
         setInvitation(data)
         setStage('ready')
       })
-      .catch(() => setStage('invalid'))
+      .catch(() => {
+        // Ignore l'abandon déclenché par le cleanup (StrictMode double-monte
+        // cet effet en dev) — pas une vraie invitation invalide.
+        if (controller.signal.aborted) return
+        setStage('invalid')
+      })
     return () => controller.abort()
   }, [token])
 

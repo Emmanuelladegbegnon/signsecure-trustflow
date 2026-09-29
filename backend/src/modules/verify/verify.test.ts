@@ -34,7 +34,7 @@ describe('Verify — endpoint public', () => {
     const res = await request(app).get(`/api/verify/${code}`)
     expect(res.status).toBe(200)
     expect(res.body.origine).toBe('TRACE')
-    expect(res.body.integrite.methode).toBe('ocr_score')
+    expect(res.body.integrite.methode).toBe('examen_humain')
   })
 
   it('utilise le hash exact pour un dossier Sign', async () => {

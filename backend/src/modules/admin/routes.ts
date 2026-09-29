@@ -3,7 +3,7 @@ import { asyncHandler } from '../../middleware/asyncHandler.js'
 import { requireAuth, requireRole } from '../../middleware/auth.js'
 import { validateBody } from '../../middleware/validate.js'
 import { actorFromAuth } from '../../lib/actor.js'
-import { auditQuerySchema, bulkCreateUsersSchema, createUserSchema, updateRolesSchema } from './schemas.js'
+import { auditQuerySchema, bulkCreateUsersSchema, createUserSchema, updateRolesSchema, updateStatusSchema } from './schemas.js'
 import * as adminService from './service.js'
 
 export const adminRouter = Router()
@@ -54,6 +54,23 @@ adminRouter.patch(
   }),
 )
 
+adminRouter.patch(
+  '/users/:id/statut',
+  requireRole('ADMINISTRATEUR'),
+  validateBody(updateStatusSchema),
+  asyncHandler(async (req, res) => {
+    res.json(await adminService.updateUserStatus(req.params.id, req.body.statut, actorFromAuth(req)))
+  }),
+)
+
+adminRouter.delete(
+  '/users/:id',
+  requireRole('ADMINISTRATEUR'),
+  asyncHandler(async (req, res) => {
+    res.json(await adminService.deleteInvitedUser(req.params.id, actorFromAuth(req)))
+  }),
+)
+
 // Consultation de l'audit : Administrateur ET Vérificateur (CLAUDE.md § RBAC —
 // le rôle Vérificateur existe précisément pour ce contrôle interne). Le
 // contrat ne précise pas les rôles autorisés par endpoint ; ce choix élargit
@@ -64,5 +81,21 @@ adminRouter.get(
   asyncHandler(async (req, res) => {
     const query = auditQuerySchema.parse(req.query)
     res.json(await adminService.getAuditLog(req.auth!.organizationId, query))
+  }),
+)
+
+adminRouter.get(
+  '/audit/integrite',
+  requireRole('ADMINISTRATEUR', 'VERIFICATEUR'),
+  asyncHandler(async (req, res) => {
+    res.json(await adminService.getAuditIntegrity(req.auth!.organizationId))
+  }),
+)
+
+adminRouter.post(
+  '/audit/ancrage',
+  requireRole('ADMINISTRATEUR'),
+  asyncHandler(async (req, res) => {
+    res.status(201).json(await adminService.anchorAuditChain(actorFromAuth(req)))
   }),
 )

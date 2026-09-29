@@ -5,6 +5,8 @@ export interface SessionTokenPayload {
   sub: string
   organizationId: string
   roles: string[]
+  /** Identifiant de la Session serveur — permet l'expiration sur inactivité et la déconnexion effective. */
+  sid: string
 }
 
 export function signSessionToken(payload: SessionTokenPayload): string {

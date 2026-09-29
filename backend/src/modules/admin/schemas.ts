@@ -18,6 +18,10 @@ export const updateRolesSchema = z.object({
   roles: z.array(z.string()).min(1, 'Au moins un rôle est requis.'),
 })
 
+export const updateStatusSchema = z.object({
+  statut: z.enum(['actif', 'suspendu']),
+})
+
 export const auditQuerySchema = z.object({
   acteur: z.string().optional(),
   action: z.string().optional(),

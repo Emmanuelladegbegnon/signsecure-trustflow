@@ -4,9 +4,9 @@ import { requireAuth, requireRole } from '../../middleware/auth.js'
 import { validateBody } from '../../middleware/validate.js'
 import { actorFromAuth } from '../../lib/actor.js'
 import { ApiError } from '../../lib/errors.js'
-import { uploadImages, uploadIncidentPhoto } from '../../lib/storage.js'
+import { sendStoredFile, uploadComparisonFile, uploadImages, uploadIncidentPhoto } from '../../lib/storage.js'
 import { renderTrackingLabelSvg } from './label.js'
-import { incidentSchema, observationsSchema, registerTraceSchema, transferRequestSchema } from './schemas.js'
+import { comparisonSchema, incidentSchema, observationsSchema, registerTraceSchema, transferRequestSchema } from './schemas.js'
 import * as traceService from './service.js'
 
 export const traceRouter = Router()
@@ -74,7 +74,7 @@ traceRouter.post(
   asyncHandler(async (req, res) => {
     res
       .status(201)
-      .json(await traceService.reportIncident(req.params.id, { ...req.body, photoPath: req.file?.path }, actorFromAuth(req)))
+      .json(await traceService.reportIncident(req.params.id, { ...req.body, photo: req.file }, actorFromAuth(req)))
   }),
 )
 
@@ -83,6 +83,53 @@ traceRouter.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     res.json(await traceService.getTimeline(req.params.id, req.auth!.organizationId))
+  }),
+)
+
+traceRouter.get(
+  '/:id/photos',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    res.json(await traceService.listArtifacts(req.params.id, req.auth!.organizationId))
+  }),
+)
+
+traceRouter.get(
+  '/photos/:artifactId',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const file = await traceService.getArtifactFile(req.params.artifactId, req.auth!.organizationId)
+    await sendStoredFile(res, file.path, file.mimeType)
+  }),
+)
+
+// Examen de concordance humain (option A) — réservé aux rôles de contrôle.
+traceRouter.post(
+  '/:id/comparaisons',
+  requireAuth,
+  requireRole('VERIFICATEUR', 'SUPERVISEUR'),
+  uploadComparisonFile.single('fichier'),
+  validateBody(comparisonSchema),
+  asyncHandler(async (req, res) => {
+    if (!req.file) throw ApiError.badRequest('MISSING_FILE', 'La copie présentée (photo ou scan) est requise.')
+    res.status(201).json(await traceService.recordComparison(req.params.id, req.file, req.body, actorFromAuth(req)))
+  }),
+)
+
+traceRouter.get(
+  '/:id/comparaisons',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    res.json(await traceService.listComparisons(req.params.id, req.auth!.organizationId))
+  }),
+)
+
+traceRouter.get(
+  '/comparaisons/:comparaisonId/fichier',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const file = await traceService.getComparisonFile(req.params.comparaisonId, req.auth!.organizationId)
+    await sendStoredFile(res, file.path, file.mimeType)
   }),
 )
 

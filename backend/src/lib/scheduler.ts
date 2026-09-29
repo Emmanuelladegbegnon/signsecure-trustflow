@@ -1,0 +1,25 @@
+/**
+ * Tâches planifiées en mémoire (MVP mono-instance) : relance des signataires
+ * avant expiration de leur lien, et ancrage externe périodique du journal
+ * d'audit. Démarré par index.ts uniquement — jamais pendant les tests.
+ */
+import { env } from '../env.js'
+import { anchorAllAuditChains } from './auditAnchor.js'
+import { sendSignatureReminders } from '../modules/sign/service.js'
+
+function runSafely(name: string, task: () => Promise<unknown>) {
+  task().catch((err) => console.error(`[Planificateur] Échec de la tâche « ${name} » :`, err))
+}
+
+export function startScheduler() {
+  if (!env.schedulerEnabled) return
+
+  const reminders = setInterval(() => runSafely('relances de signature', sendSignatureReminders), 60 * 60_000)
+  const anchors = setInterval(() => runSafely('ancrage du journal', anchorAllAuditChains), env.auditAnchorIntervalHours * 3_600_000)
+  reminders.unref()
+  anchors.unref()
+
+  // Premier passage peu après le démarrage, pour ne pas attendre une heure.
+  setTimeout(() => runSafely('relances de signature', sendSignatureReminders), 30_000).unref()
+  console.log(`[Planificateur] Relances horaires ; ancrage du journal toutes les ${env.auditAnchorIntervalHours} h.`)
+}

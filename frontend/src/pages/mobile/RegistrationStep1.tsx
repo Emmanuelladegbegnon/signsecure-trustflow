@@ -1,16 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TRACE_DOCUMENT_TYPES } from '../../constants/traceTypes'
+import { TRACE_REGISTRATION_STEPS } from '../../constants/steps'
 import { FormAlert } from '../../components/ui/FormAlert'
 import { Icon } from '../../components/ui/Icon'
+import { Stepper } from '../../components/ui/Stepper'
 import { apiRequest, ApiRequestError } from '../../lib/httpClient'
 import { traceCaptureUrl } from '../../routes'
-
-const STEPS = [
-  { label: 'Informations', active: true },
-  { label: 'Métadonnées', active: false },
-  { label: 'Validation', active: false },
-]
 
 const CONFIDENTIALITE_OPTIONS = [
   { value: 'standard', label: 'Standard' },
@@ -90,21 +86,7 @@ export function RegistrationStep1() {
 
       <main className="flex-1 overflow-y-auto px-margin-mobile py-6 pb-24 max-w-container-max mx-auto w-full">
         <div className="mb-8">
-          <div className="flex items-center justify-between relative">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-surface-variant -z-10 rounded-full" />
-            {STEPS.map((step) => (
-              <div key={step.label} className="flex flex-col items-center gap-2">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-label-md text-label-md ${
-                    step.active ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-variant text-on-surface-variant'
-                  }`}
-                >
-                  {STEPS.indexOf(step) + 1}
-                </div>
-                <span className={`font-label-sm text-label-sm ${step.active ? 'text-primary' : 'text-on-surface-variant'}`}>{step.label}</span>
-              </div>
-            ))}
-          </div>
+          <Stepper steps={TRACE_REGISTRATION_STEPS} currentStep={0} />
         </div>
 
         <p className="font-body-md text-body-md text-on-surface-variant mb-6">

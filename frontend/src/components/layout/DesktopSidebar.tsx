@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
+import { canAccess } from '../../auth/access'
 import { Icon } from '../ui/Icon'
 import { ROUTES } from '../../routes'
 import { ADMIN_NAV, PRIMARY_NAV, type NavKey } from './nav'
@@ -16,7 +17,8 @@ function initialsOf(prenom: string, nom: string) {
 export function DesktopSidebar({ active }: { active: NavKey }) {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
-  const isAdmin = user?.roles.includes('Administrateur') ?? false
+  const visiblePrimaryNav = PRIMARY_NAV.filter((item) => canAccess(item.key, user?.roles))
+  const visibleAdminNav = ADMIN_NAV.filter((item) => canAccess(item.key, user?.roles))
 
   const handleLogout = async () => {
     await logout()
@@ -39,17 +41,19 @@ export function DesktopSidebar({ active }: { active: NavKey }) {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={() => navigate(ROUTES.newDocument)}
-        className="mb-6 mx-4 py-3 px-4 bg-primary text-on-primary rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm"
-      >
-        <Icon name="add" size={20} />
-        Nouveau Document
-      </button>
+      {canAccess('sign', user?.roles) && (
+        <button
+          type="button"
+          onClick={() => navigate(ROUTES.newDocument)}
+          className="mb-6 mx-4 py-3 px-4 bg-primary text-on-primary rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm"
+        >
+          <Icon name="add" size={20} />
+          Nouveau Document
+        </button>
+      )}
 
       <ul className="flex-1 space-y-2">
-        {PRIMARY_NAV.map((item) => (
+        {visiblePrimaryNav.map((item) => (
           <li key={item.key}>
             <Link to={item.to} className={`${linkBase} ${active === item.key ? linkActive : linkInactive}`}>
               <Icon name={item.icon} filled={active === item.key} />
@@ -59,11 +63,11 @@ export function DesktopSidebar({ active }: { active: NavKey }) {
         ))}
       </ul>
 
-      {isAdmin && (
+      {visibleAdminNav.length > 0 && (
         <div className="space-y-1 mb-2">
           <p className="px-4 mb-1 font-label-sm text-label-sm text-on-surface-variant tracking-wide">ADMINISTRATION</p>
           <ul className="space-y-1">
-            {ADMIN_NAV.map((item) => (
+            {visibleAdminNav.map((item) => (
               <li key={item.key}>
                 <Link to={item.to} className={`${linkBase} ${active === item.key ? linkActive : linkInactive}`}>
                   <Icon name={item.icon} filled={active === item.key} />

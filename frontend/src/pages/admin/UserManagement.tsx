@@ -73,6 +73,10 @@ export function UserManagement() {
   const [rolesSaving, setRolesSaving] = useState(false)
   const [rolesError, setRolesError] = useState<string | null>(null)
 
+  const [confirmAction, setConfirmAction] = useState<{ user: AdminUser; kind: 'suspendre' | 'reactiver' | 'supprimer' } | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [actionSubmitting, setActionSubmitting] = useState(false)
+
   const loadUsers = () => {
     setLoading(true)
     setLoadError(null)
@@ -159,6 +163,27 @@ export function UserManagement() {
     setRolesEditFor(user)
     setRolesDraft(user.roles.filter((r): r is Role => (ROLES as readonly string[]).includes(r)))
     setRolesError(null)
+  }
+
+  const runConfirmedAction = async () => {
+    if (!confirmAction) return
+    setActionSubmitting(true)
+    setActionError(null)
+    try {
+      if (confirmAction.kind === 'supprimer') {
+        await apiRequest(`/admin/users/${confirmAction.user.id}`, { method: 'DELETE' })
+        setUsers((prev) => prev.filter((u) => u.id !== confirmAction.user.id))
+      } else {
+        const statut = confirmAction.kind === 'suspendre' ? 'suspendu' : 'actif'
+        await apiRequest(`/admin/users/${confirmAction.user.id}/statut`, { method: 'PATCH', body: { statut } })
+        setUsers((prev) => prev.map((u) => (u.id === confirmAction.user.id ? { ...u, statut } : u)))
+      }
+      setConfirmAction(null)
+    } catch (err) {
+      setActionError(err instanceof ApiRequestError ? err.message : 'Une erreur inattendue est survenue. Réessayez.')
+    } finally {
+      setActionSubmitting(false)
+    }
   }
 
   const saveRoles = async () => {
@@ -305,13 +330,42 @@ export function UserManagement() {
                       </span>
                     </td>
                     <td className="p-4 text-right">
-                      <button
-                        className="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface-container-high transition-colors"
-                        onClick={() => openRolesEdit(user)}
-                        title="Modifier les rôles"
-                      >
-                        <Icon name="edit" size={18} />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          className="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface-container-high transition-colors"
+                          onClick={() => openRolesEdit(user)}
+                          title="Modifier les rôles"
+                        >
+                          <Icon name="edit" size={18} />
+                        </button>
+                        {user.statut === 'invite' && (
+                          <button
+                            className="text-on-surface-variant hover:text-error p-1 rounded-full hover:bg-surface-container-high transition-colors"
+                            onClick={() => setConfirmAction({ user, kind: 'supprimer' })}
+                            title="Supprimer l'invitation"
+                          >
+                            <Icon name="delete" size={18} />
+                          </button>
+                        )}
+                        {user.statut === 'actif' && (
+                          <button
+                            className="text-on-surface-variant hover:text-error p-1 rounded-full hover:bg-surface-container-high transition-colors"
+                            onClick={() => setConfirmAction({ user, kind: 'suspendre' })}
+                            title="Suspendre le compte"
+                          >
+                            <Icon name="block" size={18} />
+                          </button>
+                        )}
+                        {user.statut === 'suspendu' && (
+                          <button
+                            className="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface-container-high transition-colors"
+                            onClick={() => setConfirmAction({ user, kind: 'reactiver' })}
+                            title="Réactiver le compte"
+                          >
+                            <Icon name="check_circle" size={18} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )
@@ -569,6 +623,50 @@ export function UserManagement() {
               {rolesSaving && <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true" />}
               {rolesSaving ? 'Enregistrement…' : 'Enregistrer'}
             </button>
+          </div>
+        </div>
+      )}
+      {confirmAction && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
+          onClick={() => (actionSubmitting ? null : setConfirmAction(null))}
+        >
+          <div className="bg-surface-container-lowest rounded-xl shadow-lg p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <h2 className="font-headline-sm text-headline-sm text-on-surface mb-2">
+              {confirmAction.kind === 'supprimer' && "Supprimer l'invitation ?"}
+              {confirmAction.kind === 'suspendre' && 'Suspendre ce compte ?'}
+              {confirmAction.kind === 'reactiver' && 'Réactiver ce compte ?'}
+            </h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant mb-4">
+              {confirmAction.user.prenom} {confirmAction.user.nom} ({confirmAction.user.email})
+              {confirmAction.kind === 'supprimer' && " — l'invitation en attente sera définitivement supprimée."}
+              {confirmAction.kind === 'suspendre' && ' perdra immédiatement l\'accès à son compte, sans perte de son historique.'}
+              {confirmAction.kind === 'reactiver' && ' retrouvera l\'accès à son compte.'}
+            </p>
+            {actionError && (
+              <div className="mb-4">
+                <FormAlert tone="error">{actionError}</FormAlert>
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button
+                className="flex-1 border border-outline-variant text-on-surface py-2.5 rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors disabled:opacity-60"
+                onClick={() => setConfirmAction(null)}
+                disabled={actionSubmitting}
+                type="button"
+              >
+                Annuler
+              </button>
+              <button
+                className="flex-1 bg-error text-on-error py-2.5 rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                onClick={runConfirmedAction}
+                disabled={actionSubmitting}
+                type="button"
+              >
+                {actionSubmitting && <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" aria-hidden="true" />}
+                {actionSubmitting ? 'En cours…' : 'Confirmer'}
+              </button>
+            </div>
           </div>
         </div>
       )}

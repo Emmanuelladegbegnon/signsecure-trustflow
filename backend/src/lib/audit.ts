@@ -28,6 +28,37 @@ function computeEventHash(previousEventHash: string, payload: Record<string, unk
     .digest('hex')
 }
 
+/**
+ * Charge utile hachée d'un événement. `userAgent` et `details` n'entrent dans
+ * le hash que lorsqu'ils sont renseignés : les événements écrits avant l'ajout
+ * de ces deux champs gardent exactement le même hash (chaîne existante intacte).
+ */
+function hashPayload(event: {
+  organizationId: string
+  actorId: string | null
+  actorLabel: string
+  action: string
+  objectType: string
+  objectId: string
+  ip: string
+  userAgent: string | null
+  details: string | null
+  timestampServer: Date
+}): Record<string, unknown> {
+  return {
+    organizationId: event.organizationId,
+    actorId: event.actorId,
+    actorLabel: event.actorLabel,
+    action: event.action,
+    objectType: event.objectType,
+    objectId: event.objectId,
+    ip: event.ip,
+    ...(event.userAgent ? { userAgent: event.userAgent } : {}),
+    ...(event.details ? { details: event.details } : {}),
+    timestampServer: event.timestampServer.toISOString(),
+  }
+}
+
 export interface AuditEventInput {
   organizationId: string
   /** null pour un acteur non-utilisateur (système, API partenaire). */
@@ -38,6 +69,9 @@ export interface AuditEventInput {
   objectId: string
   documentId?: string | null
   ip: string
+  userAgent?: string | null
+  /** Détails techniques, sérialisés en JSON et inclus dans le hash chaîné. */
+  details?: Record<string, unknown> | null
 }
 
 /** Ajoute un événement au journal d'audit, chaîné par hash (CLAUDE.md § Sécurité). */
@@ -49,17 +83,24 @@ export function recordAuditEvent(input: AuditEventInput) {
     })
     const previousEventHash = last?.eventHash ?? GENESIS_HASH
     const timestampServer = new Date()
+    const userAgent = input.userAgent ? input.userAgent.slice(0, 500) : null
+    const details = input.details ? JSON.stringify(input.details) : null
 
-    const eventHash = computeEventHash(previousEventHash, {
-      organizationId: input.organizationId,
-      actorId: input.actorId ?? null,
-      actorLabel: input.actorLabel,
-      action: input.action,
-      objectType: input.objectType,
-      objectId: input.objectId,
-      ip: input.ip,
-      timestampServer: timestampServer.toISOString(),
-    })
+    const eventHash = computeEventHash(
+      previousEventHash,
+      hashPayload({
+        organizationId: input.organizationId,
+        actorId: input.actorId ?? null,
+        actorLabel: input.actorLabel,
+        action: input.action,
+        objectType: input.objectType,
+        objectId: input.objectId,
+        ip: input.ip,
+        userAgent,
+        details,
+        timestampServer,
+      }),
+    )
 
     return prisma.auditEvent.create({
       data: {
@@ -71,6 +112,8 @@ export function recordAuditEvent(input: AuditEventInput) {
         objectId: input.objectId,
         documentId: input.documentId ?? null,
         ip: input.ip,
+        userAgent,
+        details,
         timestampServer,
         previousEventHash,
         eventHash,
@@ -91,16 +134,7 @@ export async function verifyAuditChain(organizationId: string): Promise<{ intact
     if (event.previousEventHash !== expectedPrevious) {
       return { intact: false, brokenAtEventId: event.id }
     }
-    const recomputed = computeEventHash(event.previousEventHash, {
-      organizationId: event.organizationId,
-      actorId: event.actorId,
-      actorLabel: event.actorLabel,
-      action: event.action,
-      objectType: event.objectType,
-      objectId: event.objectId,
-      ip: event.ip,
-      timestampServer: event.timestampServer.toISOString(),
-    })
+    const recomputed = computeEventHash(event.previousEventHash, hashPayload(event))
     if (recomputed !== event.eventHash) {
       return { intact: false, brokenAtEventId: event.id }
     }

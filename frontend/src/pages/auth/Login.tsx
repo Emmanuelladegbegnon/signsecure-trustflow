@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
+import { SESSION_NOTICE_KEY } from '../../auth/sessionNotice'
 import { FormAlert } from '../../components/ui/FormAlert'
 import { Icon } from '../../components/ui/Icon'
 import { ApiRequestError } from '../../lib/httpClient'
@@ -18,6 +19,16 @@ export function Login() {
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({})
   const [apiError, setApiError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  // Motif d'une déconnexion forcée (inactivité…), lu une seule fois.
+  const [sessionNotice] = useState<string | null>(() => {
+    try {
+      const notice = sessionStorage.getItem(SESSION_NOTICE_KEY)
+      sessionStorage.removeItem(SESSION_NOTICE_KEY)
+      return notice
+    } catch {
+      return null
+    }
+  })
 
   const validate = () => {
     const errors: typeof fieldErrors = {}
@@ -56,6 +67,12 @@ export function Login() {
             <h1 className="font-headline-lg text-headline-lg text-on-surface mb-2">Se connecter</h1>
             <p className="font-body-md text-body-md text-on-surface-variant">Accédez à votre espace sécurisé TrustFlow.</p>
           </div>
+
+          {sessionNotice && !apiError && (
+            <div className="mb-6">
+              <FormAlert tone="info">{sessionNotice}</FormAlert>
+            </div>
+          )}
 
           {apiError && (
             <div className="mb-6">

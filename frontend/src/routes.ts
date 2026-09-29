@@ -54,6 +54,9 @@ export const ROUTES = {
   adminUsers: '/admin/utilisateurs',
   adminAuditLog: '/admin/audit',
   adminPermissions: '/admin/permissions',
+
+  /** Page publique : finalités, durées de conservation, droits (Code du numérique, art. 405 et suivants). */
+  personalData: '/donnees-personnelles',
 } as const
 
 /** Construit l'URL réelle d'un lien de signature à usage unique à partir d'un token. */

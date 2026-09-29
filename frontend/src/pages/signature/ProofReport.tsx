@@ -4,18 +4,22 @@ import { useAuth } from '../../auth/AuthContext'
 import { FormAlert } from '../../components/ui/FormAlert'
 import { FullscreenSpinner } from '../../components/ui/FullscreenSpinner'
 import { Icon } from '../../components/ui/Icon'
-import { apiRequest, ApiRequestError } from '../../lib/httpClient'
+import { PdfViewer } from '../../components/ui/PdfViewer'
+import { apiRequest, ApiRequestError, fetchAuthedFileUrl } from '../../lib/httpClient'
 
-// NOTE : API_CONTRACT.md ne détaille pas le sous-schéma de `signataires` et
-// `timeline` (juste "[...]"), ni de champ titre/référence pour le document.
-// Formes déduites par analogie avec les autres endpoints du contrat
-// (rapport_de_preuve mock, /api/trace/:id/timeline, /api/admin/audit) — à
-// confirmer avec le back ; le rendu tolère les champs manquants.
+// Forme de GET /api/documents/:id/rapport-preuve — rapport structuré en 5
+// blocs (expéditeur, signataire, authentification, contexte et dates,
+// empreinte), voir backend/src/modules/sign/service.ts#getProofReport.
 interface ProofSignatory {
   nom: string
-  ip?: string
-  timestamp?: string
-  methode?: string
+  email: string
+  telephone: string
+  identite: string
+  signe: boolean
+  methode: string | null
+  authentification: { lienUnique: boolean; canauxOtp: string[] }
+  contexte: { ip: string | null; userAgent: string | null }
+  dates: { consentement: string | null; validation: string | null }
 }
 
 interface ProofTimelineEntry {
@@ -26,12 +30,45 @@ interface ProofTimelineEntry {
 }
 
 interface ProofReportData {
-  titre?: string
-  codeReference?: string
+  titre: string
+  codeReference: string | null
+  statut: string
+  expediteur: { nom: string; organisation: string; dateCreation: string; dateEnvoi: string | null }
   signataires: ProofSignatory[]
+  empreinte: {
+    sha256Final: string | null
+    sha256Original: string | null
+    nombrePages: number | null
+    cachet: { date: string; nature: string } | null
+    horodatageTiers: { date: string; service: string | null } | null
+  }
+  journal: { chaineIntacte: boolean }
   timeline: ProofTimelineEntry[]
-  hash: string
+  hash: string | null
   disclaimer: string
+}
+
+const formatDate = (iso: string | null | undefined) =>
+  iso ? new Date(iso).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'medium' }) : '—'
+
+const OTP_LABELS: Record<string, string> = { sms: 'Code SMS', email: 'Code email' }
+
+function Field({ label, children, mono = false }: { label: string; children: React.ReactNode; mono?: boolean }) {
+  return (
+    <div className="bg-surface-container-low p-3 rounded-lg">
+      <span className="font-label-sm text-label-sm text-on-surface-variant block mb-1 uppercase">{label}</span>
+      <span className={mono ? 'font-mono text-[12px] break-all text-on-surface' : 'font-body-sm text-body-sm text-on-surface'}>{children}</span>
+    </div>
+  )
+}
+
+function SectionTitle({ icon, children }: { icon: string; children: React.ReactNode }) {
+  return (
+    <h2 className="font-headline-sm text-headline-sm text-on-surface mb-4 flex items-center gap-2 border-b border-outline-variant pb-2">
+      <Icon name={icon} />
+      {children}
+    </h2>
+  )
 }
 
 export function ProofReport() {
@@ -40,6 +77,12 @@ export function ProofReport() {
   const [data, setData] = useState<ProofReportData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Aperçu du PDF — GET /api/documents/:id/fichier, endpoint authentifié
+  // (jamais de chemin de stockage exposé). Optionnel : son échec n'empêche
+  // pas de consulter le reste du rapport de preuve.
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [pdfError, setPdfError] = useState<string | null>(null)
 
   // POST /documents/:id/revoquer exige le rôle Superviseur — vérifié aussi
   // côté serveur ; ce contrôle client n'est qu'un confort d'affichage.
@@ -78,9 +121,35 @@ export function ProofReport() {
     const controller = new AbortController()
     apiRequest<ProofReportData>(`/documents/${id}/rapport-preuve`, { signal: controller.signal })
       .then((res) => setData(res))
-      .catch((err) => setError(err instanceof ApiRequestError ? err.message : 'Impossible de charger le rapport de preuve.'))
-      .finally(() => setLoading(false))
+      .catch((err) => {
+        // Ignore l'abandon déclenché par le cleanup (StrictMode double-monte
+        // cet effet en dev) — pas un vrai échec réseau.
+        if (controller.signal.aborted) return
+        setError(err instanceof ApiRequestError ? err.message : 'Impossible de charger le rapport de preuve.')
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
     return () => controller.abort()
+  }, [id])
+
+  useEffect(() => {
+    if (!id) return
+    const controller = new AbortController()
+    let objectUrl: string | null = null
+    fetchAuthedFileUrl(`/documents/${id}/fichier`, controller.signal)
+      .then((url) => {
+        objectUrl = url
+        setPdfUrl(url)
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return
+        setPdfError(err instanceof ApiRequestError ? err.message : "Impossible de charger l'aperçu du document.")
+      })
+    return () => {
+      controller.abort()
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
   }, [id])
 
   if (loading) return <FullscreenSpinner />
@@ -170,58 +239,106 @@ export function ProofReport() {
           )}
 
           <div className="p-8 space-y-10">
-            <section>
+            <section className="print:hidden">
               <h2 className="font-headline-sm text-headline-sm text-on-surface mb-4 flex items-center gap-2 border-b border-outline-variant pb-2">
-                <Icon name="description" />
-                Informations Document
+                <Icon name="visibility" />
+                Aperçu du document
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-body-sm text-body-sm">
-                {data.codeReference && (
-                  <div className="bg-surface-container-low p-4 rounded-lg">
-                    <span className="font-label-sm text-label-sm text-on-surface-variant block mb-1">CODE DE RÉFÉRENCE</span>
-                    <span className="font-body-md text-body-md font-medium text-on-surface">{data.codeReference}</span>
-                  </div>
-                )}
-                <div className="col-span-1 md:col-span-2 bg-surface-container-low p-4 rounded-lg">
-                  <span className="font-label-sm text-label-sm text-on-surface-variant block mb-1">EMPREINTE HASH (SHA-256)</span>
-                  <code className="font-mono text-[13px] break-all text-on-surface">{data.hash}</code>
-                </div>
-              </div>
+              {pdfUrl && <PdfViewer url={pdfUrl} className="w-full h-[600px] rounded-lg border border-outline-variant p-4 bg-surface-container-low" />}
+              {!pdfUrl && pdfError && <FormAlert tone="error">{pdfError}</FormAlert>}
+              {!pdfUrl && !pdfError && <div className="h-[600px] rounded-lg border border-outline-variant bg-surface-container-low animate-pulse" />}
             </section>
 
             <section>
-              <h2 className="font-headline-sm text-headline-sm text-on-surface mb-4 flex items-center gap-2 border-b border-outline-variant pb-2">
-                <Icon name="group" />
-                Signataires
-              </h2>
-              <div className="overflow-x-auto rounded-lg border border-outline-variant">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-surface-container-low border-b border-outline-variant">
-                      <th className="p-3 font-label-md text-label-md text-on-surface">Nom</th>
-                      <th className="p-3 font-label-md text-label-md text-on-surface">Adresse IP</th>
-                      <th className="p-3 font-label-md text-label-md text-on-surface">Horodatage</th>
-                      <th className="p-3 font-label-md text-label-md text-on-surface">Méthode</th>
-                    </tr>
-                  </thead>
-                  <tbody className="font-body-sm text-body-sm">
-                    {data.signataires.map((s, i) => (
-                      <tr key={`${s.nom}-${i}`} className="border-b border-outline-variant last:border-0 hover:bg-surface-bright transition-colors">
-                        <td className="p-3 font-medium text-on-surface">{s.nom}</td>
-                        <td className="p-3 text-on-surface-variant">{s.ip ?? '—'}</td>
-                        <td className="p-3 text-on-surface-variant">{s.timestamp ?? '—'}</td>
-                        <td className="p-3">
-                          {s.methode && (
-                            <span className="inline-flex items-center gap-1 bg-secondary-container text-on-secondary-container px-2 py-1 rounded font-label-sm text-label-sm">
-                              <Icon name="smartphone" size={14} />
-                              {s.methode}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <SectionTitle icon="outgoing_mail">1. Expéditeur</SectionTitle>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Field label="Émis par">{data.expediteur.nom}</Field>
+                <Field label="Organisation">{data.expediteur.organisation}</Field>
+                <Field label="Dossier créé le">{formatDate(data.expediteur.dateCreation)}</Field>
+                <Field label="Envoyé pour signature le">{formatDate(data.expediteur.dateEnvoi)}</Field>
+                {data.codeReference && <Field label="Code de suivi">{data.codeReference}</Field>}
+              </div>
+            </section>
+
+            {data.signataires.map((s, i) => (
+              <section key={`${s.email}-${i}`} className="print-break-inside-avoid flex flex-col gap-6">
+                <div>
+                  <SectionTitle icon="person">2. Signataire{data.signataires.length > 1 ? ` ${i + 1}` : ''} — {s.nom}</SectionTitle>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <Field label="Email">{s.email}</Field>
+                    <Field label="Téléphone">{s.telephone}</Field>
+                    <Field label="Statut">{s.signe ? `Signé (${s.methode ?? 'manuscrite'})` : 'Signature non effectuée'}</Field>
+                  </div>
+                  <p className="mt-3 font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+                    <Icon name="info" size={16} />
+                    {s.identite}
+                  </p>
+                </div>
+
+                <div>
+                  <SectionTitle icon="key">3. Authentification</SectionTitle>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <Field label="Lien de signature">{s.authentification.lienUnique ? 'Lien personnel, à usage unique, à durée limitée' : '—'}</Field>
+                    <Field label="Codes à usage unique validés">
+                      {s.authentification.canauxOtp.length ? s.authentification.canauxOtp.map((c) => OTP_LABELS[c] ?? c).join(' + ') : '—'}
+                    </Field>
+                  </div>
+                </div>
+
+                <div>
+                  <SectionTitle icon="schedule">4. Contexte et dates (horloge du serveur)</SectionTitle>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <Field label="Consentement coché le">{formatDate(s.dates.consentement)}</Field>
+                    <Field label="Signature validée le">{formatDate(s.dates.validation)}</Field>
+                    <Field label="Adresse IP">{s.contexte.ip ?? '—'}</Field>
+                    <Field label="Navigateur / appareil" mono>
+                      {s.contexte.userAgent ?? '—'}
+                    </Field>
+                  </div>
+                </div>
+              </section>
+            ))}
+
+            <section className="print-break-inside-avoid">
+              <SectionTitle icon="fingerprint">5. Empreinte et intégrité</SectionTitle>
+              <div className="grid grid-cols-1 gap-3">
+                <Field label="SHA-256 de la version finale scellée" mono>
+                  {data.empreinte.sha256Final ?? 'Pas encore de version finale (signatures en attente)'}
+                </Field>
+                <Field label="SHA-256 du PDF déposé (avant signature)" mono>
+                  {data.empreinte.sha256Original ?? '—'}
+                </Field>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <Field label="Nombre de pages">{data.empreinte.nombrePages ?? '—'}</Field>
+                  <Field label="Cachet de plateforme">
+                    {data.empreinte.cachet ? `${data.empreinte.cachet.nature} — ${formatDate(data.empreinte.cachet.date)}` : '—'}
+                  </Field>
+                  <Field label="Horodatage par un tiers (RFC 3161)">
+                    {data.empreinte.horodatageTiers
+                      ? `${formatDate(data.empreinte.horodatageTiers.date)}${data.empreinte.horodatageTiers.service ? ` — ${data.empreinte.horodatageTiers.service}` : ''}`
+                      : 'Non effectué'}
+                  </Field>
+                  <Field label="Journal d'audit chaîné">
+                    {data.journal.chaineIntacte ? 'Conforme au contrôle de chaînage' : 'Rupture de chaîne détectée — alerter un administrateur'}
+                  </Field>
+                </div>
+                {data.empreinte.horodatageTiers && id && (
+                  <button
+                    type="button"
+                    className="print:hidden self-start inline-flex items-center gap-2 px-3 py-2 border border-outline-variant rounded-lg font-label-md text-label-md hover:bg-surface-container-low"
+                    onClick={async () => {
+                      const url = await fetchAuthedFileUrl(`/documents/${id}/horodatage`)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `horodatage-${data.codeReference ?? id}.tsr`
+                      a.click()
+                      URL.revokeObjectURL(url)
+                    }}
+                  >
+                    <Icon name="download" size={18} />
+                    Télécharger le jeton d'horodatage (.tsr)
+                  </button>
+                )}
               </div>
             </section>
 

@@ -10,6 +10,7 @@ import { toRoleLabels } from '../../lib/roles.js'
 
 interface RequestMeta {
   ip: string
+  userAgent?: string | null
 }
 
 function otpChannelFor(): 'email' {
@@ -65,6 +66,7 @@ export async function activateAccount(token: string, password: string, meta: Req
     objectType: 'User',
     objectId: invitation.userId,
     ip: meta.ip,
+    userAgent: meta.userAgent,
   })
 
   return { success: true as const }
@@ -103,6 +105,7 @@ export async function login(email: string, password: string, meta: RequestMeta) 
         objectType: 'User',
         objectId: user.id,
         ip: meta.ip,
+        userAgent: meta.userAgent,
       })
     }
     throw invalidCredentials()
@@ -141,10 +144,12 @@ export async function verifyLoginOtp(email: string, code: string, meta: RequestM
     objectType: 'User',
     objectId: user.id,
     ip: meta.ip,
+    userAgent: meta.userAgent,
   })
 
+  const session = await prisma.session.create({ data: { userId: user.id, ip: meta.ip, userAgent: meta.userAgent ?? null } })
   const roles = user.roles.map((r) => r.role)
-  const token = signSessionToken({ sub: user.id, organizationId: user.organizationId, roles })
+  const token = signSessionToken({ sub: user.id, organizationId: user.organizationId, roles, sid: session.id })
   return { token, user: { id: user.id, nom: user.nom, prenom: user.prenom, roles: toRoleLabels(roles) } }
 }
 
@@ -170,10 +175,9 @@ export async function resendLoginOtp(email: string) {
   return { success: true as const, nextResendAt: (refreshed?.nextResendAt ?? new Date()).toISOString() }
 }
 
-export async function logout(userId: string, organizationId: string, meta: RequestMeta) {
-  // JWT sans état : rien à invalider côté serveur pour ce MVP (durée de vie
-  // courte déjà configurée via JWT_EXPIRES_IN). On trace tout de même
-  // l'action pour l'audit.
+export async function logout(userId: string, organizationId: string, sessionId: string, meta: RequestMeta) {
+  // La session serveur est révoquée : le JWT devient inutilisable immédiatement.
+  await prisma.session.update({ where: { id: sessionId }, data: { revokedAt: new Date(), revokedReason: 'LOGOUT' } })
   const user = await prisma.user.findUnique({ where: { id: userId } })
   await recordAuditEvent({
     organizationId,
@@ -183,11 +187,22 @@ export async function logout(userId: string, organizationId: string, meta: Reque
     objectType: 'User',
     objectId: userId,
     ip: meta.ip,
+    userAgent: meta.userAgent,
   })
   return { success: true as const }
 }
 
 export async function getMe(userId: string) {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, include: { roles: true } })
-  return { id: user.id, nom: user.nom, prenom: user.prenom, email: user.email, roles: toRoleLabels(user.roles.map((r) => r.role)) }
+  // telephone est inclus pour préremplir les formulaires qui en ont besoin
+  // (ex. s'ajouter comme signataire dans Sign sans ressaisir ses coordonnées
+  // déjà connues du compte) — jamais une donnée nouvelle, juste réexposée.
+  return {
+    id: user.id,
+    nom: user.nom,
+    prenom: user.prenom,
+    email: user.email,
+    telephone: user.telephone,
+    roles: toRoleLabels(user.roles.map((r) => r.role)),
+  }
 }

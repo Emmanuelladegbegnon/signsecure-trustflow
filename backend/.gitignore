@@ -7,3 +7,7 @@ dist
 uploads/
 coverage
 *.tsbuildinfo
+# Clé privée du cachet de démonstration (.p12) — jamais commitée
+keys/
+*.p12
+.test-uploads/

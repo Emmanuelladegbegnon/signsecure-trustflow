@@ -24,6 +24,9 @@ export function createApp() {
   const authLimiter = rateLimit({ windowMs: 15 * 60_000, limit: 30, standardHeaders: true, legacyHeaders: false })
   app.use('/api/auth/login', authLimiter)
   app.use('/api/auth/otp', authLimiter)
+  // Parcours public du signataire (lien + OTP) : limite par IP en plus des
+  // essais par code et du plafond de renvois.
+  app.use('/api/sign/link', rateLimit({ windowMs: 15 * 60_000, limit: 60, standardHeaders: true, legacyHeaders: false }))
 
   app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
   app.use('/api/auth', authRouter)
