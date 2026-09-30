@@ -68,7 +68,7 @@ Sortie (200) : `{ id, nom, prenom, email, telephone, roles: string[] }`
 ## 2. SIGN
 
 ### POST /api/documents
-Entrée : `multipart/form-data` — fichier PDF, `titre`, `type`, `sensible?` (`"true"`/`"false"`, défaut false)
+Entrée : `multipart/form-data` — fichier PDF, `titre`, `type`, `sensible?` et `controleIdentite?` (`"true"`/`"false"`, défaut false)
 Sortie (201) : `{ dossierId, trackingCode }`
 Effet serveur : calcule le SHA-256 et le nombre de pages du PDF déposé. Un document `sensible` exige deux codes à la signature (SMS + email).
 Erreur : 400 `INVALID_PDF`
@@ -90,6 +90,12 @@ Sortie (200) : `{ token }` — signature du compte authentifié lui-même (sans 
 Entrée : token dans l'URL
 Sortie (200) : `{ dossier: { titre, type, page }, pdfUrl, zoneSignature: { page, x, y }, otp: { canaux: [{ canal: "sms" | "email", destination }], smsSimulation: boolean } }` — `destination` est masquée
 Sortie (410) : lien expiré ou déjà utilisé
+
+### POST /api/sign/link/:token/identite
+Entrée : `multipart/form-data` — `typePiece` (`CNI` | `CIP` | `PASSEPORT` | `PERMIS` | `CARTE_CONSULAIRE` | `AUTRE`), `recto` (image, obligatoire), `verso` (image, facultatif)
+Sortie (200) : `{ statut: "EN_ATTENTE" }` — photos chiffrées, métadonnées effacées, conservées seulement jusqu'à la décision (7 jours max)
+Erreur : 409 `IDENTITY_NOT_EXPECTED`
+Note : GET /api/sign/link/:token renvoie aussi `identite: { requise, statut: "A_FOURNIR" | "EN_ATTENTE" | "VALIDEE" | "REFUSEE" | null, motifRefus }`. Tant que la pièce exigée n'est pas `VALIDEE`, les endpoints de signature répondent 403 `IDENTITY_CHECK_PENDING`.
 
 ### POST /api/sign/link/:token/signature
 Entrée : `{ signatureImageBase64, consentement: true }`
@@ -159,7 +165,7 @@ But : comparer une feuille imprimée à la page scellée correspondante ; un QR 
 
 ### POST /api/verify/recherche-par-fichier
 Entrée : `multipart/form-data` — `fichier` (PDF, gardé en mémoire)
-Sortie (200) : `{ trouve: true, trackingCode, statut, hashSoumis }` | `{ trouve: false, hashSoumis }`
+Sortie (200) : `{ trouve: true, trackingCode, statut, hashSoumis, fichierModifie }` | `{ trouve: false, hashSoumis }` — `fichierModifie: true` = retrouvé par les marques invisibles, le fichier n'est pas l'original intact
 But : retrouver un document dont le code imprimé est illisible ou douteux. Correspondance exacte d'empreinte avec une version finale ; ne fonctionne pas sur un scan.
 
 ### GET /api/verify/cachet/certificat
@@ -167,10 +173,27 @@ Sortie (200) : `{ empreinteSha256, sujet, valideJusquau, nature }` — empreinte
 
 ### POST /api/verify/:code/comparer
 Entrée : `multipart/form-data` — fichier soumis par le tiers (gardé en mémoire, jamais écrit sur disque)
-Sortie (200, origine SIGN) : `{ methode: "hash_exact", resultat: "correspond" | "diverge", hashSoumis, hashReference }`
+Sortie (200, origine SIGN) : `{ methode: "hash_exact", resultat: "correspond" | "diverge", hashSoumis, hashReference, marquesInvisibles? }` — `marquesInvisibles` (si divergence) : `{ presentes, memeDocument, autreDocument, pagesDOrigine, pagesSansMarque, marquesFalsifiees }`, lues dans les marques signées invisibles de chaque page
 Sortie (200, origine TRACE) : `{ methode: "examen_humain", message }` — aucun score ni verdict automatique
 Erreur : 409 `NO_FINAL_VERSION` si le document Sign n'a pas encore de version finale
 Règle (décision du 2026-09-29, option A) : `hash_exact` uniquement pour un dossier Sign. Une photo/scan Trace n'est jamais comparée automatiquement : la comparaison est un examen humain interne (voir POST /api/trace/:id/comparaisons).
+
+---
+
+## 3 bis. CONTRÔLE D'IDENTITÉ (rôles Vérificateur ou Superviseur)
+
+Contrôle visuel humain, sans biométrie. L'émetteur du dossier ne contrôle jamais ses propres signataires.
+
+### GET /api/identites
+Sortie (200) : `{ controles: [{ signataireId, nomDeclare, document: { id, titre, code }, emetteurId, emetteur, typePieceLibelle, soumisLe, verso, supprimeLe }] }`
+
+### GET /api/identites/:signataireId/piece/:face
+`face` = `recto` | `verso`. Sortie : image (chaque consultation est journalisée). 404 une fois la décision prise (photo supprimée).
+
+### POST /api/identites/:signataireId/decision
+Entrée : `{ decision: "VALIDEE" | "REFUSEE", nomConforme: boolean, motif? }` — reconfirmation par code exigée
+Sortie (200) : `{ success: true, statut }` — photos supprimées, empreintes et décision au journal (`IDENTITY_CHECKED`), email au signataire ; une validation relance le délai de 48 h du lien
+Erreurs : 403 `SAME_PERSON`, 400 `NAME_MISMATCH` (validation sans nom conforme), 400 `MOTIF_REQUIRED` (refus sans motif)
 
 ---
 

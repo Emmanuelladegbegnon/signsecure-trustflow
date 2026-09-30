@@ -9,6 +9,7 @@ import { documentsRouter, signLinkRouter } from './modules/sign/routes.js'
 import { verifyRouter } from './modules/verify/routes.js'
 import { traceRouter } from './modules/trace/routes.js'
 import { adminRouter } from './modules/admin/routes.js'
+import { identityRouter } from './modules/identity/routes.js'
 
 /** App Express configurée mais pas démarrée — séparée d'index.ts pour être importable telle quelle par les tests (supertest). */
 export function createApp() {
@@ -38,6 +39,7 @@ export function createApp() {
   app.use('/api/verify', verifyRouter)
   app.use('/api/trace', traceRouter)
   app.use('/api/admin', adminRouter)
+  app.use('/api/identites', identityRouter)
 
   app.use(notFoundHandler)
   app.use(errorHandler)

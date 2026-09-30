@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { RoleRoute } from './auth/RoleRoute'
 import { ROUTES } from './routes'
@@ -31,8 +31,15 @@ import { TransferRequest } from './pages/mobile/TransferRequest'
 import { TransferReception } from './pages/mobile/TransferReception'
 
 import { UserManagement } from './pages/admin/UserManagement'
+import { IdentityReview } from './pages/identity/IdentityReview'
 import { AuditLog } from './pages/admin/AuditLog'
 import { PermissionsMatrix } from './pages/admin/PermissionsMatrix'
+
+/** /v/:code/:page/:k → page de résultat avec l'aperçu de la page (lien court des QR imprimés). */
+function ShortPageLink() {
+  const { code = '', page = '', k = '' } = useParams()
+  return <Navigate to={`/verifier/resultat/${encodeURIComponent(code)}?page=${encodeURIComponent(page)}&k=${encodeURIComponent(k)}`} replace />
+}
 
 function App() {
   return (
@@ -48,6 +55,7 @@ function App() {
       <Route path={ROUTES.verifyPublic} element={<PublicVerification />} />
       <Route path={ROUTES.verifyResult} element={<VerificationResult />} />
       <Route path={ROUTES.compareFiles} element={<FileComparison />} />
+      <Route path={ROUTES.shortPageLink} element={<ShortPageLink />} />
       <Route path={ROUTES.personalData} element={<PersonalData />} />
 
       {/* Protégé — nécessite une session active (voir auth/ProtectedRoute) */}
@@ -74,6 +82,9 @@ function App() {
           <Route path={ROUTES.mobileTransferReception} element={<TransferReception />} />
         </Route>
 
+        <Route element={<RoleRoute area="identity" />}>
+          <Route path={ROUTES.identityReview} element={<IdentityReview />} />
+        </Route>
         <Route element={<RoleRoute area="users" />}>
           <Route path={ROUTES.adminUsers} element={<UserManagement />} />
         </Route>

@@ -5,9 +5,10 @@
  * été écrite en base ni sur disque avant cet appel (voir lib/pendingSignatures.ts).
  *
  * Quand le dernier signataire a signé, la version finale reçoit en plus :
- *   1. un pied de page de vérification sur chaque page (QR, code de suivi,
- *      domaine officiel en clair, numéro de page / nombre total de pages) ;
- *   2. le cachet de plateforme PAdES (lib/pdfSeal.ts), en dernier.
+ *   1. un pied de page d'une ligne sur chaque page (petit QR propre à la page,
+ *      code de suivi, domaine officiel en clair, numéro de page / total) ;
+ *   2. des marques invisibles signées sur chaque page (lib/invisibleMarks.ts) ;
+ *   3. le cachet de plateforme PAdES (lib/pdfSeal.ts), en dernier.
  * Le hash SHA-256 de référence est calculé sur les octets finaux, après cachet.
  *
  * Le hash ne peut pas être imprimé dans le PDF lui-même (l'imprimer
@@ -19,6 +20,7 @@ import QRCode from 'qrcode'
 import { env } from '../../env.js'
 import { sealPdf } from '../../lib/pdfSeal.js'
 import { pageToken } from '../../lib/pageToken.js'
+import { addInvisibleMarks } from '../../lib/invisibleMarks.js'
 import { sha256Hex } from '../../lib/storage.js'
 
 export interface SignatureZone {
@@ -29,7 +31,8 @@ export interface SignatureZone {
 
 const SIGNATURE_WIDTH_RATIO = 0.18 // largeur de la signature ≈ 18% de la largeur de page
 const PARAPHE_WIDTH_RATIO = 0.07 // paraphe ≈ 7% de la largeur de page
-const FOOTER_BAND_HEIGHT = 54
+// Pied de page réduit à une ligne + un petit QR (~1,3 cm) : il tient dans la marge basse habituelle.
+const FOOTER_BAND_HEIGHT = 40
 
 export async function countPdfPages(pdfBytes: Uint8Array): Promise<number> {
   return (await PDFDocument.load(pdfBytes)).getPageCount()
@@ -84,9 +87,15 @@ export async function embedSignature(
   return pdfDoc.save()
 }
 
+/**
+ * Adresse encodée dans le QR. La forme courte /v/<code>/<page>/<jeton> garde
+ * un QR peu dense, donc lisible par un téléphone même imprimé en petit.
+ */
 export function verificationUrl(trackingCode: string, page?: number): string {
-  const base = `${env.publicVerifyBaseUrl.replace(/\/$/, '')}/verifier/resultat/${encodeURIComponent(trackingCode)}`
-  return page ? `${base}?page=${page}&k=${pageToken(trackingCode, page)}` : base
+  const base = env.publicVerifyBaseUrl.replace(/\/$/, '')
+  return page
+    ? `${base}/v/${encodeURIComponent(trackingCode)}/${page}/${pageToken(trackingCode, page)}`
+    : `${base}/verifier/resultat/${encodeURIComponent(trackingCode)}`
 }
 
 /** Domaine affiché en clair sous le QR : permet de repérer un QR piégé qui mènerait ailleurs. */
@@ -104,47 +113,30 @@ async function addVerificationFooter(pdfDoc: PDFDocument, trackingCode: string):
   const pages = pdfDoc.getPages()
   const total = pages.length
   const domain = displayDomain()
-  const qrSize = 46
-  const bandHeight = FOOTER_BAND_HEIGHT
-  const grey = rgb(0.25, 0.25, 0.3)
+  const qrSize = 36
+  const grey = rgb(0.3, 0.3, 0.35)
 
   // Un QR propre à chaque page : il ouvre l'aperçu scellé de CETTE page.
   const qrs = await Promise.all(
     pages.map(async (_, index) =>
-      pdfDoc.embedPng(await QRCode.toBuffer(verificationUrl(trackingCode, index + 1), { errorCorrectionLevel: 'M', margin: 1, width: 240 })),
+      pdfDoc.embedPng(await QRCode.toBuffer(verificationUrl(trackingCode, index + 1), { errorCorrectionLevel: 'M', margin: 0, width: 200 })),
     ),
   )
 
   pages.forEach((page, index) => {
-    const qr = qrs[index]!
     const { width } = page.getSize()
-    page.drawRectangle({ x: 0, y: 0, width, height: bandHeight, color: rgb(1, 1, 1), opacity: 0.92 })
-    page.drawLine({ start: { x: 16, y: bandHeight }, end: { x: width - 16, y: bandHeight }, thickness: 0.5, color: rgb(0.8, 0.8, 0.85) })
-    page.drawImage(qr, { x: width - qrSize - 16, y: 4, width: qrSize, height: qrSize })
-
-    const textX = 20
-    page.drawText(`Code de suivi : ${trackingCode}`, { x: textX, y: bandHeight - 14, size: 8.5, font: bold, color: grey })
-    page.drawText(`Vérifier uniquement sur ${domain}/verifier (saisie manuelle du code possible)`, {
-      x: textX,
-      y: bandHeight - 26,
-      size: 7,
+    // Pas de fond opaque : le pied de page ne doit jamais masquer le contenu signé.
+    page.drawImage(qrs[index]!, { x: width - qrSize - 18, y: 2, width: qrSize, height: qrSize })
+    const y = 16
+    page.drawText(trackingCode, { x: 20, y, size: 7.5, font: bold, color: grey })
+    const codeWidth = bold.widthOfTextAtSize(trackingCode, 7.5)
+    page.drawText(`  ·  p. ${index + 1}/${total}  ·  vérifier sur ${domain}/verifier  ·  cachet de démonstration non qualifié`, {
+      x: 20 + codeWidth,
+      y,
+      size: 6.5,
       font,
       color: grey,
-    })
-    page.drawText(`Page ${index + 1}/${total} — scannez le QR de cette page pour afficher son aperçu scellé et la comparer`, {
-      x: textX,
-      y: bandHeight - 37,
-      size: 7,
-      font,
-      color: grey,
-    })
-    page.drawText('Cachet électronique SignSecure de démonstration, non qualifié. Pour contrôler l\'intégrité, soumettre ce fichier sur la page de vérification.', {
-      x: textX,
-      y: bandHeight - 48,
-      size: 6,
-      font,
-      color: grey,
-      maxWidth: width - qrSize - 56,
+      maxWidth: width - qrSize - 60 - codeWidth,
     })
   })
 }
@@ -160,6 +152,7 @@ export async function finalizeSignedPdf(
 ): Promise<{ bytes: Buffer; hashSha256: string; pageCount: number }> {
   const pdfDoc = await PDFDocument.load(signedBytes)
   await addVerificationFooter(pdfDoc, trackingCode)
+  addInvisibleMarks(pdfDoc, trackingCode)
   const withFooter = await pdfDoc.save({ useObjectStreams: false })
   const bytes = await sealPdf(withFooter, sealedAt)
   return { bytes, hashSha256: sha256Hex(bytes), pageCount: pdfDoc.getPageCount() }

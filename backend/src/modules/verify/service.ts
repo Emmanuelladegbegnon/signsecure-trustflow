@@ -6,6 +6,7 @@ import { inspectTrackingCode } from '../../lib/trackingCode.js'
 import { isValidPageToken } from '../../lib/pageToken.js'
 import { getSealCertificateInfo, sealCertificateHistory } from '../../lib/pdfSeal.js'
 import { extractPagePreview } from '../sign/pdf.js'
+import { readInvisibleMarks } from '../../lib/invisibleMarks.js'
 
 interface RequestMeta {
   ip: string
@@ -49,6 +50,7 @@ export async function verifyByCode(rawCode: string, meta: RequestMeta) {
   })
 
   if (document.origine === 'SIGN') {
+    const signatories = await prisma.signatory.findMany({ where: { documentId: document.id }, select: { identityStatus: true } })
     return {
       statut: document.statut,
       origine: document.origine,
@@ -62,7 +64,13 @@ export async function verifyByCode(rawCode: string, meta: RequestMeta) {
         horodatageTiers: document.tsaGenTime,
         apercuParPage: Boolean(document.sealedAt),
       },
-      signature: { type: document.type, titre: document.titre, dateScellement: document.sealedAt },
+      signature: {
+        type: document.type,
+        titre: document.titre,
+        dateScellement: document.sealedAt,
+        // Seulement un indicateur : jamais le nom ni la pièce.
+        identitesControlees: signatories.length > 0 && signatories.every((s) => s.identityStatus === 'VALIDEE'),
+      },
       revocation: document.statut === 'REVOKED' ? { revoque: true, date: document.revokedAt } : undefined,
     }
   }
@@ -120,11 +128,26 @@ export async function compareFile(code: string, fileBuffer: Buffer, meta: Reques
   })
 
   // Comparaison d'empreinte EXACTE : un seul octet modifié change le résultat.
+  // En cas de divergence, les marques invisibles disent si le fichier est une
+  // copie modifiée de CE document, d'un autre, ou un fichier sans marque.
+  const marks = matches ? null : await readInvisibleMarks(fileBuffer)
   return {
     methode: 'hash_exact' as const,
     resultat: matches ? ('correspond' as const) : ('diverge' as const),
     hashSoumis: submittedHash,
     hashReference: document.hashSha256,
+    ...(marks
+      ? {
+          marquesInvisibles: {
+            presentes: marks.presentes,
+            memeDocument: marks.codeDetecte === code,
+            autreDocument: marks.presentes && marks.codeDetecte !== code,
+            pagesDOrigine: marks.pagesDOrigine,
+            pagesSansMarque: marks.pagesSansMarque,
+            marquesFalsifiees: marks.marquesFalsifiees,
+          },
+        }
+      : {}),
   }
 }
 
@@ -172,7 +195,17 @@ export async function getPagePreview(rawCode: string, pageNumber: number, token:
  */
 export async function findByFile(fileBuffer: Buffer, meta: RequestMeta) {
   const submittedHash = sha256Hex(fileBuffer)
-  const document = await prisma.document.findFirst({ where: { hashSha256: submittedHash, origine: 'SIGN' } })
+  let document = await prisma.document.findFirst({ where: { hashSha256: submittedHash, origine: 'SIGN' } })
+  let parMarque = false
+  if (!document) {
+    // Fichier modifié : son empreinte ne correspond plus, mais ses marques
+    // invisibles signées peuvent encore désigner le document d'origine.
+    const marks = await readInvisibleMarks(fileBuffer)
+    if (marks.presentes && marks.codeDetecte) {
+      document = await prisma.document.findUnique({ where: { trackingCode: marks.codeDetecte } })
+      parMarque = Boolean(document)
+    }
+  }
   if (!document) return { trouve: false as const, hashSoumis: submittedHash }
 
   await recordAuditEvent({
@@ -185,8 +218,16 @@ export async function findByFile(fileBuffer: Buffer, meta: RequestMeta) {
     documentId: document.id,
     ip: meta.ip,
     userAgent: meta.userAgent,
+    details: { parMarqueInvisible: parMarque, sha256Soumis: submittedHash },
   })
-  return { trouve: true as const, trackingCode: document.trackingCode, statut: document.statut, hashSoumis: submittedHash }
+  return {
+    trouve: true as const,
+    trackingCode: document.trackingCode,
+    statut: document.statut,
+    hashSoumis: submittedHash,
+    // true = retrouvé par les marques invisibles : le fichier soumis N'EST PAS l'original intact.
+    fichierModifie: parMarque,
+  }
 }
 
 /** Certificat de cachet actuellement en service — publié pour détecter un changement de clé. */

@@ -7,6 +7,7 @@ import { env } from '../env.js'
 import { anchorAllAuditChains } from './auditAnchor.js'
 import { createBackup } from './backup.js'
 import { sendSignatureReminders } from '../modules/sign/service.js'
+import { purgeStaleIdentityDocuments } from '../modules/identity/service.js'
 
 function runSafely(name: string, task: () => Promise<unknown>) {
   task().catch((err) => console.error(`[Planificateur] Échec de la tâche « ${name} » :`, err))
@@ -15,7 +16,10 @@ function runSafely(name: string, task: () => Promise<unknown>) {
 export function startScheduler() {
   if (!env.schedulerEnabled) return
 
-  const reminders = setInterval(() => runSafely('relances de signature', sendSignatureReminders), 60 * 60_000)
+  const reminders = setInterval(() => {
+    runSafely('relances de signature', sendSignatureReminders)
+    runSafely("suppression des pièces d'identité non contrôlées", purgeStaleIdentityDocuments)
+  }, 60 * 60_000)
   const anchors = setInterval(() => runSafely('ancrage du journal', anchorAllAuditChains), env.auditAnchorIntervalHours * 3_600_000)
   reminders.unref()
   anchors.unref()

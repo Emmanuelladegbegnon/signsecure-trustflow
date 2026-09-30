@@ -25,7 +25,7 @@ interface VerifySignResponse {
     horodatageTiers: string | null
     apercuParPage: boolean
   }
-  signature: { type: string; titre: string; dateScellement: string | null }
+  signature: { type: string; titre: string; dateScellement: string | null; identitesControlees?: boolean }
   revocation?: { revoque: true; date: string | null }
 }
 interface VerifyTraceResponse {
@@ -238,6 +238,9 @@ export function VerificationResult() {
             <Row label="Intitulé">{data.signature.titre}</Row>
             <Row label="Nombre de pages">{data.integrite.nombrePages ?? '—'}</Row>
             <Row label="Version finale scellée le">{formatDate(data.signature.dateScellement)}</Row>
+            <Row label="Identité des signataires">
+              {data.signature.identitesControlees ? "Pièces contrôlées par l'organisation émettrice" : "Déclarée par l'émetteur"}
+            </Row>
           </section>
 
           <section className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant/30">

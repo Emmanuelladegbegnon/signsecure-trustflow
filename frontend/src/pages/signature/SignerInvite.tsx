@@ -6,12 +6,14 @@ import { apiRequest, ApiRequestError } from '../../lib/httpClient'
 import { ApplySignature } from './ApplySignature'
 import { SignatureOtp, type OtpChannelInfo, type SignatureOtpCodes } from './SignatureOtp'
 import { SignatureSuccess } from './SignatureSuccess'
+import { IdentityStep } from './IdentityStep'
 
 interface LinkInfo {
   dossier: { titre: string; type: string; page: number }
   pdfUrl: string
   zoneSignature: { page: number; x: number; y: number }
   otp: { canaux: OtpChannelInfo[]; smsSimulation: boolean }
+  identite: { requise: boolean; statut: 'A_FOURNIR' | 'EN_ATTENTE' | 'VALIDEE' | 'REFUSEE' | null; motifRefus: string | null }
 }
 
 interface SignatureSubmitResult {
@@ -29,6 +31,7 @@ interface OtpVerifyResult {
 type Step =
   | { kind: 'loading' }
   | { kind: 'error'; message: string }
+  | { kind: 'identity'; statut: 'A_FOURNIR' | 'EN_ATTENTE' | 'REFUSEE'; motifRefus: string | null }
   | { kind: 'sign' }
   | { kind: 'otp' }
   | { kind: 'success'; dossierId: string; trackingCode: string }
@@ -64,7 +67,10 @@ export function SignerInvite() {
         setDossier(info.dossier)
         setPdfUrl(info.pdfUrl)
         setOtpInfo(info.otp)
-        setStep({ kind: 'sign' })
+        // Pièce d'identité exigée et pas encore validée : étape préalable à la signature.
+        if (info.identite?.requise && info.identite.statut && info.identite.statut !== 'VALIDEE') {
+          setStep({ kind: 'identity', statut: info.identite.statut, motifRefus: info.identite.motifRefus })
+        } else setStep({ kind: 'sign' })
       })
       .catch((err) => {
         // Ignore l'abandon déclenché par le cleanup (StrictMode double-monte
@@ -133,6 +139,18 @@ export function SignerInvite() {
           <p className="font-body-md text-body-md text-on-surface-variant">{step.message}</p>
         </div>
       </div>
+    )
+  }
+
+  if (step.kind === 'identity') {
+    return (
+      <IdentityStep
+        token={token ?? ''}
+        documentTitle={dossier?.titre ?? 'Document'}
+        statut={step.statut}
+        motifRefus={step.motifRefus}
+        onSubmitted={() => setStep({ kind: 'identity', statut: 'EN_ATTENTE', motifRefus: null })}
+      />
     )
   }
 

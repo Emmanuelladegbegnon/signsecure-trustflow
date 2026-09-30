@@ -28,6 +28,8 @@ const ACCESS: Record<AccessArea, Role[] | 'all'> = {
   verify: 'all',
   sign: 'all',
   trace: ['Administrateur', 'Superviseur', 'Agent de réception', 'Vérificateur'],
+  // Même règle que le serveur (GET /api/identites) : contrôle par Vérificateur ou Superviseur.
+  identity: ['Vérificateur', 'Superviseur'],
   users: ['Administrateur'],
   audit: ['Administrateur', 'Vérificateur'],
   permissions: ['Administrateur'],

@@ -130,3 +130,37 @@ describe('Serveur compromis — contrôles hors système', () => {
     expect(gone.body.trouve).toBe(false)
   })
 })
+
+describe('Marques invisibles', () => {
+  it('reconnaît une copie modifiée du document et la retrouve sans code', async () => {
+    const { document } = await signedThreePageDocument()
+    const original = await readStoredFile(document.finalPdfPath!)
+
+    // Quelqu'un ouvre le PDF signé, change un montant, et réenregistre.
+    const edited = await PDFDocument.load(original)
+    edited.getPage(1).drawText('900 000 F CFA', { x: 60, y: 500, size: 14 })
+    const tampered = Buffer.from(await edited.save())
+
+    const compare = await request(app)
+      .post(`/api/verify/${document.trackingCode}/comparer`)
+      .attach('fichier', tampered, { filename: 'bail.pdf', contentType: 'application/pdf' })
+      .expect(200)
+    expect(compare.body.resultat).toBe('diverge')
+    expect(compare.body.marquesInvisibles).toMatchObject({ presentes: true, memeDocument: true, pagesDOrigine: 3, pagesSansMarque: [] })
+
+    const found = await request(app)
+      .post('/api/verify/recherche-par-fichier')
+      .attach('fichier', tampered, { filename: 'bail.pdf', contentType: 'application/pdf' })
+      .expect(200)
+    expect(found.body).toMatchObject({ trouve: true, trackingCode: document.trackingCode, fichierModifie: true })
+
+    // Un PDF quelconque ne porte aucune marque.
+    const foreign = await PDFDocument.create()
+    foreign.addPage()
+    const other = await request(app)
+      .post(`/api/verify/${document.trackingCode}/comparer`)
+      .attach('fichier', Buffer.from(await foreign.save()), { filename: 'x.pdf', contentType: 'application/pdf' })
+      .expect(200)
+    expect(other.body.marquesInvisibles.presentes).toBe(false)
+  })
+})

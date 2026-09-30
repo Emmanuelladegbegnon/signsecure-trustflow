@@ -168,6 +168,9 @@ model Document {
   /// Document marqué sensible à la création : la validation de signature
   /// exige deux codes (SMS + email) au lieu d'un seul (SMS).
   sensible           Boolean   @default(false)
+  /// Chaque signataire externe doit présenter une pièce d'identité, contrôlée par un
+  /// vérificateur de l'organisation avant de pouvoir signer (sans biométrie).
+  identityCheckRequired Boolean @default(false)
   fichierPath        String?
   /// SHA-256 du PDF tel que déposé, avant toute signature — calculé côté serveur.
   originalHashSha256 String?
@@ -240,6 +243,23 @@ model Signatory {
   otpChannels String?
   /// Relance automatique avant expiration du lien (une seule par lien).
   reminderSentAt DateTime?
+
+  // --- Contrôle de pièce d'identité (humain, sans biométrie) ---
+  /// A_FOURNIR | EN_ATTENTE | VALIDEE | REFUSEE ; null = pas de contrôle demandé.
+  identityStatus        String?
+  identityDocType       String?
+  /// Photos de la pièce : conservées UNIQUEMENT le temps du contrôle (chiffrées),
+  /// supprimées dès la décision. Seules leurs empreintes restent.
+  identityFrontPath     String?
+  identityBackPath      String?
+  identityFrontSha256   String?
+  identityBackSha256    String?
+  identitySubmittedAt   DateTime?
+  identityReviewedAt    DateTime?
+  identityReviewerId    String?
+  identityReviewerLabel String?
+  identityNameMatches   Boolean?
+  identityRefusalReason String?
 
   otpChallenges OtpChallenge[]
   createdAt     DateTime       @default(now())

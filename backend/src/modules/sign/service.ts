@@ -17,6 +17,7 @@ import { requestTimestamp } from '../../lib/tsa.js'
 import { documentsDir, readStoredFile, sha256Hex, storeUploadedFile, timestampsDir, writeStoredFile } from '../../lib/storage.js'
 import { countPdfPages, embedSignature, finalizeSignedPdf } from './pdf.js'
 import { getSealCertificateInfo, registerSealCertificate } from '../../lib/pdfSeal.js'
+import { identityDocLabel, submitIdentityDocument, type IdentityDocType } from '../identity/service.js'
 import {
   transitionDocumentRevoked,
   transitionDocumentSent,
@@ -46,7 +47,7 @@ function requiredOtpChannels(sensible: boolean): OtpChannel[] {
 
 export async function createDocument(
   file: Express.Multer.File,
-  input: { titre: string; type: string; sensible: boolean },
+  input: { titre: string; type: string; sensible: boolean; controleIdentite: boolean },
   actor: Actor,
 ) {
   let nombrePagesPdf: number
@@ -65,6 +66,7 @@ export async function createDocument(
       titre: input.titre,
       type: input.type,
       sensible: input.sensible,
+      identityCheckRequired: input.controleIdentite,
       statut: 'DRAFT',
       trackingCode,
       fichierPath: stored.path,
@@ -84,7 +86,7 @@ export async function createDocument(
     documentId: document.id,
     ip: actor.ip,
     userAgent: actor.userAgent,
-    details: { sha256Original: stored.sha256, pages: nombrePagesPdf, sensible: input.sensible },
+    details: { sha256Original: stored.sha256, pages: nombrePagesPdf, sensible: input.sensible, controleIdentite: input.controleIdentite },
   })
 
   return { dossierId: document.id, trackingCode }
@@ -146,6 +148,7 @@ export async function assignSignatories(
           zoneX: s.zone.x,
           zoneY: s.zone.y,
           ordre: index,
+          identityStatus: document.identityCheckRequired ? 'A_FOURNIR' : null,
         },
       }),
     ),
@@ -336,6 +339,27 @@ export async function getLinkInfo(token: string) {
     pdfUrl: `/api/sign/link/${token}/fichier`,
     zoneSignature: { page: signatory.zonePage, x: signatory.zoneX, y: signatory.zoneY },
     otp: { canaux: otpDestinations(signatory, channels), smsSimulation: isSmsSimulated() },
+    identite: signatory.identityStatus
+      ? { requise: true, statut: signatory.identityStatus, motifRefus: signatory.identityRefusalReason }
+      : { requise: false, statut: null, motifRefus: null },
+  }
+}
+
+export async function submitIdentity(token: string, input: { typePiece: IdentityDocType; recto?: Express.Multer.File; verso?: Express.Multer.File }, meta: RequestMeta) {
+  const signatory = await getSignatoryByToken(token)
+  if (!input.recto) throw ApiError.badRequest('MISSING_FILE', 'La photo du recto de la pièce est requise.')
+  return submitIdentityDocument(signatory, { typePiece: input.typePiece, recto: input.recto, verso: input.verso }, meta)
+}
+
+/** Signature bloquée tant que la pièce exigée n'est pas validée par l'organisation. */
+function assertIdentityCleared(signatory: { identityStatus: string | null }) {
+  if (signatory.identityStatus && signatory.identityStatus !== 'VALIDEE') {
+    throw ApiError.forbiddenCode(
+      'IDENTITY_CHECK_PENDING',
+      signatory.identityStatus === 'EN_ATTENTE'
+        ? "Votre pièce d'identité est en cours de contrôle. Vous recevrez un email dès que vous pourrez signer."
+        : "Ce document exige une pièce d'identité : envoyez-la avant de signer.",
+    )
   }
 }
 
@@ -376,6 +400,7 @@ async function issueSignatureOtps(signatory: { id: string; telephone: string; em
 
 export async function applySignature(token: string, signatureImageBase64: string, meta: RequestMeta) {
   const signatory = await getSignatoryByToken(token)
+  assertIdentityCleared(signatory)
   const channels = requiredOtpChannels(signatory.document.sensible)
 
   stashPendingSignature(signatory.id, signatureImageBase64)
@@ -467,6 +492,7 @@ async function checkSignatureOtps(signatoryId: string, channels: OtpChannel[], c
 
 export async function verifySignatureOtp(token: string, codes: { code: string; codeEmail?: string }, meta: RequestMeta) {
   const signatory = await getSignatoryByToken(token)
+  assertIdentityCleared(signatory)
   const channels = requiredOtpChannels(signatory.document.sensible)
   const challenges = await checkSignatureOtps(signatory.id, channels, { sms: codes.code, email: codes.codeEmail })
 
@@ -636,7 +662,19 @@ export async function getProofReport(documentId: string, organizationId: string)
       nom: s.nom,
       email: s.email,
       telephone: maskPhone(s.telephone),
-      identite: DECLARED_IDENTITY_NOTICE,
+      identite:
+        s.identityStatus === 'VALIDEE'
+          ? `Pièce d'identité (${identityDocLabel(s.identityDocType)}) contrôlée visuellement par ${s.identityReviewerLabel} le ${s.identityReviewedAt?.toLocaleDateString('fr-FR')} : nom conforme au nom déclaré. Contrôle humain, sans biométrie ; la photo de la pièce n'est pas conservée.`
+          : DECLARED_IDENTITY_NOTICE,
+      controleIdentite:
+        s.identityStatus === 'VALIDEE'
+          ? {
+              typePiece: identityDocLabel(s.identityDocType),
+              controlePar: s.identityReviewerLabel,
+              date: s.identityReviewedAt,
+              empreintesPiece: [s.identityFrontSha256, s.identityBackSha256].filter(Boolean),
+            }
+          : null,
       signe: s.signedAt !== null,
       methode: s.methode,
       authentification: {

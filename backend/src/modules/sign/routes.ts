@@ -2,11 +2,12 @@ import { Router } from 'express'
 import { asyncHandler } from '../../middleware/asyncHandler.js'
 import { requireAuth, requireRole } from '../../middleware/auth.js'
 import { validateBody } from '../../middleware/validate.js'
-import { sendStoredFile, uploadPdf } from '../../lib/storage.js'
+import { sendStoredFile, uploadImages, uploadPdf } from '../../lib/storage.js'
 import { ApiError } from '../../lib/errors.js'
 import { actorFromAuth, requestMeta } from '../../lib/actor.js'
 import {
   applySignatureSchema,
+  identitySubmitSchema,
   assignSignatoriesSchema,
   createDocumentSchema,
   revokeDocumentSchema,
@@ -123,6 +124,22 @@ signLinkRouter.get(
   asyncHandler(async (req, res) => {
     const filePath = await signService.getLinkFilePath(req.params.token)
     await sendStoredFile(res, filePath, 'application/pdf')
+  }),
+)
+
+/** Pièce d'identité du signataire (recto obligatoire, verso facultatif), si le dossier l'exige. */
+signLinkRouter.post(
+  '/:token/identite',
+  uploadImages.fields([
+    { name: 'recto', maxCount: 1 },
+    { name: 'verso', maxCount: 1 },
+  ]),
+  validateBody(identitySubmitSchema),
+  asyncHandler(async (req, res) => {
+    const files = (req.files ?? {}) as Record<string, Express.Multer.File[] | undefined>
+    res.json(
+      await signService.submitIdentity(req.params.token, { typePiece: req.body.typePiece, recto: files.recto?.[0], verso: files.verso?.[0] }, requestMeta(req)),
+    )
   }),
 )
 

@@ -8,6 +8,14 @@ export const createDocumentSchema = z.object({
     .union([z.boolean(), z.enum(['true', 'false'])])
     .optional()
     .transform((v) => v === true || v === 'true'),
+  controleIdentite: z
+    .union([z.boolean(), z.enum(['true', 'false'])])
+    .optional()
+    .transform((v) => v === true || v === 'true'),
+})
+
+export const identitySubmitSchema = z.object({
+  typePiece: z.enum(['CNI', 'CIP', 'PASSEPORT', 'PERMIS', 'CARTE_CONSULAIRE', 'AUTRE']),
 })
 
 const zoneSchema = z.object({

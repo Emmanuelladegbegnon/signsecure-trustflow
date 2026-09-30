@@ -14,7 +14,13 @@ interface VerifyReference {
 }
 
 type CompareResult =
-  | { methode: 'hash_exact'; resultat: 'correspond' | 'diverge'; hashSoumis: string; hashReference: string }
+  | {
+      methode: 'hash_exact'
+      resultat: 'correspond' | 'diverge'
+      hashSoumis: string
+      hashReference: string
+      marquesInvisibles?: { presentes: boolean; memeDocument: boolean; autreDocument: boolean; pagesDOrigine: number | null; pagesSansMarque: number[]; marquesFalsifiees: number }
+    }
   | { methode: 'examen_humain'; message: string }
 
 /**
@@ -147,6 +153,21 @@ export function FileComparison() {
                     ? "L'empreinte SHA-256 de votre fichier correspond exactement à celle de la version finale enregistrée : il n'a pas été modifié depuis son scellement."
                     : "L'empreinte de votre fichier ne correspond pas à la version finale enregistrée : le fichier a été modifié, ou il ne s'agit pas de la version finale."}
                 </FormAlert>
+                {result.resultat === 'diverge' && result.marquesInvisibles && (
+                  <FormAlert tone="info">
+                    {result.marquesInvisibles.memeDocument
+                      ? `Les marques invisibles de SignSecure montrent qu'il s'agit bien d'une copie de ce document, mais modifiée après scellement${
+                          result.marquesInvisibles.pagesSansMarque.length
+                            ? ` (page${result.marquesInvisibles.pagesSansMarque.length > 1 ? 's' : ''} ${result.marquesInvisibles.pagesSansMarque.join(', ')} ajoutée(s) ou remplacée(s))`
+                            : ''
+                        }. Fiez-vous à l'original enregistré.`
+                      : result.marquesInvisibles.autreDocument
+                        ? "Ce fichier porte les marques d'un AUTRE document SignSecure : il ne correspond pas à ce code."
+                        : result.marquesInvisibles.marquesFalsifiees > 0
+                          ? 'Ce fichier contient de fausses marques SignSecure : il a été fabriqué ou falsifié.'
+                          : "Ce fichier ne porte aucune marque SignSecure : ce n'est pas un document scellé par la plateforme, ou ses marques ont été effacées."}
+                  </FormAlert>
+                )}
                 <div className="font-mono text-[11px] text-on-surface-variant break-all bg-surface p-3 rounded-lg border border-outline-variant/50">
                   <div>Votre fichier : {result.hashSoumis}</div>
                   <div>Référence : {result.hashReference}</div>

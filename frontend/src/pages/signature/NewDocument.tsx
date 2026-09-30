@@ -24,6 +24,7 @@ export function NewDocument() {
   const [titre, setTitre] = useState('')
   const [type, setType] = useState('')
   const [sensible, setSensible] = useState(false)
+  const [controleIdentite, setControleIdentite] = useState(false)
   const [art267Ack, setArt267Ack] = useState(false)
   const excluded = isExcludedFromDigital(type)
   const [dragActive, setDragActive] = useState(false)
@@ -73,6 +74,7 @@ export function NewDocument() {
     formData.append('titre', titre.trim())
     formData.append('type', type)
     formData.append('sensible', String(sensible))
+    formData.append('controleIdentite', String(controleIdentite))
 
     setSubmitting(true)
     try {
@@ -238,6 +240,17 @@ export function NewDocument() {
               <span className="font-body-sm text-body-sm text-on-surface-variant">
                 Chaque signataire devra saisir deux codes, l'un reçu par SMS et l'autre par email. Cela réduit le risque qu'une seule ligne
                 téléphonique détournée (SIM swap) suffise à signer.
+              </span>
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3 rounded-lg border border-outline-variant p-4 cursor-pointer hover:bg-surface-container-low transition-colors">
+            <input type="checkbox" className="mt-1" checked={controleIdentite} onChange={(e) => setControleIdentite(e.target.checked)} />
+            <span className="flex flex-col gap-1">
+              <span className="font-label-md text-label-md text-on-surface">Exiger une pièce d'identité de chaque signataire</span>
+              <span className="font-body-sm text-body-sm text-on-surface-variant">
+                Avant de signer, chaque signataire photographie sa pièce ; un vérificateur de l'organisation (pas vous) la compare au nom
+                déclaré. Contrôle visuel, sans reconnaissance faciale ; la photo est supprimée après la décision.
               </span>
             </span>
           </label>

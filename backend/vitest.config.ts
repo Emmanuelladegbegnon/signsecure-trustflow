@@ -21,6 +21,8 @@ export default defineConfig({
       BACKUP_KEY: 'ab'.repeat(32),
       FILE_ENCRYPTION_KEYS: '',
     },
+    // Scellement PDF, chiffrement et sauvegardes : plusieurs secondes sur un poste Windows chargé.
+    testTimeout: 30_000,
     globalSetup: ['./src/test/globalSetup.ts'],
     pool: 'threads', // 'forks' (child_process) est instable dans cet environnement Windows sandboxé (voir frontend/vite.config.ts, même choix)
     fileParallelism: false, // une seule base SQLite de test partagée par tous les fichiers — pas d'exécution concurrente

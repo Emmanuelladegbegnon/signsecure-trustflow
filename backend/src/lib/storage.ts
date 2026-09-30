@@ -27,11 +27,14 @@ export const traceDir = path.resolve(env.uploadDir, 'trace')
 export const incidentsDir = path.resolve(env.uploadDir, 'incidents')
 export const comparisonsDir = path.resolve(env.uploadDir, 'comparaisons')
 export const timestampsDir = path.resolve(env.uploadDir, 'horodatages')
+/** Pièces d'identité : présentes seulement le temps du contrôle (voir modules/identity). */
+export const identitiesDir = path.resolve(env.uploadDir, 'identites')
 ensureDir(documentsDir)
 ensureDir(traceDir)
 ensureDir(incidentsDir)
 ensureDir(comparisonsDir)
 ensureDir(timestampsDir)
+ensureDir(identitiesDir)
 
 const memory = multer.memoryStorage()
 const isImage = (mimetype: string) => mimetype === 'image/jpeg' || mimetype === 'image/png' || mimetype === 'image/webp'

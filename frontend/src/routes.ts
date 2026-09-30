@@ -25,6 +25,8 @@ export const ROUTES = {
   /** Résultat de GET /api/verify/:code — une seule page, qui branche son rendu sur `statut`/`origine` (code inconnu, valide, révoqué, hash exact vs score OCR). */
   verifyResult: '/verifier/resultat/:code',
   compareFiles: '/verifier/:code/comparaison',
+  /** Adresse courte encodée dans le QR de chaque page (QR moins dense, lisible même imprimé petit). */
+  shortPageLink: '/v/:code/:page/:k',
 
   /** Liste des documents en cours de traçabilité (GET /api/documents, filtré côté client sur origine=trace — pas d'endpoint de liste dédié dans le contrat). */
   traceabilityList: '/tracabilite',
@@ -51,6 +53,8 @@ export const ROUTES = {
   /** POST /api/trace/transfert/:transfertId/confirmer. */
   mobileTransferReception: '/mobile/transfert/:transfertId/reception',
 
+  /** Contrôle des pièces d'identité des signataires (Vérificateur, Superviseur). */
+  identityReview: '/identites',
   adminUsers: '/admin/utilisateurs',
   adminAuditLog: '/admin/audit',
   adminPermissions: '/admin/permissions',

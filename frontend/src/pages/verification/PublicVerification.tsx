@@ -29,8 +29,17 @@ export function PublicVerification() {
     const form = new FormData()
     form.append('fichier', file)
     try {
-      const res = await apiRequest<{ trouve: boolean; trackingCode?: string }>('/verify/recherche-par-fichier', { method: 'POST', body: form, auth: false })
-      if (res.trouve && res.trackingCode) navigate(verifyResultUrl(res.trackingCode))
+      const res = await apiRequest<{ trouve: boolean; trackingCode?: string; fichierModifie?: boolean }>('/verify/recherche-par-fichier', {
+        method: 'POST',
+        body: form,
+        auth: false,
+      })
+      if (res.trouve && res.trackingCode && res.fichierModifie) {
+        setFileMessage(
+          `Ce fichier a été MODIFIÉ après sa signature. Ses marques invisibles désignent le document d'origine ${res.trackingCode} : consultez-le pour voir la version d'origine enregistrée.`,
+        )
+        navigate(verifyResultUrl(res.trackingCode), { state: { fichierModifie: true } })
+      } else if (res.trouve && res.trackingCode) navigate(verifyResultUrl(res.trackingCode))
       else
         setFileMessage(
           "Aucune version finale enregistrée ne correspond exactement à ce fichier. S'il s'agit d'un scan ou d'un fichier modifié, adressez-vous à l'organisation émettrice.",
