@@ -4,6 +4,7 @@ import { ApiError } from '../../lib/errors.js'
 import { recordAuditEvent } from '../../lib/audit.js'
 import { generateTrackingCode } from '../../lib/trackingCode.js'
 import { comparisonsDir, incidentsDir, storeUploadedFile, traceDir } from '../../lib/storage.js'
+import { storeSanitizedImage } from '../../lib/imageSanitizer.js'
 import {
   transitionCustodyTransferConfirmed,
   transitionCustodyTransferRequested,
@@ -114,7 +115,7 @@ export async function captureArtifacts(documentId: string, files: Express.Multer
 
   const created = []
   for (const [index, file] of files.entries()) {
-    const stored = await storeUploadedFile(traceDir, file)
+    const stored = await storeSanitizedImage(traceDir, file)
     const artifact = await prisma.artifact.create({
       data: {
         documentId,
@@ -136,7 +137,13 @@ export async function captureArtifacts(documentId: string, files: Express.Multer
       documentId,
       ip: actor.ip,
       userAgent: actor.userAgent,
-      details: { page: artifact.pageIndex + 1, sha256: stored.sha256, octets: stored.sizeBytes },
+      details: {
+        page: artifact.pageIndex + 1,
+        sha256: stored.sha256,
+        sha256Recu: stored.sha256Recu,
+        metadonneesSupprimees: stored.metadonneesSupprimees,
+        octets: stored.sizeBytes,
+      },
     })
   }
 
@@ -202,7 +209,7 @@ export async function reportIncident(
   actor: Actor,
 ) {
   await getOwnedTraceDocument(documentId, actor.organizationId)
-  const photo = input.photo ? await storeUploadedFile(incidentsDir, input.photo) : null
+  const photo = input.photo ? await storeSanitizedImage(incidentsDir, input.photo) : null
 
   const incident = await prisma.incident.create({
     data: {
@@ -283,7 +290,8 @@ export async function recordComparison(
   actor: Actor,
 ) {
   await getOwnedTraceDocument(documentId, actor.organizationId)
-  const stored = await storeUploadedFile(comparisonsDir, file)
+  // Copie examinée : une image est nettoyée de ses métadonnées, un PDF est gardé tel quel.
+  const stored = file.mimetype === 'application/pdf' ? await storeUploadedFile(comparisonsDir, file) : await storeSanitizedImage(comparisonsDir, file)
   const comparison = await prisma.traceComparison.create({
     data: {
       documentId,

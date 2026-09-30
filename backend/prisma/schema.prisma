@@ -35,6 +35,8 @@ enum DocumentOrigin {
 enum OtpPurpose {
   LOGIN
   SIGNATURE
+  /// Reconfirmation demandée juste avant une action sensible (révocation, rôles, comptes).
+  REAUTH
 }
 
 model Organization {
@@ -103,6 +105,8 @@ model Session {
   lastActivityAt DateTime  @default(now())
   revokedAt      DateTime?
   revokedReason  String?
+  /// Fin de la fenêtre pendant laquelle les actions sensibles sont permises sans nouveau code.
+  reauthUntil    DateTime?
 
   @@index([userId])
 }
@@ -360,4 +364,15 @@ model PermissionProfile {
   nom         String
   description String
   permissions Json
+}
+
+/// Historique des certificats de cachet de la plateforme. Un document scellé
+/// porte l'empreinte du certificat utilisé : si elle ne figure pas ici, le
+/// document n'a pas été scellé par un certificat connu (clé remplacée à l'insu
+/// de tous, ou faux).
+model SealCertificate {
+  fingerprint String    @id
+  subject     String
+  activeFrom  DateTime  @default(now())
+  retiredAt   DateTime?
 }

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import request from 'supertest'
 import { createApp } from '../../app.js'
 import { getTestOtpProvider } from '../../lib/otpProvider.js'
-import { createTestOrganization, createTestUser } from '../../test/factories.js'
+import { createTestOrganization, createTestUser , sessionCookie } from '../../test/factories.js'
 
 const app = createApp()
 
@@ -43,10 +43,14 @@ describe('Auth — login → OTP → session', () => {
 
     const verify = await request(app).post('/api/auth/otp/verify').send({ email, code })
     expect(verify.status).toBe(200)
-    expect(verify.body.token).toBeTypeOf('string')
+    // Le jeton n'est jamais renvoyé au JavaScript : seulement dans un cookie httpOnly, SameSite=Strict.
+    expect(verify.body.token).toBeUndefined()
+    const setCookie = String(verify.headers['set-cookie'])
+    expect(setCookie).toMatch(/ss_session=.*HttpOnly/i)
+    expect(setCookie).toMatch(/SameSite=Strict/i)
     expect(verify.body.user.roles).toEqual(['Administrateur'])
 
-    const me = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${verify.body.token}`)
+    const me = await request(app).get('/api/auth/me').set('Cookie', sessionCookie(verify))
     expect(me.status).toBe(200)
     expect(me.body.email).toBe(email)
   })

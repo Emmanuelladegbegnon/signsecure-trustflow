@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { actorFromAuth } from '../../lib/actor.js'
 import { auditQuerySchema, bulkCreateUsersSchema, createUserSchema, updateRolesSchema, updateStatusSchema } from './schemas.js'
 import * as adminService from './service.js'
+import { requireRecentReauth } from '../auth/reauth.js'
 
 export const adminRouter = Router()
 adminRouter.use(requireAuth)
@@ -23,6 +24,7 @@ adminRouter.get(
 adminRouter.post(
   '/users',
   requireRole('ADMINISTRATEUR'),
+  requireRecentReauth,
   validateBody(createUserSchema),
   asyncHandler(async (req, res) => {
     res.status(201).json(await adminService.createUser(req.body, actorFromAuth(req)))
@@ -32,6 +34,7 @@ adminRouter.post(
 adminRouter.post(
   '/users/bulk',
   requireRole('ADMINISTRATEUR'),
+  requireRecentReauth,
   validateBody(bulkCreateUsersSchema),
   asyncHandler(async (req, res) => {
     res.status(201).json(await adminService.bulkCreateUsers(req.body.users, actorFromAuth(req)))
@@ -49,6 +52,7 @@ adminRouter.get(
 adminRouter.patch(
   '/users/:id/roles',
   requireRole('ADMINISTRATEUR'),
+  requireRecentReauth,
   validateBody(updateRolesSchema),
   asyncHandler(async (req, res) => {
     res.json(await adminService.updateUserRoles(req.params.id, req.body.roles, actorFromAuth(req)))
@@ -58,6 +62,7 @@ adminRouter.patch(
 adminRouter.patch(
   '/users/:id/statut',
   requireRole('ADMINISTRATEUR'),
+  requireRecentReauth,
   validateBody(updateStatusSchema),
   asyncHandler(async (req, res) => {
     res.json(await adminService.updateUserStatus(req.params.id, req.body.statut, actorFromAuth(req)))
@@ -67,6 +72,7 @@ adminRouter.patch(
 adminRouter.delete(
   '/users/:id',
   requireRole('ADMINISTRATEUR'),
+  requireRecentReauth,
   asyncHandler(async (req, res) => {
     res.json(await adminService.deleteInvitedUser(req.params.id, actorFromAuth(req)))
   }),

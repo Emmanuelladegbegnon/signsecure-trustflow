@@ -1,7 +1,10 @@
 import { Router } from 'express'
 import { asyncHandler } from '../../middleware/asyncHandler.js'
 import { requireAuth } from '../../middleware/auth.js'
-import { requestMeta } from '../../lib/actor.js'
+import { actorFromAuth, requestMeta } from '../../lib/actor.js'
+import { requestReauth, verifyReauth } from './reauth.js'
+import { clearSessionCookie, setSessionCookie } from '../../lib/sessionCookie.js'
+import { z } from 'zod'
 import { validateBody } from '../../middleware/validate.js'
 import { activateAccountSchema, loginSchema, otpResendSchema, otpVerifySchema } from './schemas.js'
 import * as authService from './service.js'
@@ -35,7 +38,10 @@ authRouter.post(
   '/otp/verify',
   validateBody(otpVerifySchema),
   asyncHandler(async (req, res) => {
-    res.json(await authService.verifyLoginOtp(req.body.email, req.body.code, requestMeta(req)))
+    const { token, user } = await authService.verifyLoginOtp(req.body.email, req.body.code, requestMeta(req))
+    // Le jeton part uniquement dans un cookie httpOnly, jamais dans la réponse JSON.
+    setSessionCookie(res, token)
+    res.json({ user })
   }),
 )
 
@@ -51,7 +57,9 @@ authRouter.post(
   '/logout',
   requireAuth,
   asyncHandler(async (req, res) => {
-    res.json(await authService.logout(req.auth!.sub, req.auth!.organizationId, req.auth!.sid, requestMeta(req)))
+    const result = await authService.logout(req.auth!.sub, req.auth!.organizationId, req.auth!.sid, requestMeta(req))
+    clearSessionCookie(res)
+    res.json(result)
   }),
 )
 
@@ -60,5 +68,23 @@ authRouter.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     res.json(await authService.getMe(req.auth!.sub))
+  }),
+)
+
+/** Reconfirmation avant action sensible : envoi d'un code, puis vérification. */
+authRouter.post(
+  '/reconfirmation',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    res.json(await requestReauth(actorFromAuth(req)))
+  }),
+)
+
+authRouter.post(
+  '/reconfirmation/verifier',
+  requireAuth,
+  validateBody(z.object({ code: z.string().length(6) })),
+  asyncHandler(async (req, res) => {
+    res.json(await verifyReauth(actorFromAuth(req), req.auth!.sid, req.body.code))
   }),
 )

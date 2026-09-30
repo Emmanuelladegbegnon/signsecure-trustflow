@@ -13,17 +13,24 @@
     "test:watch": "vitest",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "backup": "tsx src/scripts/backup.ts",
+    "verify-backup": "tsx src/scripts/verifyBackup.ts",
+    "rotate-keys": "tsx src/scripts/rotateFileKeys.ts",
+    "rotate-seal": "tsx src/scripts/rotateSealCertificate.ts",
+    "security:audit": "npm audit --omit=dev",
+    "security:zap": "tsx src/scripts/zapScan.ts",
+    "security:check": "npm audit --omit=dev && vitest run src/test/security-checks.test.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^6.1.0",
+    "@prisma/client": "^6.19.3",
     "@signpdf/placeholder-pdf-lib": "^3.3.0",
     "@signpdf/signer-p12": "^3.3.0",
     "@signpdf/signpdf": "^3.3.0",
-    "bcrypt": "^5.1.1",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
@@ -35,6 +42,7 @@
     "nodemailer": "^10.0.0",
     "pdf-lib": "^1.17.1",
     "qrcode": "^1.5.4",
+    "sharp": "^0.35.5",
     "zod": "^3.24.1"
   },
   "devDependencies": {
@@ -48,10 +56,13 @@
     "@types/nodemailer": "^8.0.1",
     "@types/qrcode": "^1.5.6",
     "@types/supertest": "^6.0.2",
-    "prisma": "^6.1.0",
+    "prisma": "^6.19.3",
     "supertest": "^7.0.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^4.0.0"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.0"
   }
 }

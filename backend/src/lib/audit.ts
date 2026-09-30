@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { prisma } from '../db.js'
+import { queueSecurityAlert } from './securityAlerts.js'
 
 const GENESIS_HASH = '0'.repeat(64)
 
@@ -102,7 +103,7 @@ export function recordAuditEvent(input: AuditEventInput) {
       }),
     )
 
-    return prisma.auditEvent.create({
+    const created = await prisma.auditEvent.create({
       data: {
         organizationId: input.organizationId,
         actorId: input.actorId ?? null,
@@ -119,12 +120,18 @@ export function recordAuditEvent(input: AuditEventInput) {
         eventHash,
       },
     })
+    queueSecurityAlert(created)
+    return created
   })
 }
 
 /** Rejoue la chaîne et vérifie qu'aucun événement n'a été altéré a posteriori. */
-export async function verifyAuditChain(organizationId: string): Promise<{ intact: boolean; brokenAtEventId?: string }> {
-  const events = await prisma.auditEvent.findMany({
+/** `client` permet de contrôler une base restaurée depuis une sauvegarde (lib/backup.ts). */
+export async function verifyAuditChain(
+  organizationId: string,
+  client: Pick<typeof prisma, 'auditEvent'> = prisma,
+): Promise<{ intact: boolean; brokenAtEventId?: string }> {
+  const events = await client.auditEvent.findMany({
     where: { organizationId },
     orderBy: { timestampServer: 'asc' },
   })

@@ -46,6 +46,7 @@ interface SealCertificate {
   empreinteSha256: string
   sujet: string
   valideJusquau: string
+  historique: Array<{ empreinteSha256: string; enServiceDepuis: string; retireLe: string | null }>
 }
 
 export function PersonalData() {
@@ -115,6 +116,23 @@ export function PersonalData() {
             <p className="font-body-sm text-body-sm">
               Valide jusqu'au {new Date(cert.valideJusquau).toLocaleDateString('fr-FR')} — {cert.sujet}
             </p>
+          )}
+          {cert && cert.historique.some((h) => h.retireLe) && (
+            <>
+              <p className="font-body-sm text-body-sm">
+                Certificats utilisés auparavant : un document scellé pendant leur période de service reste valable.
+              </p>
+              <ul className="font-mono text-[11px] break-all flex flex-col gap-1">
+                {cert.historique
+                  .filter((h) => h.retireLe)
+                  .map((h) => (
+                    <li key={h.empreinteSha256}>
+                      {h.empreinteSha256} — du {new Date(h.enServiceDepuis).toLocaleDateString('fr-FR')} au{' '}
+                      {new Date(h.retireLe!).toLocaleDateString('fr-FR')}
+                    </li>
+                  ))}
+              </ul>
+            </>
           )}
 
           <h2 className="font-headline-sm text-headline-sm text-on-surface mt-4">Vos droits</h2>

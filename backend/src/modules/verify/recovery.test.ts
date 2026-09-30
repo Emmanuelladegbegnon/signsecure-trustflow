@@ -7,7 +7,7 @@ import { getTestOtpProvider } from '../../lib/otpProvider.js'
 import { pageToken } from '../../lib/pageToken.js'
 import { readStoredFile } from '../../lib/storage.js'
 import { checkCharacter, generateTrackingCode, inspectTrackingCode } from '../../lib/trackingCode.js'
-import { createTestOrganization, createTestUser } from '../../test/factories.js'
+import { createTestOrganization, createTestUser , sessionCookie } from '../../test/factories.js'
 
 const app = createApp()
 const SIGNATURE_PNG =
@@ -16,7 +16,7 @@ const SIGNATURE_PNG =
 async function loginAs(email: string, password: string): Promise<string> {
   await request(app).post('/api/auth/login').send({ email, password }).expect(200)
   const code = getTestOtpProvider().lastCodeFor(email, 'email')
-  return (await request(app).post('/api/auth/otp/verify').send({ email, code }).expect(200)).body.token
+  return sessionCookie(await request(app).post('/api/auth/otp/verify').send({ email, code }).expect(200))
 }
 
 /** Parcours complet : PDF de 3 pages signé par un signataire externe. */
@@ -29,7 +29,7 @@ async function signedThreePageDocument() {
   for (let i = 0; i < 3; i++) pdf.addPage([595, 842])
   const created = await request(app)
     .post('/api/documents')
-    .set('Authorization', `Bearer ${token}`)
+    .set('Cookie', token).set('X-Requested-With', 'SignSecure')
     .field('titre', 'Bail commercial')
     .field('type', 'contrat')
     .attach('fichier', Buffer.from(await pdf.save()), { filename: 'bail.pdf', contentType: 'application/pdf' })
@@ -39,10 +39,10 @@ async function signedThreePageDocument() {
   const telephone = `+229 01 ${String(Date.now()).slice(-8)}`
   await request(app)
     .post(`/api/documents/${dossierId}/signataires`)
-    .set('Authorization', `Bearer ${token}`)
+    .set('Cookie', token).set('X-Requested-With', 'SignSecure')
     .send({ signataires: [{ nom: 'Kossi Bailleur', email, telephone, zone: { page: 3, x: 60, y: 70 } }] })
     .expect(200)
-  await request(app).post(`/api/documents/${dossierId}/envoyer`).set('Authorization', `Bearer ${token}`).expect(200)
+  await request(app).post(`/api/documents/${dossierId}/envoyer`).set('Cookie', token).set('X-Requested-With', 'SignSecure').expect(200)
   const signatory = await prisma.signatory.findFirstOrThrow({ where: { documentId: dossierId } })
   await request(app).post(`/api/sign/link/${signatory.linkToken}/signature`).send({ signatureImageBase64: SIGNATURE_PNG, consentement: true }).expect(200)
   const sms = getTestOtpProvider().lastCodeFor(signatory.telephone, 'sms')
@@ -103,7 +103,7 @@ describe('Retrouver un document sans code', () => {
       .expect(200)
     expect(other.body.trouve).toBe(false)
 
-    const search = await request(app).get('/api/documents?q=Kossi').set('Authorization', `Bearer ${token}`).expect(200)
+    const search = await request(app).get('/api/documents?q=Kossi').set('Cookie', token).set('X-Requested-With', 'SignSecure').expect(200)
     expect(search.body.dossiers.map((d: { id: string }) => d.id)).toContain(document.id)
   })
 })
@@ -115,7 +115,7 @@ describe('Serveur compromis — contrôles hors système', () => {
     expect(cert.body.empreinteSha256).toMatch(/^([0-9A-F]{2}:){31}[0-9A-F]{2}$/)
     expect(document.sealCertFingerprint).toBe(cert.body.empreinteSha256)
 
-    const report = await request(app).get(`/api/documents/${document.id}/rapport-preuve`).set('Authorization', `Bearer ${token}`).expect(200)
+    const report = await request(app).get(`/api/documents/${document.id}/rapport-preuve`).set('Cookie', token).set('X-Requested-With', 'SignSecure').expect(200)
     expect(report.body.empreinte.cachet.conformeAuCertificatPublie).toBe(true)
   })
 
@@ -123,10 +123,10 @@ describe('Serveur compromis — contrôles hors système', () => {
     const { org, token } = await signedThreePageDocument()
     const last = await prisma.auditEvent.findFirstOrThrow({ where: { organizationId: org.id }, orderBy: { timestampServer: 'desc' } })
 
-    const ok = await request(app).post('/api/admin/audit/controle-ancrage').set('Authorization', `Bearer ${token}`).send({ hash: last.eventHash }).expect(200)
+    const ok = await request(app).post('/api/admin/audit/controle-ancrage').set('Cookie', token).set('X-Requested-With', 'SignSecure').send({ hash: last.eventHash }).expect(200)
     expect(ok.body).toMatchObject({ trouve: true, chaineIntacteJusquIci: true })
 
-    const gone = await request(app).post('/api/admin/audit/controle-ancrage').set('Authorization', `Bearer ${token}`).send({ hash: 'ab'.repeat(32) }).expect(200)
+    const gone = await request(app).post('/api/admin/audit/controle-ancrage').set('Cookie', token).set('X-Requested-With', 'SignSecure').send({ hash: 'ab'.repeat(32) }).expect(200)
     expect(gone.body.trouve).toBe(false)
   })
 })

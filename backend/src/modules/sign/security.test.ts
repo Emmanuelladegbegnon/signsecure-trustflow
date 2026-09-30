@@ -2,18 +2,23 @@ import { describe, expect, it } from 'vitest'
 import request from 'supertest'
 import { readFile } from 'node:fs/promises'
 import { PDFDocument } from 'pdf-lib'
+import sharp from 'sharp'
 import { createApp } from '../../app.js'
 import { prisma } from '../../db.js'
 import { verifyAuditChain } from '../../lib/audit.js'
 import { getTestOtpProvider } from '../../lib/otpProvider.js'
 import { readStoredFile, sha256Hex } from '../../lib/storage.js'
-import { createTestOrganization, createTestUser } from '../../test/factories.js'
+import { createTestOrganization, createTestUser , sessionCookie } from '../../test/factories.js'
 
 const app = createApp()
 // PNG 1×1 — tient lieu de signature dessinée.
 const SIGNATURE_PNG =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
-const JPEG_BYTES = Buffer.from('ffd8ffe000104a46494600010100000100010000ffd9', 'hex')
+// Vraie photo JPEG portant des métadonnées d'appareil (comme une photo de téléphone).
+const JPEG_BYTES = await sharp({ create: { width: 40, height: 30, channels: 3, background: '#c0c0c0' } })
+  .jpeg()
+  .withExif({ IFD0: { Make: 'TelephoneTest', Model: 'Modele-42', Software: 'CameraApp' } })
+  .toBuffer()
 
 async function makePdf(pages = 2): Promise<Buffer> {
   const doc = await PDFDocument.create()
@@ -25,7 +30,7 @@ async function loginAs(email: string, password: string): Promise<string> {
   await request(app).post('/api/auth/login').send({ email, password }).expect(200)
   const code = getTestOtpProvider().lastCodeFor(email, 'email')
   const res = await request(app).post('/api/auth/otp/verify').send({ email, code }).expect(200)
-  return res.body.token as string
+  return sessionCookie(res)
 }
 
 let phoneCounter = 0
@@ -44,7 +49,7 @@ async function setupIssuer(roles: Parameters<typeof createTestUser>[0]['roles'] 
 async function createSignDocument(token: string, opts: { sensible?: boolean } = {}) {
   const res = await request(app)
     .post('/api/documents')
-    .set('Authorization', `Bearer ${token}`)
+    .set('Cookie', token).set('X-Requested-With', 'SignSecure')
     .field('titre', 'Contrat de test')
     .field('type', 'contrat')
     .field('sensible', String(opts.sensible ?? false))
@@ -56,10 +61,10 @@ async function createSignDocument(token: string, opts: { sensible?: boolean } = 
 async function assignAndSend(token: string, dossierId: string, signer: { email: string; telephone: string }) {
   await request(app)
     .post(`/api/documents/${dossierId}/signataires`)
-    .set('Authorization', `Bearer ${token}`)
+    .set('Cookie', token).set('X-Requested-With', 'SignSecure')
     .send({ signataires: [{ nom: 'Awa Signataire', ...signer, zone: { page: 1, x: 10, y: 10 } }] })
     .expect(200)
-  await request(app).post(`/api/documents/${dossierId}/envoyer`).set('Authorization', `Bearer ${token}`).expect(200)
+  await request(app).post(`/api/documents/${dossierId}/envoyer`).set('Cookie', token).set('X-Requested-With', 'SignSecure').expect(200)
   const signatory = await prisma.signatory.findFirstOrThrow({ where: { documentId: dossierId } })
   return signatory
 }
@@ -71,14 +76,14 @@ describe('Sign — parcours sécurisé', () => {
 
     const res = await request(app)
       .post(`/api/documents/${dossierId}/signataires`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', token).set('X-Requested-With', 'SignSecure')
       .send({ signataires: [{ nom: 'Moi', email: issuer.email.toUpperCase(), telephone: uniquePhone(), zone: { page: 1, x: 10, y: 10 } }] })
     expect(res.status).toBe(400)
     expect(res.body.error.code).toBe('SIGNER_IS_ISSUER')
 
     const samePhone = await request(app)
       .post(`/api/documents/${dossierId}/signataires`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', token).set('X-Requested-With', 'SignSecure')
       .send({ signataires: [{ nom: 'Complice', email: 'autre@test.local', telephone: issuer.user.telephone, zone: { page: 1, x: 10, y: 10 } }] })
     expect(samePhone.body.error.code).toBe('SIGNER_IS_ISSUER')
   })
@@ -145,7 +150,7 @@ describe('Sign — parcours sécurisé', () => {
       .expect(200)
     expect(ko.body.resultat).toBe('diverge')
 
-    const report = await request(app).get(`/api/documents/${dossierId}/rapport-preuve`).set('Authorization', `Bearer ${token}`).expect(200)
+    const report = await request(app).get(`/api/documents/${dossierId}/rapport-preuve`).set('Cookie', token).set('X-Requested-With', 'SignSecure').expect(200)
     expect(report.body.signataires[0].identite).toMatch(/non vérifiée/)
     expect(report.body.signataires[0].dates.consentement).toBeTruthy()
     expect(report.body.empreinte.cachet).not.toBeNull()
@@ -181,17 +186,17 @@ describe('Sign — parcours sécurisé', () => {
 describe('Sessions — expiration sur inactivité', () => {
   it("refuse une session inactive depuis plus que le délai et invalide le token à la déconnexion", async () => {
     const { token } = await setupIssuer()
-    await request(app).get('/api/auth/me').set('Authorization', `Bearer ${token}`).expect(200)
+    await request(app).get('/api/auth/me').set('Cookie', token).set('X-Requested-With', 'SignSecure').expect(200)
 
     const { sid } = JSON.parse(Buffer.from(token.split('.')[1]!, 'base64url').toString()) as { sid: string }
     await prisma.session.update({ where: { id: sid }, data: { lastActivityAt: new Date(Date.now() - 60 * 60_000) } })
-    const idle = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${token}`)
+    const idle = await request(app).get('/api/auth/me').set('Cookie', token).set('X-Requested-With', 'SignSecure')
     expect(idle.status).toBe(401)
     expect(idle.body.error.code).toBe('SESSION_IDLE_TIMEOUT')
 
     const { token: fresh } = await setupIssuer()
-    await request(app).post('/api/auth/logout').set('Authorization', `Bearer ${fresh}`).expect(200)
-    await request(app).get('/api/auth/me').set('Authorization', `Bearer ${fresh}`).expect(401)
+    await request(app).post('/api/auth/logout').set('Cookie', fresh).set('X-Requested-With', 'SignSecure').expect(200)
+    await request(app).get('/api/auth/me').set('Cookie', fresh).set('X-Requested-With', 'SignSecure').expect(401)
   })
 })
 
@@ -200,31 +205,39 @@ describe('Trace — preuve à la réception', () => {
     const { token } = await setupIssuer(['AGENT_RECEPTION', 'SUPERVISEUR', 'VERIFICATEUR'])
     const reg = await request(app)
       .post('/api/trace/enregistrement')
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', token).set('X-Requested-With', 'SignSecure')
       .send({ type: 'contrat', titre: 'Contrat papier', dateIndiquee: '2026-09-29', nombrePages: 2 })
       .expect(201)
     const id = reg.body.dossierId as string
 
     const capture = await request(app)
       .post(`/api/trace/${id}/capture`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', token).set('X-Requested-With', 'SignSecure')
       .attach('photos', JPEG_BYTES, { filename: 'page1.jpg', contentType: 'image/jpeg' })
       .expect(200)
-    expect(capture.body.empreintes[0].sha256).toBe(sha256Hex(JPEG_BYTES))
+    // Les métadonnées de l'appareil sont supprimées ; l'empreinte de référence est celle de la photo conservée.
+    expect((await sharp(JPEG_BYTES).metadata()).exif).toBeDefined()
+    const artifact = await prisma.artifact.findFirstOrThrow({ where: { documentId: id } })
+    const kept = await readStoredFile(artifact.path)
+    expect((await sharp(kept).metadata()).exif).toBeUndefined()
+    expect(capture.body.empreintes[0].sha256).toBe(sha256Hex(kept))
 
     const event = await prisma.auditEvent.findFirstOrThrow({ where: { documentId: id, action: 'TRACE_PHOTO_CAPTURED' } })
-    expect(JSON.parse(event.details!).sha256).toBe(sha256Hex(JPEG_BYTES))
+    const details = JSON.parse(event.details!)
+    expect(details.sha256).toBe(sha256Hex(kept))
+    expect(details.sha256Recu).toBe(sha256Hex(JPEG_BYTES))
+    expect(details.metadonneesSupprimees.join(' ')).toMatch(/EXIF/)
 
-    const early = await request(app).post(`/api/trace/${id}/valider`).set('Authorization', `Bearer ${token}`)
+    const early = await request(app).post(`/api/trace/${id}/valider`).set('Cookie', token).set('X-Requested-With', 'SignSecure')
     expect(early.status).toBe(400)
     expect(early.body.error.code).toBe('PAGES_MISSING_PHOTOS')
 
     await request(app)
       .post(`/api/trace/${id}/capture`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', token).set('X-Requested-With', 'SignSecure')
       .attach('photos', JPEG_BYTES, { filename: 'page2.jpg', contentType: 'image/jpeg' })
       .expect(200)
-    const validated = await request(app).post(`/api/trace/${id}/valider`).set('Authorization', `Bearer ${token}`).expect(200)
+    const validated = await request(app).post(`/api/trace/${id}/valider`).set('Cookie', token).set('X-Requested-With', 'SignSecure').expect(200)
 
     // Verify public : aucune comparaison automatique, aucun score ni verdict.
     const compare = await request(app)
@@ -238,13 +251,13 @@ describe('Trace — preuve à la réception', () => {
     // Examen de concordance humain, journalisé.
     const review = await request(app)
       .post(`/api/trace/${id}/comparaisons`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', token).set('X-Requested-With', 'SignSecure')
       .field('conclusion', 'CONCORDANCE_CONSTATEE')
       .field('commentaire', 'Pages 1 et 2 comparées visuellement aux photos de réception.')
       .attach('fichier', JPEG_BYTES, { filename: 'copie.jpg', contentType: 'image/jpeg' })
       .expect(201)
     expect(review.body.conclusion).toBe('CONCORDANCE_CONSTATEE')
-    const list = await request(app).get(`/api/trace/${id}/comparaisons`).set('Authorization', `Bearer ${token}`).expect(200)
+    const list = await request(app).get(`/api/trace/${id}/comparaisons`).set('Cookie', token).set('X-Requested-With', 'SignSecure').expect(200)
     expect(list.body.comparaisons).toHaveLength(1)
   })
 })

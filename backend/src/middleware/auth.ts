@@ -6,22 +6,28 @@ import { verifySessionToken } from '../lib/jwt.js'
 import { recordAuditEvent } from '../lib/audit.js'
 import { env } from '../env.js'
 import { asyncHandler } from './asyncHandler.js'
+import { CSRF_HEADER, CSRF_VALUE, readSessionCookie } from '../lib/sessionCookie.js'
 
 // Évite une écriture en base à chaque requête : l'activité n'est rafraîchie qu'au-delà de ce délai.
 const ACTIVITY_REFRESH_MS = 30_000
 
 /**
- * Vérifie le Bearer token et réhydrate req.auth depuis la base (pas seulement
+ * Lit le jeton dans le cookie de session httpOnly et réhydrate req.auth depuis la base (pas seulement
  * depuis le JWT) : un compte suspendu entre-temps perd l'accès immédiatement,
  * même si son token n'est pas encore expiré.
  */
 export const requireAuth = asyncHandler(async (req: Request, _res: Response, next: NextFunction) => {
-  const header = req.headers.authorization
-  if (!header?.startsWith('Bearer ')) throw ApiError.unauthorized()
+  const token = readSessionCookie(req)
+  if (!token) throw ApiError.unauthorized()
+
+  // Anti-CSRF : toute requête qui modifie des données doit porter l'en-tête du front.
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.get(CSRF_HEADER) !== CSRF_VALUE) {
+    throw ApiError.forbiddenCode('CSRF_HEADER_MISSING', 'Requête refusée : en-tête de sécurité manquant.')
+  }
 
   let payload
   try {
-    payload = verifySessionToken(header.slice('Bearer '.length))
+    payload = verifySessionToken(token)
   } catch {
     throw ApiError.unauthorized('Session invalide ou expirée.')
   }

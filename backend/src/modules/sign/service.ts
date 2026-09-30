@@ -16,7 +16,7 @@ import { withKeyedLock } from '../../lib/keyedLock.js'
 import { requestTimestamp } from '../../lib/tsa.js'
 import { documentsDir, readStoredFile, sha256Hex, storeUploadedFile, timestampsDir, writeStoredFile } from '../../lib/storage.js'
 import { countPdfPages, embedSignature, finalizeSignedPdf } from './pdf.js'
-import { getSealCertificateInfo } from '../../lib/pdfSeal.js'
+import { getSealCertificateInfo, registerSealCertificate } from '../../lib/pdfSeal.js'
 import {
   transitionDocumentRevoked,
   transitionDocumentSent,
@@ -501,6 +501,7 @@ export async function verifySignatureOtp(token: string, codes: { code: string; c
     let finalData: Parameters<typeof transitionDocumentSignedIfComplete>[2] | null = null
 
     if (isLast) {
+      await registerSealCertificate()
       const final = await finalizeSignedPdf(signedBytes, document.trackingCode!, signedAt)
       versionPath = path.join(documentsDir, `${document.id}-v${version}-final.pdf`)
       versionHash = final.hashSha256
@@ -616,6 +617,9 @@ export async function getProofReport(documentId: string, organizationId: string)
     orderBy: { timestampServer: 'asc' },
   })
   const sentEvent = events.find((e) => e.action === 'DOCUMENT_SENT')
+  const sealCert = document.sealCertFingerprint
+    ? await prisma.sealCertificate.findUnique({ where: { fingerprint: document.sealCertFingerprint } })
+    : null
   const chain = await verifyAuditChain(organizationId)
 
   return {
@@ -653,6 +657,9 @@ export async function getProofReport(documentId: string, organizationId: string)
             empreinteCertificat: document.sealCertFingerprint,
             // Comparaison avec le certificat actuellement publié : une différence signale un changement de clé.
             conformeAuCertificatPublie: document.sealCertFingerprint === getSealCertificateInfo().empreinteSha256,
+            // Le certificat utilisé figure-t-il dans l'historique publié (actuel ou retiré) ?
+            certificatConnu: Boolean(sealCert),
+            certificatPeriode: sealCert ? { depuis: sealCert.activeFrom, jusqua: sealCert.retiredAt } : null,
           }
         : null,
       horodatageTiers: document.tsaGenTime ? { date: document.tsaGenTime, service: document.tsaUrl } : null,

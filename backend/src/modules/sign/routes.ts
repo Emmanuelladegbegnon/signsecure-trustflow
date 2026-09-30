@@ -14,6 +14,7 @@ import {
   startOwnSignatureSchema,
 } from './schemas.js'
 import * as signService from './service.js'
+import { requireRecentReauth } from '../auth/reauth.js'
 
 /** Monté sur /api/documents — actions authentifiées côté émetteur du dossier. */
 export const documentsRouter = Router()
@@ -99,6 +100,7 @@ documentsRouter.post(
   '/:id/revoquer',
   requireAuth,
   requireRole('SUPERVISEUR'),
+  requireRecentReauth,
   validateBody(revokeDocumentSchema),
   asyncHandler(async (req, res) => {
     const actor = actorFromAuth(req)

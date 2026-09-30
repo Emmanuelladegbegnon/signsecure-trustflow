@@ -4,7 +4,7 @@ import { recordAuditEvent } from '../../lib/audit.js'
 import { readStoredFile, sha256Hex } from '../../lib/storage.js'
 import { inspectTrackingCode } from '../../lib/trackingCode.js'
 import { isValidPageToken } from '../../lib/pageToken.js'
-import { getSealCertificateInfo } from '../../lib/pdfSeal.js'
+import { getSealCertificateInfo, sealCertificateHistory } from '../../lib/pdfSeal.js'
 import { extractPagePreview } from '../sign/pdf.js'
 
 interface RequestMeta {
@@ -190,9 +190,10 @@ export async function findByFile(fileBuffer: Buffer, meta: RequestMeta) {
 }
 
 /** Certificat de cachet actuellement en service — publié pour détecter un changement de clé. */
-export function getPublishedSealCertificate() {
+export async function getPublishedSealCertificate() {
   return {
     ...getSealCertificateInfo(),
+    historique: await sealCertificateHistory(),
     nature: 'Certificat auto-signé de démonstration, non qualifié. SignSecure n\'est pas un prestataire de services de confiance.',
   }
 }

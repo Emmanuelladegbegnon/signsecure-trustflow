@@ -81,9 +81,13 @@ export interface StoredFile {
 
 /** Écrit un fichier reçu (en mémoire) sur disque, chiffré, et retourne son empreinte calculée côté serveur. */
 export async function storeUploadedFile(dir: string, file: Express.Multer.File): Promise<StoredFile> {
-  const filePath = path.join(dir, `${randomUUID()}${EXTENSIONS[file.mimetype] ?? ''}`)
-  await writeStoredFile(filePath, file.buffer)
-  return { path: filePath, sha256: sha256Hex(file.buffer), sizeBytes: file.buffer.length, mimeType: file.mimetype }
+  return storeBuffer(dir, file.buffer, file.mimetype)
+}
+
+export async function storeBuffer(dir: string, buffer: Buffer, mimeType: string): Promise<StoredFile> {
+  const filePath = path.join(dir, `${randomUUID()}${EXTENSIONS[mimeType] ?? ''}`)
+  await writeStoredFile(filePath, buffer)
+  return { path: filePath, sha256: sha256Hex(buffer), sizeBytes: buffer.length, mimeType }
 }
 
 export async function writeStoredFile(filePath: string, plain: Buffer | Uint8Array): Promise<void> {

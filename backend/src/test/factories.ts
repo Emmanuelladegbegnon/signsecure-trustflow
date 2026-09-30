@@ -30,3 +30,12 @@ export async function createTestUser(opts: { organizationId: string; roles: Role
   })
   return { user, email, password }
 }
+
+/** Extrait le cookie de session (httpOnly) d'une réponse de connexion, à renvoyer tel quel dans l'en-tête Cookie. */
+export function sessionCookie(res: { headers: Record<string, unknown> }): string {
+  const raw = res.headers['set-cookie']
+  const cookies = Array.isArray(raw) ? (raw as string[]) : raw ? [String(raw)] : []
+  const session = cookies.find((c) => c.startsWith('ss_session='))
+  if (!session) throw new Error('Aucun cookie de session dans la réponse.')
+  return session.split(';')[0]!
+}

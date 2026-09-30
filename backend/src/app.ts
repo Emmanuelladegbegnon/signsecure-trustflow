@@ -13,6 +13,9 @@ import { adminRouter } from './modules/admin/routes.js'
 /** App Express configurée mais pas démarrée — séparée d'index.ts pour être importable telle quelle par les tests (supertest). */
 export function createApp() {
   const app = express()
+  app.disable('x-powered-by')
+  // Derrière un hébergeur ou un reverse proxy, TRUST_PROXY = nombre de proxys de confiance.
+  app.set('trust proxy', env.trustProxy)
 
   app.use(helmet())
   app.use(cors({ origin: env.corsOrigin, credentials: true }))

@@ -5,6 +5,7 @@
  */
 import { env } from '../env.js'
 import { anchorAllAuditChains } from './auditAnchor.js'
+import { createBackup } from './backup.js'
 import { sendSignatureReminders } from '../modules/sign/service.js'
 
 function runSafely(name: string, task: () => Promise<unknown>) {
@@ -18,6 +19,10 @@ export function startScheduler() {
   const anchors = setInterval(() => runSafely('ancrage du journal', anchorAllAuditChains), env.auditAnchorIntervalHours * 3_600_000)
   reminders.unref()
   anchors.unref()
+  // Sauvegarde chiffrée automatique, seulement si un dossier et une clé de sauvegarde sont configurés.
+  if (env.backupDir && env.backupKey) {
+    setInterval(() => runSafely('sauvegarde chiffrée', createBackup), env.backupIntervalHours * 3_600_000).unref()
+  }
 
   // Premier passage peu après le démarrage, pour ne pas attendre une heure.
   setTimeout(() => runSafely('relances de signature', sendSignatureReminders), 30_000).unref()

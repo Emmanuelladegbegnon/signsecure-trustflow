@@ -13,9 +13,12 @@ export const verifyRouter = Router()
 verifyRouter.use(verifyLimiter)
 
 // Routes à chemin fixe déclarées AVANT '/:code' pour ne pas être capturées par lui.
-verifyRouter.get('/cachet/certificat', (_req, res) => {
-  res.json(verifyService.getPublishedSealCertificate())
-})
+verifyRouter.get(
+  '/cachet/certificat',
+  asyncHandler(async (_req, res) => {
+    res.json(await verifyService.getPublishedSealCertificate())
+  }),
+)
 
 verifyRouter.post(
   '/recherche-par-fichier',

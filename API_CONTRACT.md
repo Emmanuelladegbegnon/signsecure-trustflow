@@ -6,7 +6,9 @@ Se référer à CLAUDE.md pour les règles de sécurité, le vocabulaire autoris
 
 ## Conventions générales
 
-- Toutes les routes sauf `/api/verify/*`, `/api/auth/login`, `/api/auth/otp/*` et `/api/sign/link/*` exigent un token d'authentification (header `Authorization: Bearer <token>`).
+- Toutes les routes sauf `/api/verify/*`, `/api/auth/login`, `/api/auth/otp/*`, `/api/auth/invitation/*` et `/api/sign/link/*` exigent une session : cookie `ss_session` (httpOnly, SameSite=Strict, posé par POST /api/auth/otp/verify). Le jeton n'est jamais renvoyé en JSON ni lisible par le JavaScript du front.
+- Anti-CSRF : toute requête authentifiée qui modifie des données (POST, PATCH, PUT, DELETE) doit porter l'en-tête `X-Requested-With: SignSecure`, sinon 403 `CSRF_HEADER_MISSING`.
+- Actions sensibles (POST /api/documents/:id/revoquer, POST/PATCH/DELETE /api/admin/users*) : 403 `REAUTH_REQUIRED` tant qu'un code de reconfirmation n'a pas été validé depuis moins de 5 minutes sur la session (voir POST /api/auth/reconfirmation).
 - Toute erreur suit le format : `{ "error": { "code": "STRING_CODE", "message": "texte lisible" } }`.
 - Les champs `document_status` et `custody_status` ne sont jamais modifiables directement par le client : uniquement via les endpoints d'action dédiés, qui passent par la couche métier centralisée du backend.
 - Toutes les dates sont en ISO-8601, calculées et renvoyées côté serveur.
@@ -28,16 +30,26 @@ Sortie (410) : invitation expirée ou déjà utilisée
 
 ### POST /api/auth/invitation/:token/activer
 Entrée : `{ password }`
-Sortie (200) : `{ success: true }` — le compte passe de "invité" à "actif" ; l'utilisateur peut ensuite utiliser /api/auth/login normalement
+Sortie (200) : `{ success: true }` — le compte passe de "invité" à "actif"
+Erreur : 400 `WEAK_PASSWORD` — 12 caractères minimum, mots de passe courants et nom/email refusés ; l'utilisateur peut ensuite utiliser /api/auth/login normalement
 
 ### POST /api/auth/login
 Entrée : `{ email, password }`
 Sortie (200) : `{ requiresOtp: true, otpChannel: "sms" | "email" }`
 Sortie (401) : erreur standard
 
+### POST /api/auth/reconfirmation
+Entrée : aucune (session requise)
+Sortie (200) : `{ canal: "email", destination }` — envoie un code de reconfirmation ; 409 `RESEND_TOO_SOON` si un code vient d'être envoyé
+
+### POST /api/auth/reconfirmation/verifier
+Entrée : `{ code }`
+Sortie (200) : `{ success: true, valableJusqua }` — ouvre une fenêtre de 5 minutes pour les actions sensibles
+Erreurs : 401 code invalide ; 401 `SESSION_REVOKED` après 5 codes faux (session fermée, alerte aux administrateurs)
+
 ### POST /api/auth/otp/verify
 Entrée : `{ email, code }`
-Sortie (200) : `{ token, user: { id, nom, prenom, roles: string[] } }`
+Sortie (200) : `{ user: { id, nom, prenom, roles } }` + cookie de session `ss_session` (httpOnly, SameSite=Strict, Secure en HTTPS). Le jeton n'apparaît jamais dans le JSON.
 
 ### POST /api/auth/otp/resend
 Entrée : `{ email }`

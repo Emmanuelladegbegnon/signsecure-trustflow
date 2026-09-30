@@ -31,6 +31,13 @@ export const env = {
   signerLinkExpiryHours: Number(process.env.SIGNER_LINK_EXPIRY_HOURS ?? 48),
   accountLockThreshold: Number(process.env.ACCOUNT_LOCK_THRESHOLD ?? 5),
   accountLockMinutes: Number(process.env.ACCOUNT_LOCK_MINUTES ?? 15),
+  // Cookie de session « Secure » (HTTPS uniquement). Activé par défaut en production.
+  cookieSecure: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : process.env.NODE_ENV === 'production',
+  // Nombre de proxys devant l'API (hébergeur, reverse proxy). 0 = aucun : l'IP
+  // vue est celle de la connexion. Mal réglé, toutes les requêtes semblent
+  // venir de la même IP (limites de débit et journal faussés) ou l'IP peut
+  // être usurpée via X-Forwarded-For.
+  trustProxy: Number(process.env.TRUST_PROXY ?? 0),
   // Expiration de session après inactivité, vérifiée côté serveur à chaque requête authentifiée.
   sessionIdleMinutes: Number(process.env.SESSION_IDLE_MINUTES ?? 15),
 
@@ -47,6 +54,13 @@ export const env = {
   // Chiffrement des fichiers au repos (AES-256-GCM). 64 caractères hex (32 octets).
   // Absent : les fichiers restent en clair (un avertissement est journalisé au démarrage).
   fileEncryptionKey: process.env.FILE_ENCRYPTION_KEY,
+  // Trousseau de clés pour le changement de clé : "v2:hex,v1:hex" (la première est en service).
+  fileEncryptionKeys: process.env.FILE_ENCRYPTION_KEYS,
+  // Sauvegardes chiffrées : dossier de destination (idéalement un disque externe ou un
+  // montage réseau) et clé DISTINCTE de celle des fichiers (64 hex).
+  backupDir: process.env.BACKUP_DIR ?? '',
+  backupKey: process.env.BACKUP_KEY ?? '',
+  backupIntervalHours: Number(process.env.BACKUP_INTERVAL_HOURS ?? 24),
 
   // Cachet de plateforme PAdES — certificat AUTO-SIGNÉ de démonstration, non
   // qualifié. Généré automatiquement au premier démarrage s'il n'existe pas.

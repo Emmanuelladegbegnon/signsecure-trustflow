@@ -1,7 +1,8 @@
 import { z } from 'zod'
 
 export const activateAccountSchema = z.object({
-  password: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères.'),
+  // Règle complète (longueur, mots de passe courants, nom/email) appliquée dans le service, qui connaît la personne.
+  password: z.string().min(1, 'Le mot de passe est requis.').max(128),
 })
 
 export const loginSchema = z.object({

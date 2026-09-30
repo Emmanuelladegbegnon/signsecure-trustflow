@@ -25,6 +25,10 @@ export class ApiError extends Error {
     return new ApiError(403, 'FORBIDDEN', message)
   }
 
+  static forbiddenCode(code: string, message: string) {
+    return new ApiError(403, code, message)
+  }
+
   static notFound(message = 'Ressource introuvable.') {
     return new ApiError(404, 'NOT_FOUND', message)
   }

@@ -3,6 +3,7 @@ import { env } from '../../env.js'
 import { ApiError } from '../../lib/errors.js'
 import { recordAuditEvent } from '../../lib/audit.js'
 import { hashPassword, verifyPassword } from '../../lib/password.js'
+import { passwordProblem } from '../../lib/passwordPolicy.js'
 import { signSessionToken } from '../../lib/jwt.js'
 import { generateOtpCode, hashOtpCode, OTP_MAX_ATTEMPTS, OTP_RESEND_COOLDOWN_SECONDS, OTP_TTL_MINUTES } from '../../lib/otp.js'
 import { getOtpProvider } from '../../lib/otpProvider.js'
@@ -51,6 +52,9 @@ export async function activateAccount(token: string, password: string, meta: Req
   if (!invitation || invitation.usedAt || invitation.expiresAt < new Date()) {
     throw ApiError.gone("Cette invitation a expiré ou a déjà été utilisée.")
   }
+
+  const problem = passwordProblem(password, { email: invitation.user.email, nom: invitation.user.nom, prenom: invitation.user.prenom })
+  if (problem) throw ApiError.badRequest('WEAK_PASSWORD', problem)
 
   const passwordHash = await hashPassword(password)
   await prisma.$transaction([

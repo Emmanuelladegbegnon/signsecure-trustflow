@@ -21,6 +21,8 @@ import { pdflibAddPlaceholder } from '@signpdf/placeholder-pdf-lib'
 import { P12Signer } from '@signpdf/signer-p12'
 import { SignPdf } from '@signpdf/signpdf'
 import { env } from '../env.js'
+import { prisma } from '../db.js'
+import { recordAuditEvent } from './audit.js'
 
 export const SEAL_SIGNER_NAME = 'SignSecure TrustFlow - cachet de demonstration (non qualifie)'
 const DEV_PASSPHRASE = 'demo-cachet-non-qualifie'
@@ -116,4 +118,48 @@ export async function sealPdf(pdfBytes: Uint8Array, signingTime: Date): Promise<
   const withPlaceholder = Buffer.from(await pdfDoc.save({ useObjectStreams: false }))
   const signer = new P12Signer(ensureSealP12(), { passphrase: passphrase() })
   return new SignPdf().sign(withPlaceholder, signer, signingTime)
+}
+
+/** Réservé au script de rotation : oublie le certificat en mémoire. */
+export function resetSealCache() {
+  cachedInfo = null
+}
+
+/**
+ * Inscrit le certificat en service dans l'historique. Appelé au démarrage et
+ * avant chaque scellement : un nouveau certificat retire le précédent et
+ * l'événement SEAL_CERT_ROTATED est écrit dans le journal de chaque
+ * organisation (ce qui déclenche une alerte aux administrateurs).
+ */
+export async function registerSealCertificate(): Promise<void> {
+  const info = getSealCertificateInfo()
+  const known = await prisma.sealCertificate.findUnique({ where: { fingerprint: info.empreinteSha256 } })
+  if (known && !known.retiredAt) return
+  const now = new Date()
+  const previous = await prisma.sealCertificate.findMany({ where: { retiredAt: null } })
+  await prisma.$transaction([
+    prisma.sealCertificate.updateMany({ where: { retiredAt: null }, data: { retiredAt: now } }),
+    known
+      ? prisma.sealCertificate.update({ where: { fingerprint: info.empreinteSha256 }, data: { retiredAt: null, activeFrom: now } })
+      : prisma.sealCertificate.create({ data: { fingerprint: info.empreinteSha256, subject: info.sujet, activeFrom: now } }),
+  ])
+  if (previous.length === 0) return // premier certificat : rien à signaler
+  const organizations = await prisma.organization.findMany({ select: { id: true } })
+  for (const { id } of organizations) {
+    await recordAuditEvent({
+      organizationId: id,
+      actorId: null,
+      actorLabel: 'Plateforme SignSecure',
+      action: 'SEAL_CERT_ROTATED',
+      objectType: 'SealCertificate',
+      objectId: info.empreinteSha256,
+      ip: 'system',
+      details: { nouveau: info.empreinteSha256, ancien: previous.map((p) => p.fingerprint) },
+    })
+  }
+}
+
+export async function sealCertificateHistory() {
+  const rows = await prisma.sealCertificate.findMany({ orderBy: { activeFrom: 'desc' } })
+  return rows.map((r) => ({ empreinteSha256: r.fingerprint, sujet: r.subject, enServiceDepuis: r.activeFrom, retireLe: r.retiredAt }))
 }
