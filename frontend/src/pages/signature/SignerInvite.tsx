@@ -4,17 +4,22 @@ import { FullscreenSpinner } from '../../components/ui/FullscreenSpinner'
 import { Icon } from '../../components/ui/Icon'
 import { apiRequest, ApiRequestError } from '../../lib/httpClient'
 import { ApplySignature } from './ApplySignature'
-import { SignatureOtp } from './SignatureOtp'
+import { SignatureOtp, type OtpChannelInfo, type SignatureOtpCodes } from './SignatureOtp'
 import { SignatureSuccess } from './SignatureSuccess'
+import { IdentityStep } from './IdentityStep'
 
 interface LinkInfo {
   dossier: { titre: string; type: string; page: number }
   pdfUrl: string
   zoneSignature: { page: number; x: number; y: number }
+  otp: { canaux: OtpChannelInfo[]; smsSimulation: boolean }
+  identite: { requise: boolean; statut: 'A_FOURNIR' | 'EN_ATTENTE' | 'VALIDEE' | 'REFUSEE' | null; motifRefus: string | null }
 }
 
 interface SignatureSubmitResult {
   otpRequired: true
+  canaux: OtpChannelInfo[]
+  smsSimulation: boolean
 }
 
 interface OtpVerifyResult {
@@ -26,6 +31,7 @@ interface OtpVerifyResult {
 type Step =
   | { kind: 'loading' }
   | { kind: 'error'; message: string }
+  | { kind: 'identity'; statut: 'A_FOURNIR' | 'EN_ATTENTE' | 'REFUSEE'; motifRefus: string | null }
   | { kind: 'sign' }
   | { kind: 'otp' }
   | { kind: 'success'; dossierId: string; trackingCode: string }
@@ -43,6 +49,8 @@ export function SignerInvite() {
   const { token } = useParams<{ token: string }>()
   const [step, setStep] = useState<Step>({ kind: 'loading' })
   const [dossier, setDossier] = useState<LinkInfo['dossier'] | null>(null)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [otpInfo, setOtpInfo] = useState<LinkInfo['otp']>({ canaux: [{ canal: 'sms', destination: '' }], smsSimulation: false })
   const [signError, setSignError] = useState<string | null>(null)
   const [signing, setSigning] = useState(false)
   const [otpError, setOtpError] = useState<string | null>(null)
@@ -57,9 +65,17 @@ export function SignerInvite() {
     apiRequest<LinkInfo>(`/sign/link/${token}`, { auth: false, signal: controller.signal })
       .then((info) => {
         setDossier(info.dossier)
-        setStep({ kind: 'sign' })
+        setPdfUrl(info.pdfUrl)
+        setOtpInfo(info.otp)
+        // Pièce d'identité exigée et pas encore validée : étape préalable à la signature.
+        if (info.identite?.requise && info.identite.statut && info.identite.statut !== 'VALIDEE') {
+          setStep({ kind: 'identity', statut: info.identite.statut, motifRefus: info.identite.motifRefus })
+        } else setStep({ kind: 'sign' })
       })
       .catch((err) => {
+        // Ignore l'abandon déclenché par le cleanup (StrictMode double-monte
+        // cet effet en dev) — pas un vrai lien invalide.
+        if (controller.signal.aborted) return
         const message =
           err instanceof ApiRequestError
             ? err.message
@@ -75,11 +91,12 @@ export function SignerInvite() {
     try {
       // L'image transite directement dans le corps de cette requête et n'est
       // jamais assignée à un état React ni conservée après cet appel.
-      await apiRequest<SignatureSubmitResult>(`/sign/link/${token}/signature`, {
+      const result = await apiRequest<SignatureSubmitResult>(`/sign/link/${token}/signature`, {
         method: 'POST',
         body: { signatureImageBase64, consentement },
         auth: false,
       })
+      setOtpInfo({ canaux: result.canaux, smsSimulation: result.smsSimulation })
       setStep({ kind: 'otp' })
     } catch (err) {
       setSignError(err instanceof ApiRequestError ? err.message : 'Une erreur inattendue est survenue. Réessayez.')
@@ -88,13 +105,17 @@ export function SignerInvite() {
     }
   }
 
-  const handleOtpSubmit = async (code: string) => {
+  const handleOtpResend = async () => {
+    await apiRequest(`/sign/link/${token}/otp/resend`, { method: 'POST', auth: false })
+  }
+
+  const handleOtpSubmit = async (codes: SignatureOtpCodes) => {
     setOtpError(null)
     setVerifying(true)
     try {
       const result = await apiRequest<OtpVerifyResult>(`/sign/link/${token}/otp/verify`, {
         method: 'POST',
-        body: { code },
+        body: codes,
         auth: false,
       })
       setStep({ kind: 'success', dossierId: result.dossierId, trackingCode: result.trackingCode })
@@ -121,12 +142,34 @@ export function SignerInvite() {
     )
   }
 
+  if (step.kind === 'identity') {
+    return (
+      <IdentityStep
+        token={token ?? ''}
+        documentTitle={dossier?.titre ?? 'Document'}
+        statut={step.statut}
+        motifRefus={step.motifRefus}
+        onSubmitted={() => setStep({ kind: 'identity', statut: 'EN_ATTENTE', motifRefus: null })}
+      />
+    )
+  }
+
   if (step.kind === 'sign') {
-    return <ApplySignature documentTitle={dossier?.titre ?? 'Document'} onSubmit={handleSignatureSubmit} submitting={signing} error={signError} />
+    return <ApplySignature documentTitle={dossier?.titre ?? 'Document'} pdfUrl={pdfUrl} onSubmit={handleSignatureSubmit} submitting={signing} error={signError} />
   }
 
   if (step.kind === 'otp') {
-    return <SignatureOtp documentTitle={dossier?.titre ?? 'Document'} onSubmit={handleOtpSubmit} submitting={verifying} error={otpError} />
+    return (
+      <SignatureOtp
+        documentTitle={dossier?.titre ?? 'Document'}
+        canaux={otpInfo.canaux}
+        smsSimulation={otpInfo.smsSimulation}
+        onSubmit={handleOtpSubmit}
+        onResend={handleOtpResend}
+        submitting={verifying}
+        error={otpError}
+      />
+    )
   }
 
   return <SignatureSuccess documentTitle={dossier?.titre ?? 'Document'} trackingCode={step.trackingCode} dossierId={step.dossierId} />

@@ -1,11 +1,15 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthContext'
+import { canAccess } from '../../auth/access'
 import { Icon } from '../ui/Icon'
 import { MOBILE_NAV, type NavKey } from './nav'
 
 export function MobileBottomNav({ active }: { active: NavKey }) {
+  const { user } = useAuth()
+  const visibleNav = MOBILE_NAV.filter((item) => canAccess(item.key, user?.roles))
   return (
     <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-surface border-t border-outline-variant shadow-lg rounded-t-xl">
-      {MOBILE_NAV.map((item) => {
+      {visibleNav.map((item) => {
         const isActive = active === item.key
         return (
           <Link

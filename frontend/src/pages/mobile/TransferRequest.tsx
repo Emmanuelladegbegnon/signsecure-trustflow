@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { FormAlert } from '../../components/ui/FormAlert'
 import { Icon } from '../../components/ui/Icon'
@@ -8,6 +8,12 @@ import { ROUTES } from '../../routes'
 interface TransferResponse {
   transfertId: string
   statut: string
+}
+
+interface Recipient {
+  id: string
+  nom: string
+  roles: string[]
 }
 
 export function TransferRequest() {
@@ -20,6 +26,19 @@ export function TransferRequest() {
   const [fieldError, setFieldError] = useState<string | null>(null)
   const [apiError, setApiError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [recipients, setRecipients] = useState<Recipient[] | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    apiRequest<{ destinataires: Recipient[] }>('/trace/destinataires', { signal: controller.signal })
+      .then((res) => setRecipients(res.destinataires))
+      .catch((err) => {
+        if (controller.signal.aborted) return
+        setRecipients([])
+        setApiError(err instanceof ApiRequestError ? err.message : 'Impossible de charger la liste des destinataires.')
+      })
+    return () => controller.abort()
+  }, [])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -27,7 +46,7 @@ export function TransferRequest() {
     setApiError(null)
     if (!id) return
     if (!destinataireId.trim()) {
-      setFieldError('Indiquez le destinataire du transfert.')
+      setFieldError('Choisissez le destinataire du transfert.')
       return
     }
 
@@ -83,22 +102,28 @@ export function TransferRequest() {
           <form className="flex flex-col gap-6 flex-1" onSubmit={handleSubmit} noValidate>
             <div>
               <label className="block font-label-md text-label-md text-on-surface mb-2" htmlFor="destinataire">
-                Identifiant du destinataire *
+                Destinataire *
               </label>
               <div className="relative">
                 <Icon name="person" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" />
-                <input
-                  className="block w-full pl-10 pr-3 py-3 text-body-md font-body-md text-on-surface bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-1 focus:ring-primary focus:border-primary transition-shadow placeholder:text-on-surface-variant/60"
+                <select
+                  className="block w-full pl-10 pr-3 py-3 text-body-md font-body-md text-on-surface bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-1 focus:ring-primary focus:border-primary transition-shadow"
                   id="destinataire"
                   name="destinataire"
-                  placeholder="Identifiant du compte destinataire"
-                  type="text"
                   value={destinataireId}
                   onChange={(e) => setDestinataireId(e.target.value)}
-                />
+                  disabled={recipients === null}
+                >
+                  <option value="">{recipients === null ? 'Chargement…' : 'Choisir une personne'}</option>
+                  {recipients?.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.nom} — {r.roles.join(', ')}
+                    </option>
+                  ))}
+                </select>
               </div>
               <p className="font-label-sm text-label-sm text-on-surface-variant mt-1">
-                Fourni par votre administrateur — aucun annuaire de recherche n'est encore disponible pour ce champ.
+                Le destinataire reçoit un email et confirme la réception quand le document lui est remis.
               </p>
             </div>
 

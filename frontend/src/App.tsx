@@ -1,5 +1,6 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { ProtectedRoute } from './auth/ProtectedRoute'
+import { RoleRoute } from './auth/RoleRoute'
 import { ROUTES } from './routes'
 
 import { AccountActivation } from './pages/auth/AccountActivation'
@@ -17,6 +18,7 @@ import { ProofReport } from './pages/signature/ProofReport'
 import { PublicVerification } from './pages/verification/PublicVerification'
 import { VerificationResult } from './pages/verification/VerificationResult'
 import { FileComparison } from './pages/verification/FileComparison'
+import { PersonalData } from './pages/legal/PersonalData'
 
 import { TraceabilityList } from './pages/traceability/TraceabilityList'
 import { TraceabilityDetail } from './pages/traceability/TraceabilityDetail'
@@ -29,8 +31,15 @@ import { TransferRequest } from './pages/mobile/TransferRequest'
 import { TransferReception } from './pages/mobile/TransferReception'
 
 import { UserManagement } from './pages/admin/UserManagement'
+import { IdentityReview } from './pages/identity/IdentityReview'
 import { AuditLog } from './pages/admin/AuditLog'
 import { PermissionsMatrix } from './pages/admin/PermissionsMatrix'
+
+/** /v/:code/:page/:k → page de résultat avec l'aperçu de la page (lien court des QR imprimés). */
+function ShortPageLink() {
+  const { code = '', page = '', k = '' } = useParams()
+  return <Navigate to={`/verifier/resultat/${encodeURIComponent(code)}?page=${encodeURIComponent(page)}&k=${encodeURIComponent(k)}`} replace />
+}
 
 function App() {
   return (
@@ -46,29 +55,45 @@ function App() {
       <Route path={ROUTES.verifyPublic} element={<PublicVerification />} />
       <Route path={ROUTES.verifyResult} element={<VerificationResult />} />
       <Route path={ROUTES.compareFiles} element={<FileComparison />} />
+      <Route path={ROUTES.shortPageLink} element={<ShortPageLink />} />
+      <Route path={ROUTES.personalData} element={<PersonalData />} />
 
       {/* Protégé — nécessite une session active (voir auth/ProtectedRoute) */}
       <Route element={<ProtectedRoute />}>
         <Route path={ROUTES.dashboard} element={<Dashboard />} />
         <Route path={ROUTES.myFolders} element={<MyFolders />} />
 
-        <Route path={ROUTES.newDocument} element={<NewDocument />} />
-        <Route path={ROUTES.assignSigners} element={<AssignSigners />} />
-        <Route path={ROUTES.proofReport} element={<ProofReport />} />
+        {/* Écrans réservés par rôle (voir auth/access.ts) — confort d'UX, le serveur reste seul juge final */}
+        <Route element={<RoleRoute area="sign" />}>
+          <Route path={ROUTES.newDocument} element={<NewDocument />} />
+          <Route path={ROUTES.assignSigners} element={<AssignSigners />} />
+          <Route path={ROUTES.proofReport} element={<ProofReport />} />
+        </Route>
 
-        <Route path={ROUTES.traceabilityList} element={<TraceabilityList />} />
-        <Route path={ROUTES.traceabilityDetail} element={<TraceabilityDetail />} />
+        <Route element={<RoleRoute area="trace" />}>
+          <Route path={ROUTES.traceabilityList} element={<TraceabilityList />} />
+          <Route path={ROUTES.traceabilityDetail} element={<TraceabilityDetail />} />
 
-        <Route path={ROUTES.mobileRegistrationStep1} element={<RegistrationStep1 />} />
-        <Route path={ROUTES.mobileCapture} element={<CameraCapture />} />
-        <Route path={ROUTES.mobileObservations} element={<Observations />} />
-        <Route path={ROUTES.mobileIncident} element={<ReportIncident />} />
-        <Route path={ROUTES.mobileTransferRequest} element={<TransferRequest />} />
-        <Route path={ROUTES.mobileTransferReception} element={<TransferReception />} />
+          <Route path={ROUTES.mobileRegistrationStep1} element={<RegistrationStep1 />} />
+          <Route path={ROUTES.mobileCapture} element={<CameraCapture />} />
+          <Route path={ROUTES.mobileObservations} element={<Observations />} />
+          <Route path={ROUTES.mobileIncident} element={<ReportIncident />} />
+          <Route path={ROUTES.mobileTransferRequest} element={<TransferRequest />} />
+          <Route path={ROUTES.mobileTransferReception} element={<TransferReception />} />
+        </Route>
 
-        <Route path={ROUTES.adminUsers} element={<UserManagement />} />
-        <Route path={ROUTES.adminAuditLog} element={<AuditLog />} />
-        <Route path={ROUTES.adminPermissions} element={<PermissionsMatrix />} />
+        <Route element={<RoleRoute area="identity" />}>
+          <Route path={ROUTES.identityReview} element={<IdentityReview />} />
+        </Route>
+        <Route element={<RoleRoute area="users" />}>
+          <Route path={ROUTES.adminUsers} element={<UserManagement />} />
+        </Route>
+        <Route element={<RoleRoute area="audit" />}>
+          <Route path={ROUTES.adminAuditLog} element={<AuditLog />} />
+        </Route>
+        <Route element={<RoleRoute area="permissions" />}>
+          <Route path={ROUTES.adminPermissions} element={<PermissionsMatrix />} />
+        </Route>
       </Route>
 
       <Route path="*" element={<Navigate to={ROUTES.login} replace />} />

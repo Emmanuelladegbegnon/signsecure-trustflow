@@ -3,17 +3,14 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider, useAuth } from './AuthContext'
 
-const { apiRequestMock, setAuthTokenMock } = vi.hoisted(() => ({
-  apiRequestMock: vi.fn(),
-  setAuthTokenMock: vi.fn(),
-}))
+const { apiRequestMock } = vi.hoisted(() => ({ apiRequestMock: vi.fn() }))
 
 vi.mock('../lib/httpClient', () => ({
   apiRequest: apiRequestMock,
-  setAuthToken: setAuthTokenMock,
+  ApiRequestError: class extends Error {},
+  setUnauthorizedHandler: vi.fn(),
+  setReauthHandler: vi.fn(),
 }))
-
-const TOKEN_KEY = 'signsecure_auth_token'
 
 function Probe() {
   const { status, user, login, verifyOtp, logout } = useAuth()
@@ -32,21 +29,21 @@ describe('AuthContext', () => {
   beforeEach(() => {
     sessionStorage.clear()
     apiRequestMock.mockReset()
-    setAuthTokenMock.mockReset()
   })
 
-  it('starts unauthenticated when there is no stored session', async () => {
+  it('starts unauthenticated when the server has no session cookie', async () => {
+    apiRequestMock.mockRejectedValueOnce(new Error('401'))
     render(
       <AuthProvider>
         <Probe />
       </AuthProvider>,
     )
     await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('unauthenticated'))
-    expect(apiRequestMock).not.toHaveBeenCalled()
+    // Restauration silencieuse : un 401 au chargement n'est pas une « session expirée ».
+    expect(apiRequestMock).toHaveBeenCalledWith('/auth/me', { notifyUnauthorized: false })
   })
 
-  it('restores an authenticated session via GET /auth/me when a token is already stored', async () => {
-    sessionStorage.setItem(TOKEN_KEY, 'existing-token')
+  it('restores an authenticated session via GET /auth/me (httpOnly cookie)', async () => {
     apiRequestMock.mockResolvedValueOnce({ id: '1', nom: 'Kone', prenom: 'Awa', roles: ['Superviseur'] })
 
     render(
@@ -57,27 +54,14 @@ describe('AuthContext', () => {
 
     await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('authenticated'))
     expect(screen.getByTestId('user')).toHaveTextContent('Awa Kone')
-    expect(apiRequestMock).toHaveBeenCalledWith('/auth/me')
-    expect(setAuthTokenMock).toHaveBeenCalledWith('existing-token')
+    // Aucun jeton n'est stocké côté navigateur.
+    expect(Object.keys(sessionStorage)).toEqual([])
   })
 
-  it('clears an invalid stored session and falls back to unauthenticated', async () => {
-    sessionStorage.setItem(TOKEN_KEY, 'stale-token')
-    apiRequestMock.mockRejectedValueOnce(new Error('401'))
-
-    render(
-      <AuthProvider>
-        <Probe />
-      </AuthProvider>,
-    )
-
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('unauthenticated'))
-    expect(sessionStorage.getItem(TOKEN_KEY)).toBeNull()
-  })
-
-  it('verifyOtp stores the token, sets the user, and marks the session authenticated', async () => {
+  it('verifyOtp sets the user and marks the session authenticated, without storing any token', async () => {
     const user = userEvent.setup()
-    apiRequestMock.mockResolvedValueOnce({ token: 'new-token', user: { id: '2', nom: 'Diallo', prenom: 'Kouassi', roles: ['Administrateur'] } })
+    apiRequestMock.mockRejectedValueOnce(new Error('401')) // /auth/me on mount
+    apiRequestMock.mockResolvedValueOnce({ user: { id: '2', nom: 'Diallo', prenom: 'Kouassi', roles: ['Administrateur'] } })
 
     render(
       <AuthProvider>
@@ -90,13 +74,11 @@ describe('AuthContext', () => {
 
     expect(screen.getByTestId('status')).toHaveTextContent('authenticated')
     expect(screen.getByTestId('user')).toHaveTextContent('Kouassi Diallo')
-    expect(sessionStorage.getItem(TOKEN_KEY)).toBe('new-token')
-    expect(setAuthTokenMock).toHaveBeenCalledWith('new-token')
+    expect(Object.keys(sessionStorage)).toEqual([])
   })
 
   it('logout clears the session even if the server call fails', async () => {
     const user = userEvent.setup()
-    sessionStorage.setItem(TOKEN_KEY, 'existing-token')
     apiRequestMock.mockResolvedValueOnce({ id: '1', nom: 'Kone', prenom: 'Awa', roles: ['Superviseur'] }) // /auth/me on mount
     apiRequestMock.mockRejectedValueOnce(new Error('network down')) // /auth/logout
 
@@ -111,7 +93,6 @@ describe('AuthContext', () => {
 
     expect(screen.getByTestId('status')).toHaveTextContent('unauthenticated')
     expect(screen.getByTestId('user')).toHaveTextContent('none')
-    expect(sessionStorage.getItem(TOKEN_KEY)).toBeNull()
-    expect(setAuthTokenMock).toHaveBeenLastCalledWith(null)
+
   })
 })

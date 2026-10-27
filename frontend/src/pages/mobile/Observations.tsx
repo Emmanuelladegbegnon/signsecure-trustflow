@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
 import { FormAlert } from '../../components/ui/FormAlert'
 import { Icon } from '../../components/ui/Icon'
+import { Stepper } from '../../components/ui/Stepper'
+import { TRACE_REGISTRATION_STEPS } from '../../constants/steps'
 import { apiRequest, ApiRequestError } from '../../lib/httpClient'
 import { ROUTES } from '../../routes'
 import { CodeLabel } from './CodeLabel'
@@ -107,10 +109,11 @@ export function Observations() {
           </button>
           <h1 className="font-headline-sm text-headline-sm font-bold text-primary">Observations</h1>
         </div>
-        <div className="font-label-sm text-label-sm text-on-surface-variant">Étape 3/4</div>
       </header>
 
       <main className="flex-grow p-margin-mobile flex flex-col gap-6 max-w-lg mx-auto w-full pb-24">
+        <Stepper steps={TRACE_REGISTRATION_STEPS} currentStep={2} />
+
         <div className="mb-2">
           <h2 className="font-headline-md text-headline-md text-on-surface mb-2">Vérification du Document</h2>
           <p className="font-body-sm text-body-sm text-on-surface-variant">Veuillez confirmer les points de contrôle suivants pour le document en cours de traitement.</p>

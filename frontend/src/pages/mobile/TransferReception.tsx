@@ -1,20 +1,43 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { FormAlert } from '../../components/ui/FormAlert'
 import { Icon } from '../../components/ui/Icon'
 import { apiRequest, ApiRequestError } from '../../lib/httpClient'
 import { ROUTES } from '../../routes'
 
-// API_CONTRACT.md n'expose aucun GET pour récupérer les détails d'un
-// transfert (émetteur, document, date) avant confirmation — seul l'appel de
-// confirmation est réel ici ; le panneau "document transféré" ne peut pas
-// être rempli avec de vraies données tant que cet endpoint n'existe pas.
+interface IncomingTransfer {
+  id: string
+  document: { id: string; titre: string; trackingCode: string | null }
+  expediteur: string
+  lieu: string | null
+  motif: string | null
+  date: string
+}
+
+// Détails lus dans GET /trace/transferts/a-recevoir : seuls les transferts
+// dont le compte connecté est le destinataire y figurent.
 export function TransferReception() {
   const navigate = useNavigate()
   const { transfertId } = useParams<{ transfertId: string }>()
   const [error, setError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
+  const [transfer, setTransfer] = useState<IncomingTransfer | null>(null)
+  const [notFound, setNotFound] = useState(false)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    apiRequest<{ transferts: IncomingTransfer[] }>('/trace/transferts/a-recevoir', { signal: controller.signal })
+      .then((res) => {
+        const match = res.transferts.find((t) => t.id === transfertId)
+        if (match) setTransfer(match)
+        else setNotFound(true)
+      })
+      .catch(() => {
+        // Sans détails, la confirmation reste possible : le serveur décide.
+      })
+    return () => controller.abort()
+  }, [transfertId])
 
   const handleConfirm = async () => {
     if (!transfertId || confirming) return
@@ -64,11 +87,38 @@ export function TransferReception() {
                 </div>
               )}
 
-              <div className="w-full bg-surface rounded-lg border border-outline-variant p-4 mb-8 text-left">
-                <div className="flex items-center gap-2 text-on-surface-variant">
-                  <Icon name="tag" size={16} />
-                  <span className="font-body-sm text-body-sm">Transfert : {transfertId}</span>
+              {notFound && (
+                <div className="w-full mb-6">
+                  <FormAlert tone="error">Ce transfert ne vous est pas destiné, ou il a déjà été confirmé.</FormAlert>
                 </div>
+              )}
+
+              <div className="w-full bg-surface rounded-lg border border-outline-variant p-4 mb-8 text-left flex flex-col gap-2">
+                {transfer ? (
+                  <>
+                    <p className="font-label-md text-label-md text-on-surface">{transfer.document.titre}</p>
+                    {transfer.document.trackingCode && (
+                      <p className="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+                        <Icon name="tag" size={16} /> {transfer.document.trackingCode}
+                      </p>
+                    )}
+                    <p className="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+                      <Icon name="person" size={16} /> Envoyé par {transfer.expediteur}, le{' '}
+                      {new Date(transfer.date).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
+                    </p>
+                    {transfer.lieu && (
+                      <p className="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+                        <Icon name="location_on" size={16} /> {transfer.lieu}
+                      </p>
+                    )}
+                    {transfer.motif && <p className="font-body-sm text-body-sm text-on-surface-variant">Motif : {transfer.motif}</p>}
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 text-on-surface-variant">
+                    <Icon name="tag" size={16} />
+                    <span className="font-body-sm text-body-sm">Transfert : {transfertId}</span>
+                  </div>
+                )}
               </div>
 
               <div className="w-full flex flex-col gap-4">

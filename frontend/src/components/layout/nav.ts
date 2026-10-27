@@ -1,6 +1,6 @@
 import { ROUTES } from '../../routes'
 
-export type NavKey = 'dashboard' | 'sign' | 'verify' | 'trace' | 'users' | 'audit' | 'permissions'
+export type NavKey = 'dashboard' | 'sign' | 'verify' | 'trace' | 'identity' | 'users' | 'audit' | 'permissions'
 
 export interface NavItem {
   key: NavKey
@@ -19,6 +19,7 @@ export const PRIMARY_NAV: NavItem[] = [
 
 /** Admin-only navigation, rendered as a separate section below a divider. */
 export const ADMIN_NAV: NavItem[] = [
+  { key: 'identity', label: "Pièces d'identité", icon: 'badge', to: ROUTES.identityReview },
   { key: 'users', label: 'Utilisateurs', icon: 'group', to: ROUTES.adminUsers },
   { key: 'audit', label: "Journal d'audit", icon: 'history', to: ROUTES.adminAuditLog },
   { key: 'permissions', label: 'Permissions', icon: 'admin_panel_settings', to: ROUTES.adminPermissions },

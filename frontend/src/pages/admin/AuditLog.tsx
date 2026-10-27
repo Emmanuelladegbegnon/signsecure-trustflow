@@ -3,6 +3,7 @@ import { AppShell } from '../../components/layout/AppShell'
 import { FormAlert } from '../../components/ui/FormAlert'
 import { Icon } from '../../components/ui/Icon'
 import { apiRequest, ApiRequestError } from '../../lib/httpClient'
+import { AuditIntegrityPanel } from './AuditIntegrityPanel'
 
 interface AuditEvent {
   actorId: string
@@ -65,8 +66,15 @@ export function AuditLog() {
           setActorNames(Object.fromEntries(usersRes.users.map((u) => [u.id, `${u.prenom} ${u.nom}`])))
         }
       })
-      .catch((err) => setError(err instanceof ApiRequestError ? err.message : "Impossible de charger le journal d'audit."))
-      .finally(() => setLoading(false))
+      .catch((err) => {
+        // Ignore l'abandon déclenché par le cleanup (StrictMode double-monte
+        // cet effet en dev) — pas un vrai échec réseau.
+        if (controller.signal.aborted) return
+        setError(err instanceof ApiRequestError ? err.message : "Impossible de charger le journal d'audit.")
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
 
     return () => controller.abort()
   }, [acteur, action, date])
@@ -81,6 +89,8 @@ export function AuditLog() {
           <p className="font-body-md text-body-md text-on-surface-variant mt-2">Traçabilité complète des actions système et utilisateurs.</p>
         </div>
       </div>
+
+      <AuditIntegrityPanel />
 
       {error && (
         <div className="mt-6">

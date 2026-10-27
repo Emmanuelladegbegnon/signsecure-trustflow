@@ -1,23 +1,63 @@
-import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Icon } from '../../components/ui/Icon'
-import { verifyResultUrl } from '../../routes'
+import { OFFICIAL_VERIFY_HOST } from '../../constants/officialDomain'
+import { FormAlert } from '../../components/ui/FormAlert'
+import { apiRequest, ApiRequestError } from '../../lib/httpClient'
+import { inspectTrackingCode } from '../../lib/trackingCode'
+import { ROUTES, verifyResultUrl } from '../../routes'
 
 export function PublicVerification() {
   const navigate = useNavigate()
   const [code, setCode] = useState('')
   const [touched, setTouched] = useState(false)
 
+  const [searching, setSearching] = useState(false)
+  const [fileMessage, setFileMessage] = useState<string | null>(null)
+
   const trimmed = code.trim()
   const invalid = touched && !trimmed
+  const badCheck = touched && Boolean(trimmed) && inspectTrackingCode(trimmed) === 'bad_check'
+
+  // Sans code (illisible, retouché) : l'empreinte du PDF exact permet de retrouver le document.
+  const handleFindByFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setFileMessage(null)
+    setSearching(true)
+    const form = new FormData()
+    form.append('fichier', file)
+    try {
+      const res = await apiRequest<{ trouve: boolean; trackingCode?: string; fichierModifie?: boolean }>('/verify/recherche-par-fichier', {
+        method: 'POST',
+        body: form,
+        auth: false,
+      })
+      if (res.trouve && res.trackingCode && res.fichierModifie) {
+        setFileMessage(
+          `Ce fichier a été MODIFIÉ après sa signature. Ses marques invisibles désignent le document d'origine ${res.trackingCode} : consultez-le pour voir la version d'origine enregistrée.`,
+        )
+        navigate(verifyResultUrl(res.trackingCode), { state: { fichierModifie: true } })
+      } else if (res.trouve && res.trackingCode) navigate(verifyResultUrl(res.trackingCode))
+      else
+        setFileMessage(
+          "Aucune version finale enregistrée ne correspond exactement à ce fichier. S'il s'agit d'un scan ou d'un fichier modifié, adressez-vous à l'organisation émettrice.",
+        )
+    } catch (err) {
+      setFileMessage(err instanceof ApiRequestError ? err.message : 'Une erreur inattendue est survenue. Réessayez.')
+    } finally {
+      setSearching(false)
+    }
+  }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     setTouched(true)
-    if (!trimmed) return
-    // Le vrai verdict (code inconnu, valide, révoqué, hash exact vs score OCR)
-    // vient entièrement de GET /api/verify/:code, appelé par la page de résultat.
-    navigate(verifyResultUrl(trimmed))
+    if (!trimmed || inspectTrackingCode(trimmed) === 'bad_check') return
+    // Le résultat (code inconnu, signé, révoqué, enregistré via Trace) vient
+    // entièrement de GET /api/verify/:code, appelé par la page de résultat.
+    navigate(verifyResultUrl(trimmed.toUpperCase()))
   }
 
   return (
@@ -44,7 +84,7 @@ export function PublicVerification() {
                   invalid ? 'border-error' : 'border-outline-variant'
                 }`}
                 id="tracking-code"
-                placeholder="Ex: SSTF-8492-XXXX"
+                placeholder="Ex : SGN-7KQ2M9XA-C"
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
@@ -55,6 +95,13 @@ export function PublicVerification() {
               <p className="font-label-sm text-label-sm text-error flex items-center gap-1">
                 <Icon name="error" size={14} />
                 Saisissez un code de suivi.
+              </p>
+            )}
+            {badCheck && (
+              <p className="font-label-sm text-label-sm text-error flex items-start gap-1">
+                <Icon name="error" size={14} className="mt-0.5" />
+                Ce code n'est pas valide : son dernier caractère (contrôle) ne correspond pas. Vérifiez la saisie ; si le code imprimé est
+                bien celui-ci, il a peut-être été modifié.
               </p>
             )}
             <button
@@ -71,21 +118,34 @@ export function PublicVerification() {
             <span className="font-label-sm text-label-sm text-outline uppercase tracking-wider">ou utiliser</span>
             <div className="h-px bg-outline-variant flex-1" />
           </div>
-          <button
-            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-outline-variant bg-surface text-secondary/60 cursor-not-allowed"
-            type="button"
-            disabled
-            title="Scan QR bientôt disponible"
-          >
-            <Icon name="qr_code_scanner" size={24} />
-            <span className="font-label-sm text-label-sm">Scanner QR (bientôt disponible)</span>
-          </button>
+          <label className="flex items-start gap-3 p-4 rounded-xl border border-outline-variant bg-surface cursor-pointer hover:bg-surface-container-low transition-colors">
+            <input type="file" accept="application/pdf" className="hidden" onChange={handleFindByFile} disabled={searching} />
+            <Icon name="find_in_page" size={24} className="text-primary shrink-0" />
+            <span className="font-body-sm text-body-sm text-on-surface-variant">
+              <strong className="text-on-surface block">{searching ? 'Recherche en cours…' : 'Pas de code, ou code douteux ?'}</strong>
+              Déposez le fichier PDF signé : s'il correspond exactement à une version finale enregistrée, nous retrouvons son code. Le fichier
+              n'est pas conservé.
+            </span>
+          </label>
+          {fileMessage && <FormAlert tone="info">{fileMessage}</FormAlert>}
+
+          <div className="flex items-start gap-3 p-4 rounded-xl border border-outline-variant bg-surface">
+            <Icon name="qr_code_scanner" size={24} className="text-primary shrink-0" />
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              Scannez le QR imprimé en bas du document avec l'appareil photo de votre téléphone. Avant de lire le résultat, vérifiez que
+              l'adresse ouverte est bien <strong className="text-on-surface">{OFFICIAL_VERIFY_HOST}</strong>. En cas de doute, saisissez
+              plutôt le code à la main ici.
+            </p>
+          </div>
         </div>
 
         <p className="font-body-sm text-body-sm text-on-surface-variant mt-8 text-center flex items-center justify-center gap-2">
           <Icon name="lock" size={16} className="text-primary-container" />
           Aucune inscription requise
         </p>
+        <Link to={ROUTES.personalData} className="font-label-sm text-label-sm text-primary hover:underline mt-2">
+          Données personnelles
+        </Link>
       </div>
     </div>
   )

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { apiRequest, ApiRequestError, setAuthToken } from './httpClient'
+import { apiRequest, ApiRequestError, setReauthHandler } from './httpClient'
 
 async function captureError(promise: Promise<unknown>): Promise<ApiRequestError> {
   try {
@@ -25,7 +25,7 @@ function mockFetchOnce(status: number, body: unknown, ok = status >= 200 && stat
 
 describe('httpClient / apiRequest', () => {
   beforeEach(() => {
-    setAuthToken(null)
+    setReauthHandler(null)
   })
 
   afterEach(() => {
@@ -64,25 +64,32 @@ describe('httpClient / apiRequest', () => {
     expect(err.status).toBe(0)
   })
 
-  it('refuses to send an authenticated request when no token is set, without calling fetch', async () => {
-    const fetchSpy = vi.fn()
-    vi.stubGlobal('fetch', fetchSpy)
-
-    const err = await captureError(apiRequest('/documents'))
-
-    expect(err.code).toBe('NO_TOKEN')
-    expect(fetchSpy).not.toHaveBeenCalled()
-  })
-
-  it('attaches the Authorization header once a token is set', async () => {
-    setAuthToken('abc123')
+  it('sends the session cookie and the anti-CSRF header, never a bearer token', async () => {
     const fetchSpy = vi.fn().mockResolvedValue({ ok: true, status: 200, text: () => Promise.resolve('{}') })
     vi.stubGlobal('fetch', fetchSpy)
 
     await apiRequest('/documents')
 
     const [, init] = fetchSpy.mock.calls[0]
-    expect(init.headers.Authorization).toBe('Bearer abc123')
+    expect(init.credentials).toBe('include')
+    expect(init.headers['X-Requested-With']).toBe('SignSecure')
+    expect(init.headers.Authorization).toBeUndefined()
+  })
+
+  it('asks for a re-confirmation code on REAUTH_REQUIRED, then replays the request once', async () => {
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 403, text: () => Promise.resolve(JSON.stringify({ error: { code: 'REAUTH_REQUIRED', message: 'x' } })) })
+      .mockResolvedValueOnce({ ok: true, status: 200, text: () => Promise.resolve('{"success":true}') })
+    vi.stubGlobal('fetch', fetchSpy)
+    const handler = vi.fn().mockResolvedValue(true)
+    setReauthHandler(handler)
+
+    const result = await apiRequest('/documents/1/revoquer', { method: 'POST', body: { motif: 'test' } })
+
+    expect(handler).toHaveBeenCalledOnce()
+    expect(fetchSpy).toHaveBeenCalledTimes(2)
+    expect(result).toEqual({ success: true })
   })
 
   it('serializes a plain object body as JSON with a Content-Type header', async () => {

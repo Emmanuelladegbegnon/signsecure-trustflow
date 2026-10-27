@@ -12,7 +12,8 @@ interface InvitationInfo {
   email: string
 }
 
-const MIN_PASSWORD_LENGTH = 8
+// Règle complète vérifiée par le serveur (mots de passe courants, nom ou email refusés).
+const MIN_PASSWORD_LENGTH = 12
 
 /**
  * GET /api/auth/invitation/:token puis POST .../activer — un compte est
@@ -42,7 +43,12 @@ export function AccountActivation() {
         setInvitation(data)
         setStage('ready')
       })
-      .catch(() => setStage('invalid'))
+      .catch(() => {
+        // Ignore l'abandon déclenché par le cleanup (StrictMode double-monte
+        // cet effet en dev) — pas une vraie invitation invalide.
+        if (controller.signal.aborted) return
+        setStage('invalid')
+      })
     return () => controller.abort()
   }, [token])
 
@@ -162,7 +168,10 @@ export function AccountActivation() {
                       <Icon name={showPassword ? 'visibility' : 'visibility_off'} />
                     </button>
                   </div>
-                  <p className="font-label-sm text-label-sm text-on-surface-variant">Au moins {MIN_PASSWORD_LENGTH} caractères.</p>
+                  <p className="font-label-sm text-label-sm text-on-surface-variant">
+                    Au moins {MIN_PASSWORD_LENGTH} caractères. Une courte phrase facile à retenir fonctionne bien ; évitez votre nom et les
+                    mots de passe courants.
+                  </p>
                 </div>
 
                 <div className="space-y-1">

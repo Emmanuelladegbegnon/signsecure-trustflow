@@ -4,21 +4,30 @@ import { PublicVerifyShell } from '../../components/layout/PublicVerifyShell'
 import { FormAlert } from '../../components/ui/FormAlert'
 import { FullscreenSpinner } from '../../components/ui/FullscreenSpinner'
 import { Icon } from '../../components/ui/Icon'
+import { documentStatutLabel } from '../../constants/documentStatus'
 import { apiRequest, ApiRequestError } from '../../lib/httpClient'
 
-// Formes déduites d'API_CONTRACT.md — voir la même note dans VerificationResult.tsx.
 interface VerifyReference {
   statut: string
-  origine?: string
-  signature?: { nom?: string; role?: string }
+  origine?: 'SIGN' | 'TRACE'
+  signature?: { titre?: string }
 }
 
-interface CompareResult {
-  methode: 'hash_exact' | 'ocr_score'
-  resultat: 'correspond' | 'diverge'
-  score?: number
-}
+type CompareResult =
+  | {
+      methode: 'hash_exact'
+      resultat: 'correspond' | 'diverge'
+      hashSoumis: string
+      hashReference: string
+      marquesInvisibles?: { presentes: boolean; memeDocument: boolean; autreDocument: boolean; pagesDOrigine: number | null; pagesSansMarque: number[]; marquesFalsifiees: number }
+    }
+  | { methode: 'examen_humain'; message: string }
 
+/**
+ * Contrôle d'un fichier par un tiers, sans compte. Seul un PDF né dans Sign
+ * se compare automatiquement (empreinte SHA-256 exacte). Une copie d'un
+ * document Trace n'est jamais comparée automatiquement (CLAUDE.md § Verify).
+ */
 export function FileComparison() {
   const { code } = useParams<{ code: string }>()
   const navigate = useNavigate()
@@ -38,21 +47,28 @@ export function FileComparison() {
     const controller = new AbortController()
     apiRequest<VerifyReference>(`/verify/${encodeURIComponent(code)}`, { auth: false, signal: controller.signal })
       .then((res) => setReference(res))
-      .catch((err) => setReferenceError(err instanceof ApiRequestError ? err.message : 'Impossible de charger le document de référence.'))
-      .finally(() => setLoadingReference(false))
+      .catch((err) => {
+        // Ignore l'abandon déclenché par le cleanup (StrictMode double-monte
+        // cet effet en dev) — pas un vrai échec réseau.
+        if (controller.signal.aborted) return
+        setReferenceError(err instanceof ApiRequestError ? err.message : 'Impossible de charger le document de référence.')
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadingReference(false)
+      })
     return () => controller.abort()
   }, [code])
 
   const submitComparison = async (candidate: File) => {
     if (!code) return
+    setFile(candidate)
     setCompareError(null)
     setResult(null)
     setComparing(true)
     const formData = new FormData()
     formData.append('fichier', candidate)
     try {
-      const res = await apiRequest<CompareResult>(`/verify/${encodeURIComponent(code)}/comparer`, { method: 'POST', body: formData, auth: false })
-      setResult(res)
+      setResult(await apiRequest<CompareResult>(`/verify/${encodeURIComponent(code)}/comparer`, { method: 'POST', body: formData, auth: false }))
     } catch (err) {
       setCompareError(err instanceof ApiRequestError ? err.message : 'Une erreur inattendue est survenue. Réessayez.')
     } finally {
@@ -64,11 +80,11 @@ export function FileComparison() {
     e.preventDefault()
     setDragActive(false)
     const dropped = e.dataTransfer.files?.[0]
-    if (dropped) {
-      setFile(dropped)
-      submitComparison(dropped)
-    }
+    if (dropped) submitComparison(dropped)
   }
+
+  const isTrace = reference?.origine === 'TRACE'
+  const unknown = reference?.statut === 'UNKNOWN_CODE'
 
   return (
     <PublicVerifyShell>
@@ -76,103 +92,123 @@ export function FileComparison() {
         <button className="p-2 rounded-full hover:bg-surface-variant transition-colors text-on-surface-variant lg:hidden" onClick={() => navigate(-1)}>
           <Icon name="arrow_back" />
         </button>
-        <h1 className="font-headline-lg text-headline-lg text-on-surface">Vérification par fichier</h1>
+        <h1 className="font-headline-lg text-headline-lg text-on-surface">Contrôler un fichier</h1>
       </div>
       <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl mb-8">
-        Comparez un document soumis avec la référence enregistrée sous le code <strong>{code}</strong>. Selon l'origine du document, la comparaison
-        utilise soit un hash exact, soit un score de correspondance textuelle (OCR) — jamais un verdict d'identité absolue sur un document scanné.
+        Comparez votre exemplaire avec la version finale enregistrée sous le code <strong>{code}</strong>. Le fichier soumis sert uniquement au
+        calcul de son empreinte : il n'est pas conservé.
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        <div className="bg-surface-container-lowest rounded-xl p-6 shadow-[0px_1px_3px_rgba(15,23,42,0.1)] border border-outline-variant/30 flex flex-col gap-6">
-          <div className="flex items-center gap-4 pb-4 border-b border-outline-variant/30">
-            <div className="w-12 h-12 rounded-lg bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed">
-              <Icon name="description" size={28} />
-            </div>
-            <div>
-              <h2 className="font-headline-sm text-headline-sm text-on-surface">Document de Référence</h2>
-              <span className="font-label-sm text-label-sm text-on-surface-variant">Code : {code}</span>
-            </div>
-          </div>
+      {loadingReference && <FullscreenSpinner />}
+      {referenceError && <FormAlert tone="error">{referenceError}</FormAlert>}
+      {unknown && <FormAlert tone="error">Aucun dossier ne correspond à ce code.</FormAlert>}
 
-          {loadingReference && <FullscreenSpinner />}
-          {referenceError && <FormAlert tone="error">{referenceError}</FormAlert>}
-          {reference && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="font-label-md text-label-md text-on-surface-variant">Statut</span>
-                <span className="font-body-md text-body-md font-medium text-on-surface">{reference.statut}</span>
+      {reference && !unknown && isTrace && (
+        <div className="max-w-2xl">
+          <FormAlert tone="info">
+            Ce code correspond à un document papier enregistré via Trace. Une photo ou un scan ne peut pas être comparé automatiquement de façon
+            fiable : présentez la copie à l'organisation émettrice, qui la fera examiner par un vérificateur à côté des photos prises à la réception.
+          </FormAlert>
+        </div>
+      )}
+
+      {reference && !unknown && !isTrace && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant/30 flex flex-col gap-4">
+            <div className="flex items-center gap-4 pb-4 border-b border-outline-variant/30">
+              <div className="w-12 h-12 rounded-lg bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed">
+                <Icon name="description" size={28} />
               </div>
-              {reference.signature?.nom && (
-                <div className="flex justify-between items-center">
-                  <span className="font-label-md text-label-md text-on-surface-variant">Signataire / Déclarant</span>
-                  <span className="font-body-md text-body-md font-medium text-on-surface">{reference.signature.nom}</span>
+              <div>
+                <h2 className="font-headline-sm text-headline-sm text-on-surface">Document de référence</h2>
+                <span className="font-label-sm text-label-sm text-on-surface-variant">Code : {code}</span>
+              </div>
+            </div>
+            {reference.signature?.titre && (
+              <div className="flex justify-between">
+                <span className="font-label-md text-label-md text-on-surface-variant">Intitulé</span>
+                <span className="font-body-md text-body-md text-on-surface">{reference.signature.titre}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="font-label-md text-label-md text-on-surface-variant">Statut</span>
+              <span className="font-body-md text-body-md text-on-surface">{documentStatutLabel(reference.statut)}</span>
+            </div>
+            {reference.statut === 'REVOKED' && <FormAlert tone="error">Ce document a été révoqué par l'organisation émettrice.</FormAlert>}
+          </div>
+
+          <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant/30 flex flex-col h-full">
+            <h2 className="font-headline-sm text-headline-sm text-on-surface mb-4">Votre fichier PDF</h2>
+
+            {compareError && (
+              <div className="mb-4">
+                <FormAlert tone="error">{compareError}</FormAlert>
+              </div>
+            )}
+
+            {result?.methode === 'hash_exact' && (
+              <div className="mb-4 flex flex-col gap-2">
+                <FormAlert tone={result.resultat === 'correspond' ? 'success' : 'error'}>
+                  {result.resultat === 'correspond'
+                    ? "L'empreinte SHA-256 de votre fichier correspond exactement à celle de la version finale enregistrée : il n'a pas été modifié depuis son scellement."
+                    : "L'empreinte de votre fichier ne correspond pas à la version finale enregistrée : le fichier a été modifié, ou il ne s'agit pas de la version finale."}
+                </FormAlert>
+                {result.resultat === 'diverge' && result.marquesInvisibles && (
+                  <FormAlert tone="info">
+                    {result.marquesInvisibles.memeDocument
+                      ? `Les marques invisibles de SignSecure montrent qu'il s'agit bien d'une copie de ce document, mais modifiée après scellement${
+                          result.marquesInvisibles.pagesSansMarque.length
+                            ? ` (page${result.marquesInvisibles.pagesSansMarque.length > 1 ? 's' : ''} ${result.marquesInvisibles.pagesSansMarque.join(', ')} ajoutée(s) ou remplacée(s))`
+                            : ''
+                        }. Fiez-vous à l'original enregistré.`
+                      : result.marquesInvisibles.autreDocument
+                        ? "Ce fichier porte les marques d'un AUTRE document SignSecure : il ne correspond pas à ce code."
+                        : result.marquesInvisibles.marquesFalsifiees > 0
+                          ? 'Ce fichier contient de fausses marques SignSecure : il a été fabriqué ou falsifié.'
+                          : "Ce fichier ne porte aucune marque SignSecure : ce n'est pas un document scellé par la plateforme, ou ses marques ont été effacées."}
+                  </FormAlert>
+                )}
+                <div className="font-mono text-[11px] text-on-surface-variant break-all bg-surface p-3 rounded-lg border border-outline-variant/50">
+                  <div>Votre fichier : {result.hashSoumis}</div>
+                  <div>Référence : {result.hashReference}</div>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
+              </div>
+            )}
 
-        <div className="bg-surface-container-lowest rounded-xl p-6 shadow-[0px_1px_3px_rgba(15,23,42,0.1)] border border-outline-variant/30 flex flex-col h-full">
-          <h2 className="font-headline-sm text-headline-sm text-on-surface mb-4">Fichier à comparer</h2>
-
-          {compareError && (
-            <div className="mb-4">
-              <FormAlert tone="error">{compareError}</FormAlert>
-            </div>
-          )}
-
-          {result && (
-            <div className="mb-4">
-              <FormAlert tone={result.methode === 'ocr_score' ? 'info' : result.resultat === 'correspond' ? 'success' : 'error'}>
-                {result.methode === 'ocr_score'
-                  ? `Correspondance textuelle (OCR) : ${result.score ?? '—'}%. Un document scanné ne permet pas un hash exact — ce score indique une correspondance, pas une identité garantie.`
-                  : result.resultat === 'correspond'
-                    ? 'Le hash du fichier soumis correspond exactement à la référence enregistrée.'
-                    : "Le hash du fichier soumis ne correspond pas à la référence enregistrée."}
-              </FormAlert>
-            </div>
-          )}
-
-          <div
-            className={`flex-grow flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer relative group min-h-[250px] ${
-              dragActive ? 'border-primary bg-primary-container/10' : 'border-outline-variant bg-surface hover:bg-surface-container-high'
-            }`}
-            onDragOver={(e) => {
-              e.preventDefault()
-              setDragActive(true)
-            }}
-            onDragLeave={() => setDragActive(false)}
-            onDrop={handleDrop}
-          >
-            <input
-              aria-label="Téléverser un fichier pour comparaison"
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              type="file"
-              onChange={(e) => {
-                const selected = e.target.files?.[0]
-                if (selected) {
-                  setFile(selected)
-                  submitComparison(selected)
-                }
+            <div
+              className={`flex-grow flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer relative group min-h-[220px] ${
+                dragActive ? 'border-primary bg-primary-container/10' : 'border-outline-variant bg-surface hover:bg-surface-container-high'
+              }`}
+              onDragOver={(e) => {
+                e.preventDefault()
+                setDragActive(true)
               }}
-            />
-            <div className="w-16 h-16 rounded-full bg-primary-container/20 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
-              {comparing ? (
-                <span className="w-6 h-6 rounded-full border-2 border-primary/40 border-t-primary animate-spin" aria-hidden="true" />
-              ) : (
-                <Icon name="upload_file" size={28} />
-              )}
+              onDragLeave={() => setDragActive(false)}
+              onDrop={handleDrop}
+            >
+              <input
+                aria-label="Téléverser un fichier PDF pour contrôle"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                type="file"
+                accept="application/pdf"
+                onChange={(e) => {
+                  const selected = e.target.files?.[0]
+                  if (selected) submitComparison(selected)
+                }}
+              />
+              <div className="w-16 h-16 rounded-full bg-primary-container/20 flex items-center justify-center text-primary mb-4">
+                {comparing ? (
+                  <span className="w-6 h-6 rounded-full border-2 border-primary/40 border-t-primary animate-spin" aria-hidden="true" />
+                ) : (
+                  <Icon name="upload_file" size={28} />
+                )}
+              </div>
+              <p className="font-headline-sm text-headline-sm text-on-surface mb-2">{comparing ? 'Calcul de l’empreinte…' : (file?.name ?? 'Glissez-déposez le PDF ici')}</p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant">ou cliquez pour parcourir — PDF, 10 Mo max.</p>
             </div>
-            <p className="font-headline-sm text-headline-sm text-on-surface mb-2">{comparing ? 'Analyse en cours…' : (file?.name ?? 'Glissez-déposez le fichier ici')}</p>
-            <p className="font-body-sm text-body-sm text-on-surface-variant mb-4">ou cliquez pour parcourir</p>
-            <button className="bg-surface-container-lowest border border-outline text-on-surface font-label-md py-2 px-4 rounded-lg shadow-sm" type="button">
-              Sélectionner un fichier
-            </button>
-            <p className="font-label-sm text-label-sm text-on-surface-variant mt-4 opacity-70">PDF ou image scannée. Taille max: 10 Mo.</p>
           </div>
         </div>
-      </div>
+      )}
     </PublicVerifyShell>
   )
 }

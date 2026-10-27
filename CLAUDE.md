@@ -31,6 +31,16 @@ Le positionnement produit : SignSecure ne prétend JAMAIS être une autorité de
 - Le hash (SHA-256) de la version finale est TOUJOURS calculé côté serveur, jamais transmis depuis le client, jamais modifiable par une requête API.
 - Toute modification d'un document déjà signé doit créer une nouvelle version — jamais une édition en place de la version signée.
 
+## Décision actée sur le contrôle d'identité des signataires (30 septembre 2026)
+
+Suite à la relecture du projet, un contrôle d'identité est proposé dès la première version, sous une forme **humaine et sans biométrie** :
+
+- Option activée par l'émetteur à la création du dossier (« exiger une pièce d'identité »). Chaque signataire externe photographie sa pièce depuis son lien ; la signature est impossible tant qu'elle n'est pas validée.
+- Le contrôle est fait par un Vérificateur ou un Superviseur de l'organisation, **jamais l'émetteur du dossier** (séparation des rôles), après reconfirmation par code. Il compare visuellement le nom au nom déclaré et l'aspect de la pièce.
+- Aucune reconnaissance faciale, aucun selfie, aucune lecture automatique du numéro (NPI), aucune connexion à l'ANIP. La biométrie reste exclue (voir plus haut) : une vérification par selfie ne pourra être envisagée qu'après autorisation de l'APDP (Code du numérique, art. 407), via un prestataire en mode sandbox explicitement labellisé.
+- Minimisation : les photos de la pièce sont chiffrées, métadonnées effacées, consultables seulement par les rôles de contrôle (chaque consultation est journalisée), et **supprimées dès la décision** ou après 7 jours sans décision. Seules leurs empreintes et la décision restent, dans le journal chaîné.
+- Vocabulaire : « pièce d'identité contrôlée visuellement par l'organisation ». Jamais « identité vérifiée », « authentifiée » ou « certifiée ».
+
 ## Décisions actées sur Verify
 
 - Distinguer strictement deux niveaux de comparaison selon l'origine du document :

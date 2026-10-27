@@ -33,8 +33,15 @@ export function PermissionsMatrix() {
     const controller = new AbortController()
     apiRequest<ProfilsResponse>('/admin/roles/profils', { signal: controller.signal })
       .then((res) => setProfils(res.profils))
-      .catch((err) => setError(err instanceof ApiRequestError ? err.message : 'Impossible de charger les profils de permissions.'))
-      .finally(() => setLoading(false))
+      .catch((err) => {
+        // Ignore l'abandon déclenché par le cleanup (StrictMode double-monte
+        // cet effet en dev) — pas un vrai échec réseau.
+        if (controller.signal.aborted) return
+        setError(err instanceof ApiRequestError ? err.message : 'Impossible de charger les profils de permissions.')
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
     return () => controller.abort()
   }, [])
 
