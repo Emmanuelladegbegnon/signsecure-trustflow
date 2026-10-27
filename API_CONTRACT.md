@@ -218,9 +218,16 @@ Sortie (200) : `{ success: true, trackingCode, etiquetteUrl }`
 Effet serveur : génère le code de suivi aléatoire, crée l'événement `RECEIVED`.
 Erreur : 400 `PAGES_MISSING_PHOTOS` s'il y a moins de photos que de pages déclarées.
 
+### GET /api/trace/destinataires
+Sortie (200) : `{ destinataires: [{ id, nom, roles }] }` — comptes actifs de l'organisation ayant accès à Trace, sauf le compte connecté.
+
 ### POST /api/trace/:id/transfert
-Entrée : `{ destinataireId, lieu, motif }`
-Sortie (201) : `{ transfertId, statut: "PENDING" }`
+Entrée : `{ destinataireId, lieu, motif }` — `destinataireId` pris dans GET /api/trace/destinataires
+Sortie (201) : `{ transfertId, statut: "PENDING" }` — un email avec le lien de confirmation part au destinataire.
+Erreurs : 400 `UNKNOWN_DESTINATAIRE`, 400 `SELF_TRANSFER`, 409 `TRANSFER_ALREADY_PENDING`.
+
+### GET /api/trace/transferts/a-recevoir
+Sortie (200) : `{ transferts: [{ id, document: { id, titre, trackingCode }, expediteur, lieu, motif, date }] }` — transferts en attente dont le compte connecté est le destinataire.
 
 ### POST /api/trace/transfert/:transfertId/confirmer
 Entrée : aucune (destinataire authentifié)

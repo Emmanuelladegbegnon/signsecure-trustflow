@@ -254,6 +254,17 @@ export function ProofReport() {
               {pdfUrl && <PdfViewer url={pdfUrl} className="w-full h-[600px] rounded-lg border border-outline-variant p-4 bg-surface-container-low" />}
               {!pdfUrl && pdfError && <FormAlert tone="error">{pdfError}</FormAlert>}
               {!pdfUrl && !pdfError && <div className="h-[600px] rounded-lg border border-outline-variant bg-surface-container-low animate-pulse" />}
+              {pdfUrl && (
+                // Le fichier téléchargé est octet pour octet celui du serveur : son empreinte se compare dans Verify.
+                <a
+                  href={pdfUrl}
+                  download={`${data.codeReference ?? id}${data.empreinte.sha256Final ? '-signe' : '-en-cours'}.pdf`}
+                  className="mt-3 inline-flex items-center gap-2 px-3 py-2 border border-outline-variant rounded-lg font-label-md text-label-md hover:bg-surface-container-low"
+                >
+                  <Icon name="download" size={18} />
+                  {data.empreinte.sha256Final ? 'Télécharger le PDF final signé' : 'Télécharger la version actuelle (signatures en attente)'}
+                </a>
+              )}
             </section>
 
             <section>

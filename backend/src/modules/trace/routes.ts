@@ -20,6 +20,22 @@ traceRouter.post(
   }),
 )
 
+traceRouter.get(
+  '/destinataires',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    res.json(await traceService.listTransferRecipients(actorFromAuth(req)))
+  }),
+)
+
+traceRouter.get(
+  '/transferts/a-recevoir',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    res.json(await traceService.listIncomingTransfers(actorFromAuth(req)))
+  }),
+)
+
 traceRouter.post(
   '/:id/observations',
   requireAuth,

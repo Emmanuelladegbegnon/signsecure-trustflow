@@ -1,7 +1,11 @@
+import type { Role } from '@prisma/client'
 import type { Actor } from '../../lib/actor.js'
 import { prisma } from '../../db.js'
+import { env } from '../../env.js'
 import { ApiError } from '../../lib/errors.js'
 import { recordAuditEvent } from '../../lib/audit.js'
+import { sendEmail } from '../../lib/notify.js'
+import { toRoleLabels } from '../../lib/roles.js'
 import { generateTrackingCode } from '../../lib/trackingCode.js'
 import { comparisonsDir, incidentsDir, storeUploadedFile, traceDir } from '../../lib/storage.js'
 import { storeSanitizedImage } from '../../lib/imageSanitizer.js'
@@ -171,11 +175,57 @@ export async function validateDocument(documentId: string, actor: Actor) {
   return { success: true as const, trackingCode, etiquetteUrl: `/api/trace/etiquette/${trackingCode}` }
 }
 
-export async function requestTransfer(documentId: string, input: { destinataireId: string; lieu?: string; motif?: string }, actor: Actor) {
-  await getOwnedTraceDocument(documentId, actor.organizationId)
+/** Rôles qui ont accès à Trace et peuvent donc recevoir un document physique. */
+const TRACE_HOLDER_ROLES: Role[] = ['AGENT_RECEPTION', 'SUPERVISEUR', 'VERIFICATEUR', 'ADMINISTRATEUR']
 
-  const destinataire = await prisma.user.findFirst({ where: { id: input.destinataireId, organizationId: actor.organizationId } })
+/** Destinataires possibles d'un transfert : comptes actifs de l'organisation ayant accès à Trace, sauf soi-même. */
+export async function listTransferRecipients(actor: Actor) {
+  const users = await prisma.user.findMany({
+    where: {
+      organizationId: actor.organizationId,
+      statut: 'ACTIF',
+      id: { not: actor.id },
+      roles: { some: { role: { in: TRACE_HOLDER_ROLES } } },
+    },
+    include: { roles: true },
+    orderBy: [{ nom: 'asc' }, { prenom: 'asc' }],
+  })
+  return {
+    destinataires: users.map((u) => ({ id: u.id, nom: `${u.prenom} ${u.nom}`, roles: toRoleLabels(u.roles.map((r) => r.role)) })),
+  }
+}
+
+/** Transferts en attente dont le compte connecté est le destinataire. */
+export async function listIncomingTransfers(actor: Actor) {
+  const transfers = await prisma.transfer.findMany({
+    where: { destinataireId: actor.id, statut: 'PENDING', document: { organizationId: actor.organizationId } },
+    include: { document: true, createdBy: true },
+    orderBy: { createdAt: 'desc' },
+  })
+  return {
+    transferts: transfers.map((t) => ({
+      id: t.id,
+      document: { id: t.document.id, titre: t.document.titre, trackingCode: t.document.trackingCode },
+      expediteur: `${t.createdBy.prenom} ${t.createdBy.nom}`,
+      lieu: t.lieu,
+      motif: t.motif,
+      date: t.createdAt,
+    })),
+  }
+}
+
+export async function requestTransfer(documentId: string, input: { destinataireId: string; lieu?: string; motif?: string }, actor: Actor) {
+  const document = await getOwnedTraceDocument(documentId, actor.organizationId)
+
+  const destinataire = await prisma.user.findFirst({
+    where: { id: input.destinataireId, organizationId: actor.organizationId, statut: 'ACTIF', roles: { some: { role: { in: TRACE_HOLDER_ROLES } } } },
+  })
   if (!destinataire) throw ApiError.badRequest('UNKNOWN_DESTINATAIRE', 'Destinataire introuvable dans cette organisation.')
+  if (destinataire.id === actor.id) throw ApiError.badRequest('SELF_TRANSFER', 'Vous ne pouvez pas vous transférer un document à vous-même.')
+  // Vérifié avant de créer le transfert : sinon une demande refusée laisserait une ligne « à recevoir » orpheline.
+  if (document.custodyStatus === 'TRANSFER_PENDING') {
+    throw ApiError.conflict('TRANSFER_ALREADY_PENDING', 'Un transfert est déjà en attente pour ce dossier.')
+  }
 
   const transfer = await prisma.transfer.create({
     data: {
@@ -189,6 +239,14 @@ export async function requestTransfer(documentId: string, input: { destinataireI
   })
 
   await transitionCustodyTransferRequested(documentId, actor.organizationId, toAuditContext(actor))
+
+  await sendEmail(
+    destinataire.email,
+    `Document à recevoir : ${document.titre}`,
+    `Bonjour ${destinataire.prenom},\n\n${actor.label} vous transfère le document physique « ${document.titre} »` +
+      `${document.trackingCode ? ` (code ${document.trackingCode})` : ''}.\n` +
+      `À sa remise, confirmez la réception dans SignSecure : ${env.frontendBaseUrl}/mobile/transfert/${transfer.id}/reception`,
+  )
   return { transfertId: transfer.id, statut: 'PENDING' as const }
 }
 
